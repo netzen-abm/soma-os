@@ -1,0 +1,33 @@
+# SomaOS Reticulum Distributed Mesh Configuration Profile
+# File Path: services/protocols/reticulum_config
+
+[reticulum]
+enable_transport = True
+share_instance = True
+loglevel = 4
+storagepath = ~/.somaos/reticulum
+
+[interfaces]
+  # Default secure local looping interface for local microservices
+  [[Local Interface]]
+    type = LocalInterface
+    enabled = True
+
+  # Encrypted Wide Area TCP Network link to external sovereign nodes over remaining internet pipelines
+  [[SomaOS TCP Network Link]]
+    type = TCPClientInterface
+    enabled = True
+    target_host = bootstrap.somanet.org
+    target_port = 4242
+
+  # Disaster Fallback Link: Physical LoRa Radio / Packet Radio Node interface configuration
+  [[LoRa Emergency Mesh Interface]]
+    type = RNodeInterface
+    enabled = False # Toggle to True when physical USB RNode/LoRa transceiver unit is linked
+    interface_port = /dev/ttyUSB0
+    speed = 115200
+    frequency = 868000000 # Configured for standard European/Indian ISM frequency allocation bands
+    bandwidth = 125000
+    spreadingfactor = 7
+    codingrate = 5
+    txpower = 14
