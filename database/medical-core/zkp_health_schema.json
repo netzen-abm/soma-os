@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org",
+  "title": "SomaOS_ZKP_Health_Verification_Payload",
+  "description": "Cryptographic zero-knowledge proof payload containing zero personal identification records.",
+  "type": "object",
+  "properties": {
+    "proof_metadata": {
+      "type": "object",
+      "properties": {
+        "proving_system": { "type": "string", "enum": ["Groth16", "Plonk"] },
+        "curve_type": { "type": "string", "enum": ["BN254", "BLS12-381"] },
+        "verification_key_hash": { "type": "string", "pattern": "^0x[a-fA-F0-9]{64}$" }
+      },
+      "required": ["proving_system", "curve_type", "verification_key_hash"]
+    },
+    "public_inputs": {
+      "type": "object",
+      "properties": {
+        "salud_protocol_version": { "type": "string" },
+        "timestamp_window_epoch": { "type": "integer" },
+        "proved_vitality_score_threshold": { "type": "integer", "minimum": 0, "maximum": 100 }
+      },
+      "required": ["salud_protocol_version", "timestamp_window_epoch", "proved_vitality_score_threshold"]
+    },
+    "cryptographic_proof": {
+      "type": "object",
+      "properties": {
+        "pi_a": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+        "pi_b": { "type": "array", "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }, "minItems": 2, "maxItems": 2 },
+        "pi_c": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+      },
+      "required": ["pi_a", "pi_b", "pi_c"]
+    }
+  },
+  "required": ["proof_metadata", "public_inputs", "cryptographic_proof"]
+}
