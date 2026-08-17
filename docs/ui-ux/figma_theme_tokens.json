@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "theme_name": "SomaOS Premium Dark Cockpit",
+  "modes": {
+    "dark_space": {
+      "colors": {
+        "background": {
+          "canvas": { "$value": "#0B132B", "$type": "color", "$description": "Deep background void color profile" },
+          "surface": { "$value": "#1C2541", "$type": "color", "$description": "Secondary internal card overlay elements" },
+          "sunken_well": { "$value": "#111A33", "$type": "color", "$description": "Extremely dark container tracking zones" }
+        },
+        "branding": {
+          "cyber_jade": { "$value": "#5BC0BE", "$type": "color", "$description": "Primary visual line and anchor accent color" },
+          "biometric_neon": { "$value": "#6FFFE9", "$type": "color", "$description": "High-contrast telemetry readout indicator state color" },
+          "warning_crimson": { "$value": "#D9534F", "$type": "color", "$description": "Critical conflict or drug risk safety alert alert states" }
+        },
+        "typography": {
+          "primary_white": { "$value": "#FFFFFF", "$type": "color" },
+          "muted_violet": { "$value": "#A5A1AA", "$type": "color" },
+          "sub_slate": { "$value": "#E0E0E0", "$type": "color" }
+        }
+      },
+      "spacing": {
+        "xs": { "$value": "4px", "$type": "dimension" },
+        "sm": { "$value": "8px", "$type": "dimension" },
+        "md": { "$value": "12px", "$type": "dimension" },
+        "lg": { "$value": "16px", "$type": "dimension" },
+        "xl": { "$value": "24px", "$type": "dimension" },
+        "hero_padding": { "$value": "32px", "$type": "dimension" }
+      },
+      "border_radius": {
+        "component_radius": { "$value": "8px", "$type": "dimension" },
+        "card_radius": { "$value": "12px", "$type": "dimension" },
+        "panel_radius": { "$value": "16px", "$type": "dimension" },
+        "hero_pill": { "$value": "20px", "$type": "dimension" }
+      },
+      "typography_scale": {
+        "micro_label": { "fontSize": { "$value": "11px" }, "lineHeight": { "$value": "14px" }, "fontFamily": { "$value": "Inter" } },
+        "standard_body": { "fontSize": { "$value": "14px" }, "lineHeight": { "$value": "20px" }, "fontFamily": { "$value": "Inter" } },
+        "card_title": { "fontSize": { "$value": "18px" }, "lineHeight": { "$value": "24px" }, "fontWeight": { "$value": "Bold" } },
+        "hero_telemetry": { "fontSize": { "$value": "64px" }, "lineHeight": { "$value": "72px" }, "fontWeight": { "$value": "800" }, "letterSpacing": { "$value": "-0.02em" } }
+      }
+    }
+  }
+}
