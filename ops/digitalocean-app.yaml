@@ -1,0 +1,24 @@
+name: somaos-stack
+region: blr
+services:
+  - name: backend-gateway
+    github:
+      repo: your-username/soma-os
+      branch: main
+    dockerfile_path: Dockerfile
+    envs:
+      - key: RUST_LOG
+        value: info
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /api
+  - name: brochure-site
+    github:
+      repo: your-username/soma-os
+      branch: main
+    html_import:
+      public_dir: public
+    routes:
+      - path: /
