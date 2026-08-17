@@ -1,0 +1,61 @@
+{
+  "database_version": "1.0.0",
+  "system_identifier": "SomaOS_Botanical_Interactions_Core",
+  "botanicals": [
+    {
+      "common_name": "Ashwagandha",
+      "sanskrit_name": "Aswagandha (अश्वगंधा)",
+      "botanical_classification": "Withania somnifera",
+      "primary_bioactive_compounds": ["Withanolides", "Sitoindosides"],
+      "clinical_pharmacology": "Downregulates hypothalamic-pituitary-adrenal (HPA) axis activity, dropping circulatory systemic cortisol levels.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Immunosuppressants",
+          "example_drugs": ["Cyclosporine", "Prednisone"],
+          "risk_severity": "HIGH",
+          "physiological_mechanism": "Ashwagandha exhibits immunostimulant properties, directly counteracting intended pharmaceutical immunosuppression mechanics.",
+          "counter_action_protocol": "Flag instantly; prevent simultaneous co-administration pathways entirely."
+        },
+        {
+          "pharmaceutical_class": "Sedatives / Benzodiazepines",
+          "example_drugs": ["Alprazolam", "Diazepam"],
+          "risk_severity": "MEDIUM",
+          "physiological_mechanism": "Potentiates GABAergic pathway pathways, leading to excessive central nervous system sedation profiles.",
+          "counter_action_protocol": "Issue alert notifying patient to stagger usage schedules by a minimum 8-hour buffer window."
+        }
+      ]
+    },
+    {
+      "common_name": "Turmeric",
+      "sanskrit_name": "Haridra (हरिद्रा)",
+      "botanical_classification": "Curcuma longa",
+      "primary_bioactive_compounds": ["Curcuminoids", "Turmerone"],
+      "clinical_pharmacology": "Inhibits cyclooxygenase-2 (COX-2) expression configurations, suppressing systemic inflammatory prostaglandin synthesis tracking.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Anticoagulants / Antiplatelets",
+          "example_drugs": ["Warfarin", "Aspirin", "Clopidogrel"],
+          "risk_severity": "CRITICAL",
+          "physiological_mechanism": "Exhibits anti-aggregatory activity on platelets, exponentially boosting internal bleeding event liabilities.",
+          "counter_action_protocol": "Halt automated recommendation pipelines immediately if matching active prescription status logs."
+        }
+      ]
+    },
+    {
+      "common_name": "Holy Basil",
+      "sanskrit_name": "Tulasi (तुलसी)",
+      "botanical_classification": "Ocimum sanctum",
+      "primary_bioactive_compounds": ["Eugenol", "Ursolic Acid"],
+      "clinical_pharmacology": "Modulates blood glucose levels via pancreatic beta-cell stimulation activities.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Antidiabetics",
+          "example_drugs": ["Metformin", "Glipizide", "Insulin"],
+          "risk_severity": "MEDIUM",
+          "physiological_mechanism": "Synergistic amplification triggers increased hypoglycemia risk thresholds.",
+          "counter_action_protocol": "Recommend close continuous blood glucose monitoring cadence updates via consumer wear-tech integration."
+        }
+      ]
+    }
+  ]
+}
