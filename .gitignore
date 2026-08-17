@@ -1,0 +1,15 @@
+# Secrets and Private Configurations
+.env
+.env*.local
+secret.key
+*.pem
+
+# Rust / Dioxus / WASM Compilation Output
+/target
+dist/
+*.wasm
+
+# System and Cache Files
+.DS_Store
+node_modules/
+.cargo/config.toml
