@@ -84,6 +84,29 @@ For people who want to make changes to your project, it's helpful to have some d
 You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
 
 ## Authors and acknowledgment
+
+# SomaOS (SomaNet) 🪐
+> A Sovereign, Privacy-by-Default Preventive Medicine & Longevity Command Center.
+
+Inspired by Sid Sijbrandij's "Founder Mode" clinical approach to massive medical data autonomy, SomaOS combines ancient functional wellness (Ayurveda/Naturopathy) with modern decentralized, metadata-private networks.
+
+## 🛡️ Architectural Core
+- **Frontend:** Rust + Dioxus compiled natively to WASM (Web), Android, and iOS.
+- **Interfaces:** Low-friction, privacy-shielded Telegram Mini-App (WebApp) & WhatsApp conversational nodes.
+- **Privacy Layer:** NYM Mixnet (metadata blinding), Zero-Knowledge Proofs (identity-free health verification).
+- **Resilience Layer:** Nostr (decentralized protocol syncing) & Reticulum (offline mesh-radio fallback).
+
+## 📂 Repository Blueprint
+├── apps/
+│   ├── client-dioxus/          # Rust multiplatform frontend (WASM, Android, iOS)
+│   └── telegram-mini-app/      # WebView interface wrapper for Telegram/WhatsApp
+├── services/
+│   ├── backend-rust/           # High-performance analytical core (FastAPI equivalent in Rust)
+│   ├── ai-engine/              # Non-custodial RAG prompts & local model pipelines
+│   └── protocols/              # NYM, Nostr, Reticulum, & Salud routing configs
+└── database/
+    └── medical-core/           # Health-vault schemas & Preventive Medicine records
+
 Show your appreciation to those who have contributed to the project.
 
 ## License
