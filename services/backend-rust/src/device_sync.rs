@@ -64,3 +64,36 @@ impl NonCustodialSyncEngine {
         Ok(sync_event)
     }
 }
+
+
+#[cfg(test)]
+mod sync_tests {
+    use super::*;
+
+    #[test]
+    fn test_zero_knowledge_local_encryption_leak_prevention() {
+        // Step 1: Populate a mock local-device health data structure
+        let secret_millet_type = "Barnyard Millet Ambali Protocol";
+        let mock_vault = LocalDeviceHealthVault {
+            tracked_millet_porridge_history: vec![secret_millet_type.to_string()],
+            user_logged_conditions: vec!["Gut Microbiome Dysbiosis Rejuvenation".to_string()],
+            current_vitality_score: 95,
+        };
+        
+        let dummy_pubkey = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        // Step 2: Pass data into local network boundary mask engine
+        let built_event = NonCustodialSyncEngine::compile_secure_nostr_backup_event(&mock_vault, dummy_pubkey).unwrap();
+        
+        // Step 3: Enforce strict assertions proving no raw data leaks into network models
+        assert_eq!(built_event.kind, 4, "Nostr container must explicitly use encrypted Kind 4 envelope.");
+        
+        let processed_ciphertext = built_event.content;
+        
+        assert!(!processed_ciphertext.contains(secret_millet_type), 
+            "CRITICAL SECURITY FAILURE: Local raw plaintext health indicators leaked directly into network transport strings.");
+            
+        assert!(processed_ciphertext.starts_with("QUVTMjU2R0NN"), 
+            "Cryptographic packaging failure: Output string must be encapsulated as safe base64-encoded ciphertext.");
+    }
+}
