@@ -17,3 +17,20 @@ variables:
   SECRET_DETECTION_ENABLED: 'true'
 secret_detection:
   stage: secret-detection
+
+  stages:
+  - deploy
+
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - mkdir .public
+    - cp -r public/* .public/
+    - mv .public public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+
