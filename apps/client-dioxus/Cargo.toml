@@ -1,0 +1,20 @@
+[package]
+name = "soma_ui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Core Dioxus framework for multiplatform UI
+dioxus = { version = "0.5", features = ["macro", "router"] }
+dioxus-web = { version = "0.5", optional = true }
+dioxus-desktop = { version = "0.5", optional = true } # Supports iOS/Android webview loops
+
+# Cryptography and Privacy
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[features]
+default = ["web"]
+web = ["dioxus-web"]
+mobile = ["dioxus-desktop"]
