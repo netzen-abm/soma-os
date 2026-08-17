@@ -34,3 +34,41 @@ pages:
   only:
     - main
 
+
+stages:
+  - lint
+  - test
+  - deploy
+
+variables:
+  CARGO_TERM_COLOR: always
+
+backend-lint:
+  stage: lint
+  image: rust:1.75-slim
+  script:
+    - apt-get update && apt-get install -y pkg-config libssl-dev build-essential
+    - cd services/backend-rust
+    - cargo clippy -- -D warnings
+
+backend-test-suite:
+  stage: test
+  image: rust:1.75-slim
+  script:
+    - apt-get update && apt-get install -y pkg-config libssl-dev build-essential
+    - cd services/backend-rust
+    - cargo test --verbose
+
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - mkdir -p .public
+    - cp -r public/* .public/
+    - mv .public public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+
