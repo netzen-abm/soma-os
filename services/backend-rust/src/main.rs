@@ -78,3 +78,106 @@ async fn main() {
     println!("SomaOS Secure Gateway online on port 8080. Awaiting multi-channel connections...");
     axum::serve(listener, app).await.unwrap();
 }
+
+use axum::{
+    routing::{post, get},
+    Json, Router, http::StatusCode, extract::Query,
+}
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+// Capture incoming token authentication validation parameters from the Meta verification handshake
+#[derive(Deserialize, Debug)]
+struct WhatsAppVerificationParams {
+    #[serde(rename = "hub.mode")]
+    mode: String,
+    #[serde(rename = "hub.verify_token")]
+    verify_token: String,
+    #[serde(rename = "hub.challenge")]
+    challenge: String,
+}
+
+// Map the minimum required incoming WhatsApp messaging structural schema JSON elements
+#[derive(Deserialize, Debug)]
+struct WhatsAppWebhookPayload {
+    object: String,
+    entry: Vec<WhatsAppEntry>,
+}
+
+#[derive(Deserialize, Debug)]
+struct WhatsAppEntry {
+    changes: Vec<WhatsAppChange>,
+}
+
+#[derive(Deserialize, Debug)]
+struct WhatsAppChange {
+    value: WhatsAppValue,
+    field: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct WhatsAppValue {
+    messages: Option<Vec<WhatsAppMessage>>,
+}
+
+#[derive(Deserialize, Debug)]
+struct WhatsAppMessage {
+    from: String, // Explicit sender identifier tracking phone number string
+    id: String,
+    text: Option<WhatsAppTextBody>,
+}
+
+#[derive(Deserialize, Debug)]
+struct WhatsAppTextBody {
+    body: String,
+}
+
+const META_VERIFY_TOKEN: &str = "SOMAOS_CORE_SECURE_TOKEN_STRING_556621";
+
+// Handle authentication challenge verification from Meta developer dashboards
+async fn verify_whatsapp_webhook(
+    Query(params): Query<WhatsAppVerificationParams>,
+) -> (StatusCode, String) {
+    if params.mode == "subscribe" && params.verify_token == META_VERIFY_TOKEN {
+        println!("Meta Handshake Signature verified successfully.");
+        (StatusCode::OK, params.challenge)
+    } else {
+        (StatusCode::FORBIDDEN, "Token Mismatch Failure".to_string())
+    }
+}
+
+// Receive incoming user chat interaction payload text strings
+async fn inbound_whatsapp_message_router(
+    Json(payload): Json<WhatsAppWebhookPayload>,
+) -> StatusCode {
+    if payload.object == "whatsapp_business_account" {
+        for entry in payload.entry {
+            for change in entry.changes {
+                if change.field == "messages" {
+                    if let Some(messages) = change.value.messages {
+                        for message in messages {
+                            let sender_phone = message.from;
+                            let text_content = message.text.map(|t| t.body).unwrap_or_default();
+                            
+                            println!("Inbound raw WhatsApp message from user endpoint [{}]: {}", sender_phone, text_content);
+                            
+                            // Execution routing path hooks into onboarding logic engines safely here
+                            // Let response_string = onboarding_engine.process_message(&sender_phone, Some(&text_content));
+                        }
+                    }
+                }
+            }
+        }
+        StatusCode::OK
+    } else {
+        StatusCode::BAD_REQUEST
+    }
+}
+
+// Inject additional routing profiles cleanly into the core system matrix setup pipeline
+pub fn inject_whatsapp_routes(router: Router) -> Router {
+    router
+        .route("/api/v1/whatsapp", get(verify_whatsapp_webhook))
+        .route("/api/v1/whatsapp", post(inbound_whatsapp_message_router))
+}
+
