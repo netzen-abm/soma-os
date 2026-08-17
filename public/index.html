@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SomaOS | Sovereign Digital Health Command Center</title>
+    <style>
+        :root { --bg: #0B132B; --surface: #1C2541; --primary: #5BC0BE; --accent: #6FFFE9; --text: #FFFFFF; --text-muted: #A5A1AA; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); margin:0; padding:0; line-height: 1.6; }
+        .hero { max-width: 800px; margin: 0 auto; padding: 80px 24px; text-align: center; }
+        h1 { font-size: 3.5rem; font-weight: 800; letter-spacing: -0.05em; margin: 0 0 16px 0; background: linear-gradient(to right, #FFFFFF, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 1.25rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px auto; }
+        .cta-group { display: flex; gap: 16px; justify-content: center; margin-bottom: 60px; }
+        .btn { padding: 14px 28px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 1rem; transition: all 0.2s ease; }
+        .btn-primary { background-color: var(--primary); color: var(--bg); }
+        .btn-primary:hover { background-color: var(--accent); }
+        .btn-secondary { border: 1px solid var(--surface); color: var(--text); background: rgba(255,255,255,0.02); }
+        .btn-secondary:hover { background: var(--surface); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; padding: 0 24px 80px 24px; }
+        .card { background: var(--surface); padding: 32px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .card h3 { margin: 0 0 12px 0; font-size: 1.25rem; color: var(--accent); }
+        .card p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <section class="hero">
+        <h1>Sovereign Preventive Medicine</h1>
+        <p class="subtitle">A privacy-by-default longevity network bridging ancient botanicals with zero-knowledge biometric tracking. Accessible via Telegram, WhatsApp, and Web3 nodes.</p>
+        <div class="cta-group">
+            <a href="https://t.me" class="btn btn-primary">Launch Telegram Interface</a>
+            <a href="#architecture" class="btn btn-secondary">Explore Technical Specs</a>
+        </div>
+    </section>
+
+    <section class="grid" id="architecture">
+        <div class="card">
+            <h3>⚡ Low-Friction Entry</h3>
+            <p>Access your health command center securely through customized Telegram Mini-Apps, WhatsApp channels, and standard web interfaces without complex downloads.</p>
+        </div>
+        <div class="card">
+            <h3>🔒 Metadata Blinding</h3>
+            <p>Your network traffic routing signatures are scrubbed and anonymized via the Nym Mixnet framework to protect clinical inquiries from tracking.</p>
+        </div>
+        <div class="card">
+            <h3>📂 Non-Custodial Data</h3>
+            <p>Your health metrics align cleanly with open-source Salud Protocol schemas, putting ownership of your biological records entirely back in your hands.</p>
+        </div>
+    </section>
+
+</body>
+</html>
