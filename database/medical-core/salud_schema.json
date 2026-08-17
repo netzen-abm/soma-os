@@ -1,0 +1,34 @@
+{
+  "$schema": "https://saludprotocol.org",
+  "protocol_id": "soma-os-preventive-001",
+  "metadata": {
+    "privacy_level": "zero_knowledge_required",
+    "traditional_system": "Ayurveda_Integrated"
+  },
+  "biomarker_mapping": {
+    "heart_rate_variability": {
+      "metric_source": "Wearable_IoT_Stream",
+      "optimal_threshold": "> 60ms",
+      "critical_low_action": "trigger_nervous_system_down_regulation"
+    },
+    "cortisol_surrogate": {
+      "metric_source": "Salivary_Or_Calculated_HRV_Drop",
+      "optimal_threshold": "Low_Variability_Window"
+    }
+  },
+  "preventive_interventions": [
+    {
+      "condition_marker": "High_Inflammation_HRV_Drop",
+      "botanical_formula": {
+        "sanskrit_name": "Ashwagandha",
+        "botanical_name": "Withania somnifera",
+        "clinical_notes": "Studied for impact on stress management and anti-inflammatory pathways",
+        "contraindications": [
+          "Hyperthyroidism",
+          "Acute_Immunosuppression_Therapy"
+        ]
+      },
+      "modern_clinical_action": "Suppresses NF-kB and downregulates pro-inflammatory cytokines"
+    }
+  ]
+}
