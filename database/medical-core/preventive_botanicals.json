@@ -59,3 +59,83 @@
     }
   ]
 }
+
+{
+  "database_version": "1.1.0",
+  "system_identifier": "SomaOS_Integrated_Sovereign_Knowledge_Base",
+  "botanicals": [
+    {
+      "common_name": "Ashwagandha",
+      "sanskrit_name": "Aswagandha (अश्वगंधा)",
+      "botanical_classification": "Withania somnifera",
+      "primary_bioactive_compounds": ["Withanolides", "Sitoindosides"],
+      "clinical_pharmacology": "Downregulates hypothalamic-pituitary-adrenal (HPA) axis activity, lowering circulatory systemic cortisol levels.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Immunosuppressants",
+          "example_drugs": ["Cyclosporine", "Prednisone"],
+          "risk_severity": "HIGH",
+          "physiological_mechanism": "Ashwagandha exhibits immunostimulant properties, directly counteracting intended pharmaceutical immunosuppression mechanics.",
+          "counter_action_protocol": "Flag instantly; prevent simultaneous co-administration pathways entirely."
+        },
+        {
+          "pharmaceutical_class": "Sedatives / Benzodiazepines",
+          "example_drugs": ["Alprazolam", "Diazepam"],
+          "risk_severity": "MEDIUM",
+          "physiological_mechanism": "Potentiates GABAergic pathways, leading to excessive central nervous system sedation profiles.",
+          "counter_action_protocol": "Issue alert notifying patient to stagger usage schedules by a minimum 8-hour buffer window."
+        }
+      ],
+      "siridhanya_protocols": {
+        "target_condition": "Nervous Problems / Stress / Autism",
+        "millet_cycle": "Foxtail Millet: 3 days, Browntop Millet: 3 days, Little Millet: 1 day, Kodo Millet: 1 day, Barnyard Millet: 1 day",
+        "administration_form": "Ambali (Fermented Porridge) for 5 to 6 weeks minimum",
+        "kashaya_leaves": ["Bermuda Grass", "Guava Leaves", "Night Jasmine Leaves", "Common Rue Leaves"]
+      }
+    },
+    {
+      "common_name": "Turmeric",
+      "sanskrit_name": "Haridra (हरिद्रा)",
+      "botanical_classification": "Curcuma longa",
+      "primary_bioactive_compounds": ["Curcuminoids", "Turmerone"],
+      "clinical_pharmacology": "Inhibits cyclooxygenase-2 (COX-2) expression configurations, suppressing systemic inflammatory prostaglandin synthesis tracking.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Anticoagulants / Antiplatelets",
+          "example_drugs": ["Warfarin", "Aspirin", "Clopidogrel"],
+          "risk_severity": "CRITICAL",
+          "physiological_mechanism": "Exhibits anti-aggregatory activity on platelets, exponentially boosting internal bleeding event liabilities.",
+          "counter_action_protocol": "Halt automated recommendation pipelines immediately if matching active prescription status logs."
+        }
+      ],
+      "siridhanya_protocols": {
+        "target_condition": "Inflammation / Cold / Fever / Cough",
+        "millet_cycle": "Each positive millet variety taken for 2 days in a continuous cyclic loop",
+        "administration_form": "Sip kashaya warm; consume millets as unpolished stable food grains",
+        "kashaya_leaves": ["Holy Basil (Tulsi)", "Ginger", "Black Pepper", "Cinnamon"]
+      }
+    },
+    {
+      "common_name": "Giloy",
+      "sanskrit_name": "Guduchi / Amrita (गिलोय)",
+      "botanical_classification": "Tinospora cordifolia",
+      "primary_bioactive_compounds": ["Tinosporaside", "Cordifolioside A"],
+      "clinical_pharmacology": "Enhances the phagocytic activity of macrophages and purifies components of the blood vascular system.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Antidiabetics",
+          "example_drugs": ["Metformin", "Glimepiride", "Insulin"],
+          "risk_severity": "MEDIUM",
+          "physiological_mechanism": "Synergistically amplifies hypoglycemic effects, threatening a severe drop in blood sugar thresholds.",
+          "counter_action_protocol": "Recommend close continuous blood glucose monitoring cadence updates via consumer wear-tech integration."
+        }
+      ],
+      "siridhanya_protocols": {
+        "target_condition": "Fever / Dengue / Low Platelets / Immune Resistance",
+        "millet_cycle": "Little Millet: 2 days, Kodo Millet: 2 days, Barnyard Millet: 1 day, Foxtail Millet: 1 day, Browntop Millet: 1 day",
+        "administration_form": "Ambali or warm kashaya decoction decoctions on empty stomach morning and evening",
+        "kashaya_leaves": ["Giloy Leaves", "Papaya Leaves", "Neem Leaves", "Holy Basil"]
+      }
+    }
+  ]
+}
