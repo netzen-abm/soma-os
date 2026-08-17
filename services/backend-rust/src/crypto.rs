@@ -113,3 +113,34 @@ mod tests {
     }
 }
 
+#[cfg(test)]
+mod botanical_tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+
+    #[test]
+    fn test_botanical_search_and_safety_interception() {
+        // Path configuration setups
+        let test_db_path = "database/medical-core/preventive_botanicals.json";
+        
+        // Scenario A: High Risk Conflict - User has fever, queries Giloy, but takes Metformin
+        let user_query = "Can I take Giloy leaves for my fever?";
+        let current_prescriptions = vec!["Metformin".to_string()];
+
+        let search_result = BotanicalSearchEngine::search_and_intercept(
+            test_db_path,
+            user_query,
+            &current_prescriptions
+        ).unwrap();
+
+        assert!(search_result.is_some(), "Search engine failed to parse condition keyword matrix components.");
+        let report = search_result.unwrap();
+        
+        assert!(report.botanical_found.contains("Giloy"));
+        assert!(report.safety_alert.is_some(), "System missed critical Metformin cross-interference flag.");
+        assert_eq!(report.safety_alert.unwrap().risk_severity, "MEDIUM");
+        assert!(report.structured_protocol.kashaya_leaves.contains(&"Giloy Leaves".to_string()));
+    }
+}
+
