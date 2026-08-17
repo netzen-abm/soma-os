@@ -68,3 +68,48 @@ impl SovereignCryptoEngine {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_anonymized_user_hash_generation() {
+        let user_id_1 = "telegram_user_998877";
+        let user_id_2 = "telegram_user_998877";
+        let user_id_3 = "whatsapp_user_112233";
+
+        let hash_1 = SovereignCryptoEngine::generate_anonymized_user_hash(user_id_1);
+        let hash_2 = SovereignCryptoEngine::generate_anonymized_user_hash(user_id_2);
+        let hash_3 = SovereignCryptoEngine::generate_anonymized_user_hash(user_id_3);
+
+        // Verification matches standard SHA-256 properties
+        assert_eq!(hash_1, hash_2, "Deterministic inputs must output identical hashes.");
+        assert_ne!(hash_1, hash_3, "Distinct inputs must generate unique hash signatures.");
+        assert_eq!(hash_1.len(), 64, "SHA-256 hex output string length must be exactly 64 characters.");
+    }
+
+    #[test]
+    fn test_local_health_milestone_signature_generation() {
+        let dummy_user = "user_biometric_node_01";
+        let score = 92;
+        let schema_version = "v1.0.0-salud";
+
+        let proof_result = SovereignCryptoEngine::sign_health_milestone(dummy_user, score, schema_version);
+        
+        // Assert successful zero-knowledge payload container construction
+        assert!(proof_result.is_ok(), "Crypto Engine failed to sign health payload attributes.");
+        
+        let package = proof_result.unwrap();
+        
+        // Assert structural integrity of generated public keys and proofs
+        assert!(!package.public_verification_key_hex.is_empty(), "Public key field is empty.");
+        assert!(!package.signature_proof_hex.is_empty(), "Cryptographic signature proof field is empty.");
+        
+        // Validate internal unexposed payload metrics match source inputs
+        assert_eq!(package.raw_payload.verified_vitality_score, 92);
+        assert_eq!(package.raw_payload.salud_schema_version, "v1.0.0-salud");
+        assert!(package.raw_payload.timestamp_epoch > 0, "Timestamp execution window error.");
+    }
+}
+
