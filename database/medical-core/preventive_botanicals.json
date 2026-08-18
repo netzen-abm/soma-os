@@ -203,3 +203,62 @@
   ]
 }
 
+
+{
+  "database_version": "1.3.0",
+  "system_identifier": "SomaOS_Global_Multi_Source_Knowledge_Engine",
+  "botanicals": [
+    {
+      "common_name": "Unpolished Millets & Kashayas",
+      "sanskrit_name": "Siridhanya (सिरीधान्य)",
+      "botanical_classification": "Gramineae / Panicoideae",
+      "primary_bioactive_compounds": ["Lignans", "Phytic Acid", "Plant Sterols"],
+      "clinical_pharmacology": "High-fiber dietary framework that balances metabolic functions, decreases cellular inflammation, and helps restore healthy gut microbiota populations through fermentation.",
+      "drug_interaction_pairings": [],
+      "siridhanya_protocols": {
+        "target_condition": "Cancer / Tumor / Osteosarcoma",
+        "millet_cycle": "Little Millet (Kutki): 2 days, Kodo Millet (Varagu): 2 days, Barnyard Millet (Sanwa): 2 days, Foxtail Millet (Kakum): 2 days, Browntop Millet (Korale): 2 days",
+        "administration_form": "Consume primarily as fermented Ambali porridge prepared in structured 6-to-8 hour incubation windows.",
+        "kashaya_leaves": ["Nyctanthes arbor-tristis (Parijata)", "Tinospora cordifolia (Giloy)", "Carica papaya (Papaya Leaf)"]
+      },
+      "precision_oncology_tracks": {
+        "framework_source": "Sid Sijbrandij Founder Mode Cancer Protocol",
+        "open_data_repository_url": "https://amazonaws.com",
+        "diagnostic_modalities": [
+          "Whole Genome Sequencing (WGS at 130x coverage)",
+          "Single-Cell RNA Sequencing (scRNA-seq mapping T-cell infiltration updates)"
+        ],
+        "computational_workflows": [
+          "Variant calling via Sarek 3.5.1 pipelines (Mutect2, Strelka, Manta)",
+          "Neoantigen prediction utilizing pVACseq and MHCflurry analytics"
+        ],
+        "parallel_execution_targets": [
+          "Custom therapeutic peptide vaccine formulations derived from host mutations",
+          "Fibroblast Activation Protein (FAP) targeted radioligand treatments"
+        ]
+      },
+      "ayush_ministry_research": {
+        "regulatory_framework": "CCRAS / Ministry of AYUSH Guidelines",
+        "clinical_evidence_index": "AYUSH-DHARA-2024-CANCER-SUPPORT",
+        "monographed_efficacy": "Adjuvant botanical formulations demonstrate reduction in chemotherapy-induced myelosuppression and toxic side-effect markers while upregulating antioxidant profiles.",
+        "validated_therapies": ["Guduchi Ghana Vati", "Amalaki Rasayana", "Ashwagandha Churna"]
+      },
+      "sovereign_ebook_vectors": {
+        "source_catalog": "Biswaroop Roy Chowdhury Free E-Book Library Integration",
+        "indexed_texts": [
+          "Diabetes Type 1 & 2 Cure in 72 Hours via DIP Diet Protocols",
+          "Heart Mafia & Healthcare Truths Uncovered Manual"
+        ],
+        "core_dietary_logic": "Shifts body fluid chemistry into optimal alkaline balancing fields by consuming a strict raw fruit regimen until 12:00 PM followed by equal combinations of raw vegetables and unpolished whole food grains for lunch and dinner lines."
+      },
+      "august_ai_emulation_logic": {
+        "clinical_jargon_decoding": "Maps elevated serum alkaline phosphatase (ALP) and osteolytic lesion text strings straight into digestible terms (bone tissue breakdown indicators).",
+        "symptom_escalation_protocol": {
+          "emergency_markers": ["Unresolved deep nocturnal bone pain", "Unexplained localized skeletal swelling accompanied by sudden low-impact structural fractures"],
+          "escalation_action": "TRIGGER_IMMEDIATE_EMERGENCY_ONCOLOGY_PANEL_ALERT"
+        }
+      }
+    }
+  ]
+}
+
