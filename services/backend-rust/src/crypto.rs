@@ -259,6 +259,35 @@ mod scheduler_and_file_tests {
     }
 }
 
+// File Path: services/backend-rust/src/crypto.rs (Appended Testing Segment)
+
+#[cfg(test)]
+mod restoration_tests {
+    use super::*;
+    use crate::key_restoration::CryptographicRestorationEngine;
+
+    @test
+    fn test_deterministic_identity_reconstruction_parity() {
+        let valid_test_phrase = "ashwagandha kashaya ambali millets salud sovereign privacy zero knowledge mesh nostr nym";
+        let broken_test_phrase = "ashwagandha kashaya ambali millets salud sovereign privacy zero knowledge mesh nostr short";
+
+        // 1. Execute recovery tracking on first instance passes
+        let execution_1 = CryptographicRestorationEngine::rebuild_keys_from_mnemonic(valid_test_phrase);
+        assert!(execution_1.is_ok(), "Key Restoration Engine threw unexpected error processing valid phrase vector.");
+        
+        let cluster_1 = execution_1.unwrap();
+
+        // 2. Execute parallel reconstruction check (Must output identical keys for multi-device sync parity)
+        let execution_2 = CryptographicRestorationEngine::rebuild_keys_from_mnemonic(valid_test_phrase).unwrap();
+        assert_eq!(cluster_1.anonymized_user_hash, execution_2.anonymized_user_hash);
+        assert_eq!(cluster_1.public_verification_key_hex, execution_2.public_verification_key_hex);
+        assert_eq!(cluster_1.nostr_x_only_pubkey_hex, execution_2.nostr_x_only_pubkey_hex);
+
+        // 3. Confirm structural boundaries reject inputs that are too short or invalid
+        let execution_fault = CryptographicRestorationEngine::rebuild_keys_from_mnemonic(broken_test_phrase);
+        assert!(execution_fault.is_err(), "Restoration engine failed to intercept a broken mnemonic length footprint.");
+    }
+}
 
 
 
