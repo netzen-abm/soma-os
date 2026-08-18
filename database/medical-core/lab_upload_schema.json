@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org",
+  "title": "SomaOS_Local_OCR_Vision_Upload_Configuration",
+  "description": "Defines rules for edge-computed computer vision analysis of clinical documents inside device memory loops.",
+  "type": "object",
+  "properties": {
+    "upload_constraints": {
+      "type": "object",
+      "properties": {
+        "supported_mime_types": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["application/pdf", "image/jpeg", "image/png"] }
+        },
+        "max_file_size_bytes": { "type": "integer", "default": 10485760 }
+      },
+      "required": ["supported_mime_types", "max_file_size_bytes"]
+    },
+    "local_computer_vision_parameters": {
+      "type": "object",
+      "properties": {
+        "target_ocr_engine": { "type": "string", "enum": ["Tesseract_WASM_Native", "Apple_Vision_Kit", "Android_ML_Kit"] },
+        "preprocess_grayscale": { "type": "boolean", "default": true },
+        "deskew_image_matrix": { "type": "boolean", "default": true }
+      },
+      "required": ["target_ocr_engine", "preprocess_grayscale", "deskew_image_matrix"]
+    },
+    "biomarker_extraction_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target_biomarker_string": { "type": "string" },
+          "standard_unit_mapping": { "type": "string" },
+          "regex_parsing_capture_pattern": { "type": "string" }
+        },
+        "required": ["target_biomarker_string", "regex_parsing_capture_pattern"]
+      }
+    }
+  },
+  "required": ["upload_constraints", "local_computer_vision_parameters", "biomarker_extraction_targets"]
+}
