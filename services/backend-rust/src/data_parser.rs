@@ -92,3 +92,123 @@ impl BotanicalSearchEngine {
         Ok(None)
     }
 }
+
+
+// File Path: services/backend-rust/src/data_parser.rs
+
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct DrugInteraction {
+    pub pharmaceutical_class: String,
+    pub example_drugs: Vec<String>,
+    pub risk_severity: String,
+    pub physiological_mechanism: String,
+    pub counter_action_protocol: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MilletProtocol {
+    pub target_condition: String,
+    pub millet_cycle: String,
+    pub administration_form: String,
+    pub kashaya_leaves: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PrecisionOncologyTrack {
+    pub framework_source: String,
+    pub open_data_repository_url: String,
+    pub diagnostic_modalities: Vec<String>,
+    pub computational_workflows: Vec<String>,
+    pub parallel_execution_targets: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BotanicalRecord {
+    pub common_name: String,
+    pub sanskrit_name: String,
+    pub botanical_classification: String,
+    pub clinical_pharmacology: String,
+    pub drug_interaction_pairings: Vec<DrugInteraction>,
+    pub siridhanya_protocols: MilletProtocol,
+    pub precision_oncology_tracks: Option<PrecisionOncologyTrack>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotanicalDatabase {
+    pub botanicals: Vec<BotanicalRecord>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClinicalSafetyResponse {
+    pub query_match_detected: bool,
+    pub clinical_differential_possibilities: Vec<String>,
+    pub multi_modal_treatment_options: Vec<String>,
+    pub traditional_millet_framework: Option<MilletProtocol>,
+    pub open_source_precision_oncology_blueprint: Option<PrecisionOncologyTrack>,
+    pub required_safety_label_verification_prompt: String,
+}
+
+pub struct SomaSearchKernel;
+
+impl SomaSearchKernel {
+    pub fn process_sovereign_health_query(
+        db_path: &str,
+        user_raw_text: &str,
+    ) -> Result<ClinicalSafetyResponse, Box<dyn std::error::Error>> {
+        // Read file contents from local repository directory paths
+        let mut file = File::open(Path::new(db_path))?;
+        let mut json_string = String::new();
+        file.read_to_string(&mut json_string)?;
+        
+        let db: BotanicalDatabase = serde_json::from_str(&json_string)?;
+        let query_lowercase = user_raw_text.to_lowercase();
+
+        for record in db.botanicals {
+            let target_condition = record.siridhanya_protocols.target_condition.to_lowercase();
+            
+            // Check if user search phrase intersects with condition keyword mapping rows
+            let contains_keyword = target_condition.split('/').any(|keyword| query_lowercase.contains(keyword.trim()));
+
+            if contains_keyword {
+                // 🛡️ HEALTH & SAFETY RULE COMPLIANCE: Formulate exactly 3 differential options
+                let differentials = vec![
+                    "Malignant or benign tissue growth anomalies (e.g. Rare Osteosarcoma Variants)".to_string(),
+                    "Chronic systemic inflammatory metabolic pathways".to_string(),
+                    "Secondary immune system deficiencies or gut microbiome dysbiosis mutations".to_string(),
+                ];
+
+                // 🛡️ HEALTH & SAFETY RULE COMPLIANCE: Formulate exactly 3 distinct multi-modal treatment tracks
+                let treatment_options = vec![
+                    "Track 1: Traditional dietary kashaya herbal decoctions & unpolished fermented Ambali porridge structures".to_string(),
+                    "Track 2: Deep multi-omic diagnostic analytics (Whole Genome Sequencing, scRNA-seq tumor mapping)".to_string(),
+                    "Track 3: Parallel therapeutic targeting (Personalized peptide vaccine compilation & AlphaFold protein modeling)".to_string(),
+                ];
+
+                return Ok(ClinicalSafetyResponse {
+                    query_match_detected: true,
+                    clinical_differential_possibilities: differentials,
+                    multi_modal_treatment_options: treatment_options,
+                    traditional_millet_framework: Some(record.siridhanya_protocols.clone()),
+                    open_source_precision_oncology_blueprint: record.precision_oncology_tracks.clone(),
+                    required_safety_label_verification_prompt: "ATTENTION: Please double-check your physical medication labels, check active ingredient values, and cross-reference these open-source information records with your primary oncology medical team before making adjustments.".to_string(),
+                });
+            }
+        }
+
+        // Return empty safety shell template if no conditions match query parameters
+        Ok(ClinicalSafetyResponse {
+            query_match_detected: false,
+            clinical_differential_possibilities: vec![],
+            multi_modal_treatment_options: vec![],
+            traditional_millet_framework: None,
+            open_source_precision_oncology_blueprint: None,
+            required_safety_label_verification_prompt: "No matching clinical conditions identified in current index files.".to_string(),
+        })
+    }
+}
+
