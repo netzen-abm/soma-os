@@ -1,26 +1,64 @@
+# File Path: ./docker-compose.yml
 version: '3.8'
 
 services:
-  gateway:
-    build: .
-    ports:
-      - "8080:8080"
+  somaos-db:
+    image: postgres:15-alpine
+    container_name: somaos_postgres_node
     environment:
-      - RUST_LOG=info
+      POSTGRES_USER: somaos_vault_admin
+      POSTGRES_PASSWORD: secret_zk_infrastructure_password_9988
+      POSTGRES_DB: somaos_vitals_persistence
+    volumes:
+      - postgres_sovereign_data:/var/lib/postgresql/data
+    expose:
+      - "5432" # Exposes database port ONLY inside the internal bridge network layer
     restart: unless-stopped
     networks:
-      - somaos-mesh
+      - somaos-isolated-mesh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U somaos_vault_admin -d somaos_vitals_persistence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  static-brochure:
-    image: nginx:alpine
+  somaos-kernel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: somaos_runtime_server
     ports:
-      - "80:80"
+      - "8080:8080" # Maps outer gateway routing ports to handle Telegram/WhatsApp webhooks
+    environment:
+      - DATABASE_URL=postgres://somaos_vault_admin:secret_zk_infrastructure_password_9988@somaos-db:5432/somaos_vitals_persistence
+      - RUST_LOG=info
+      - META_WHATSAPP_TOKEN=your_meta_token_here
+      - META_PHONE_ID=your_phone_id_here
+    restart: unless-stopped
+    depends_on:
+      somaos-db:
+        condition: service_healthy
+    networks:
+      - somaos-isolated-mesh
+
+  showcase-brochure:
+    image: nginx:alpine
+    container_name: somaos_nginx_brochure
+    ports:
+      - "80:80" # Public facing digital brochure routing entry portal
     volumes:
       - ./public:/usr/share/nginx/html:ro
     restart: unless-stopped
     networks:
-      - somaos-mesh
+      - somaos-isolated-mesh
+
+volumes:
+  postgres_sovereign_data:
+    driver: local
 
 networks:
-  somaos-mesh:
+  somaos-isolated-mesh:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16 # Custom sub-network containment mapping layout
