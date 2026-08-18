@@ -322,4 +322,30 @@ mod specialized_oncology_tests {
 }
 
 
+// File Path: services/backend-rust/src/crypto.rs (Appended Legal Test Segment)
+
+#[cfg(test)]
+mod legal_compliance_tests {
+    use super::*;
+    use crate::compliance_shield::SovereignComplianceShield;
+
+    #[test]
+    fn test_regulatory_shield_interception_behavior() {
+        // Scenario A: An outbound message containing an illegal absolute cure claim (Must be blocked)
+        let unsafe_message = "This traditional botanical extract will completely cure cancer within 72 hours.";
+        let verification_report = SovereignComplianceShield::enforce_regulatory_compliance_checks(unsafe_message);
+        
+        assert!(!verification_report.is_permissible_for_delivery, 
+            "Sovereign Compliance Shield failed to catch an absolute claim violating the Magic Remedies Act of 1954.");
+        assert!(verification_report.security_compliance_flags.contains(&"VIOLATION_INDICATOR::DRUGS_AND_MAGIC_REMEDIES_ACT_1954".to_string()));
+
+        // Scenario B: A compliant, educational information message (Must be approved)
+        let safe_educational_message = "Dr. Khadar Vali's protocols outline unpolished millet cycles as supportive dietary nutrition frameworks.";
+        let safety_report = SovereignComplianceShield::enforce_regulatory_compliance_checks(safe_educational_message);
+        
+        assert!(safety_report.is_permissible_for_delivery, "Compliance Shield threw an incorrect rejection error on safe educational material.");
+        assert!(safety_report.appended_regulatory_disclaimer.contains("NMC guidelines"));
+    }
+}
+
 
