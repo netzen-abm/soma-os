@@ -139,3 +139,67 @@
     }
   ]
 }
+
+{
+  "database_version": "1.2.0",
+  "system_identifier": "SomaOS_Integrated_Sovereign_Knowledge_Base",
+  "botanicals": [
+    {
+      "common_name": "Ashwagandha",
+      "sanskrit_name": "Aswagandha (अश्वगंधा)",
+      "botanical_classification": "Withania somnifera",
+      "primary_bioactive_compounds": ["Withanolides", "Sitoindosides"],
+      "clinical_pharmacology": "Downregulates hypothalamic-pituitary-adrenal (HPA) axis activity, lowering circulatory systemic cortisol levels.",
+      "drug_interaction_pairings": [
+        {
+          "pharmaceutical_class": "Immunosuppressants",
+          "example_drugs": ["Cyclosporine", "Prednisone"],
+          "risk_severity": "HIGH",
+          "physiological_mechanism": "Ashwagandha exhibits immunostimulant properties, directly counteracting intended pharmaceutical immunosuppression mechanics.",
+          "counter_action_protocol": "Flag instantly; prevent simultaneous co-administration pathways entirely."
+        }
+      ],
+      "siridhanya_protocols": {
+        "target_condition": "Nervous Problems / Stress / Autism",
+        "millet_cycle": "Foxtail Millet: 3 days, Browntop Millet: 3 days, Little Millet: 1 day, Kodo Millet: 1 day, Barnyard Millet: 1 day",
+        "administration_form": "Ambali (Fermented Porridge) for 5 to 6 weeks minimum",
+        "kashaya_leaves": ["Bermuda Grass", "Guava Leaves", "Night Jasmine Leaves"]
+      },
+      "precision_oncology_tracks": null
+    },
+    {
+      "common_name": "Unpolished Millets & Kashayas",
+      "sanskrit_name": "Siridhanya (सिरीधान्य)",
+      "botanical_classification": "Gramineae / Panicoideae",
+      "primary_bioactive_compounds": ["Lignans", "Phytic Acid", "Plant Sterols"],
+      "clinical_pharmacology": "High-fiber dietary framework that balances metabolic functions, decreases cellular inflammation, and helps restore healthy gut microbiota populations through fermentation.",
+      "drug_interaction_pairings": [],
+      "siridhanya_protocols": {
+        "target_condition": "Cancer / Tumor / Osteosarcoma",
+        "millet_cycle": "Little Millet (Kutki): 2 days, Kodo Millet (Varagu): 2 days, Barnyard Millet (Sanwa): 2 days, Foxtail Millet (Kakum): 2 days, Browntop Millet (Korale): 2 days",
+        "administration_form": "Consume primarily as fermented Ambali porridge prepared in structured 6-to-8 hour incubation windows.",
+        "kashaya_leaves": ["Nyctanthes arbor-tristis (Parijata)", "Tinospora cordifolia (Giloy)", "Carica papaya (Papaya Leaf)", "Azadirachta indica (Neem)"]
+      },
+      "precision_oncology_tracks": {
+        "framework_source": "Sid Sijbrandij Founder Mode Cancer Protocol",
+        "open_data_repository_url": "https://amazonaws.com",
+        "diagnostic_modalities": [
+          "Whole Genome Sequencing (WGS at 130x coverage)",
+          "Single-Cell RNA Sequencing (scRNA-seq mapping T-cell infiltration updates from 19% to 89%)",
+          "Spatial Transcriptomics (10x Xenium In Situ panel mapping 428 target genes)"
+        ],
+        "computational_workflows": [
+          "Variant calling via Sarek 3.5.1 pipelines (Mutect2, Strelka, Manta)",
+          "Neoantigen prediction utilizing pVACseq and MHCflurry analytics",
+          "Structure-based validation of peptide-MHC complexes utilizing AlphaFold Multimer on cloud GPU architectures"
+        ],
+        "parallel_execution_targets": [
+          "Custom therapeutic peptide vaccine formulations derived from host mutations",
+          "Fibroblast Activation Protein (FAP) targeted radioligand treatments",
+          "Checkpoint inhibitor therapies paired with tailored tissue organoid tracking assays"
+        ]
+      }
+    }
+  ]
+}
+
