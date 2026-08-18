@@ -290,4 +290,36 @@ mod restoration_tests {
 }
 
 
+#[cfg(test)]
+mod specialized_oncology_tests {
+    use super::*;
+    use crate::data_parser::SomaSearchKernel;
+
+    #[test]
+    fn test_integrated_cancer_search_response_compliance() {
+        let db_file_path = "database/medical-core/preventive_botanicals.json";
+        let incoming_search = "I am researching treatments for spinal osteosarcoma tumors";
+
+        let response = SomaSearchKernel::process_sovereign_health_query(db_file_path, incoming_search).unwrap();
+
+        // 1. Verify search system matches data parameters correctly
+        assert!(response.query_match_detected);
+
+        // 2. Verify Health and Safety Rule compliance constraints are satisfied
+        assert_eq!(response.clinical_differential_possibilities.len(), 3, "System must present exactly 3 differential options.");
+        assert_eq!(response.multi_modal_treatment_options.len(), 3, "System must present exactly 3 separate treatment options.");
+        assert!(response.required_safety_label_verification_prompt.contains("physical medication labels"));
+
+        // 3. Verify cross-platform data integration links resolve correctly
+        let oncology_blueprint = response.open_source_precision_oncology_blueprint.unwrap();
+        assert_eq!(oncology_blueprint.framework_source, "Sid Sijbrandij Founder Mode Cancer Protocol");
+        assert!(oncology_blueprint.open_data_repository_url.contains("amazonaws.com"));
+        
+        let millet_plan = response.traditional_millet_framework.unwrap();
+        assert!(millet_plan.millet_cycle.contains("Little Millet"));
+        assert!(millet_plan.kashaya_leaves.contains(&"Tinospora cordifolia (Giloy)".to_string()));
+    }
+}
+
+
 
