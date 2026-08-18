@@ -188,3 +188,43 @@ mod compression_and_token_tests {
     }
 }
 
+
+#[cfg(test)]
+mod hardware_integration_tests {
+    use super::*;
+    use crate::device_sync::LocalDeviceHealthVault;
+    use crate::vault_exporter::VaultHardwareExporter;
+    use crate::vault_importer::VaultHardwareImporter;
+    use std::fs;
+
+    #[test]
+    fn test_end_to_end_local_file_export_and_import_cycle() {
+        let test_dir = "./tmp_test_vaults";
+        fs::create_dir_all(test_dir).unwrap();
+
+        // 1. Initialize our source data model
+        let original_vault = LocalDeviceHealthVault {
+            tracked_millet_porridge_history: vec!["Little Millet Ambali".to_string()],
+            user_logged_conditions: vec!["Autoimmune Inflammation Recovery".to_string()],
+            current_vitality_score: 91,
+        };
+
+        // 2. Export file package securely to physical disk path
+        let target_saved_file = VaultHardwareExporter::export_vault_to_hardware_path(&original_vault, test_dir).unwrap();
+        assert!(Path::new(&target_saved_file).exists(), "Exporter failed to write the .soma data packet file payload to storage channels.");
+
+        // 3. Import and decrypt file package via our new importer logic
+        let reassembled_vault = VaultHardwareImporter::import_vault_from_hardware_path(&target_saved_file).unwrap();
+
+        // 4. Verify total data integrity parity between source and destination
+        assert_eq!(reassembled_vault.current_vitality_score, original_vault.current_vitality_score);
+        assert_eq!(reassembled_vault.tracked_millet_porridge_history[0], original_vault.tracked_millet_porridge_history[0]);
+        assert_eq!(reassembled_vault.user_logged_conditions[0], original_vault.user_logged_conditions[0]);
+
+        // Clean up temporary local testing directory tree structures
+        fs::remove_dir_all(test_dir).unwrap();
+    }
+}
+
+
+
