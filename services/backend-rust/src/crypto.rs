@@ -227,4 +227,38 @@ mod hardware_integration_tests {
 }
 
 
+// File Path: services/backend-rust/src/crypto.rs (Appended Code Block)
+
+#[cfg(test)]
+mod scheduler_and_file_tests {
+    use super::*;
+    use crate::backup_scheduler::{SovereignBackupScheduler, BackupMetadataTrackingLog};
+
+    #[test]
+    fn test_backup_scheduler_alert_window_logic() {
+        let current_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        // Scenario A: User backed up data exactly 2 days ago (Should NOT trigger an alert)
+        let safe_profile = BackupMetadataTrackingLog {
+            anonymized_user_hash: "test_user_hash_1".to_string(),
+            last_successful_backup_epoch_secs: current_time - (2 * 24 * 3600),
+        };
+        let alert_not_needed = SovereignBackupScheduler::evaluate_weekly_backup_alert_requirement(&safe_profile);
+        assert!(!alert_not_needed, "Scheduler triggered an unnecessary warning flag inside a safe timeframe window.");
+
+        // Scenario B: User has not backed up data for 9 days (MUST trigger an alert)
+        let expired_profile = BackupMetadataTrackingLog {
+            anonymized_user_hash: "test_user_hash_2".to_string(),
+            last_successful_backup_epoch_secs: current_time - (9 * 24 * 3600),
+        };
+        let alert_required = SovereignBackupScheduler::evaluate_weekly_backup_alert_requirement(&expired_profile);
+        assert!(alert_required, "Scheduler missed a critical elapsed timeline threshold checkpoint flag.");
+    }
+}
+
+
+
 
