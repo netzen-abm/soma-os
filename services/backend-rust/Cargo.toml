@@ -1,0 +1,47 @@
+[package]
+name = "soma_backend"
+version = "0.1.0"
+edition = "2021"
+authors = ["SomaOS Core Architects"]
+description = "Sovereign Preventive Medicine & Longevity Monorepo Application Core"
+
+[dependencies]
+# 🚀 High-Performance Async Web & Routing Framework
+axum = { version = "0.7.5", features = ["macros"] }
+tokio = { version = "1.38.0", features = ["full"] }
+tower = { version = "0.4.13", features = ["util"] }
+
+# 🗄️ Non-Blocking Async Relational Database Engine
+sqlx = { version = "0.7.4", features = ["runtime-tokio-native-tls", "postgres", "macros", "chrono"] }
+chrono = { version = "0.4.38", features = ["serde"] }
+
+# 🔒 Sovereignty, Cryptography, and Zero-Knowledge Proofs
+ring = "0.17.8"
+sha2 = "0.10.8"
+hex = "0.4.3"
+base64 = "0.22.1"
+secp256k1 = { version = "0.29.0", features = ["global-context", "rand-std"] }
+
+# 🗜️ Performance Optimization and Data Compression
+flate2 = "1.0.30"
+
+# 📱 Native Android/iOS Foreign Language Mobile Wrappers
+uniffi = { version = "0.28.0", features = ["tokio"] }
+thiserror = "1.0.61"
+
+# 📡 Peer-to-Peer Networks and Communication Layer
+tokio-tungstenite = { version = "0.23.1", features = ["native-tls"] }
+futures-util = "0.3.30"
+reqwest = { version = "0.12.5", features = ["json"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.118"
+
+[build-dependencies]
+uniffi = { version = "0.28.0", features = ["build"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
