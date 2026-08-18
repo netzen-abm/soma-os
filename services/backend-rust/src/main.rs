@@ -276,3 +276,108 @@ async fn process_unified_bot_webhook(
     (StatusCode::OK, server_response)
 }
 
+
+// File Path: services/backend-rust/src/main.rs
+
+use axum::{
+    routing::{post, get},
+    Json, Router, http::StatusCode, extract::State,
+};
+use sqlx::postgres::PgPoolOptions;
+use std::sync::Arc;
+use tokio::net::TcpListener;
+
+mod ambali_timer;
+mod meta_outbound;
+mod crypto;
+mod db_layer;
+mod bot_menus;
+mod messenger_webhook;
+mod compliance_shield; // Import your automated legal interceptor module
+
+use ambali_timer::FermentationOrchestrator;
+use meta_outbound::MetaOutboundRunner;
+use bot_menus::MultiChannelMenuController;
+use compliance_shield::SovereignComplianceShield;
+
+struct AppState {
+    pub menu_controller: tokio::sync::Mutex<MultiChannelMenuController>,
+    pub db_manager: db_layer::SomaDatabaseManager,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("🪐 Booting SomaOS Secure Production Kernel Vector...");
+
+    let db_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgres://postgres:password@localhost:5432/somaos".to_string());
+    let wa_token = std::env::var("META_WHATSAPP_TOKEN").unwrap_or_else(|_| "mock_token".to_string());
+    let wa_phone_id = std::env::var("META_PHONE_ID").unwrap_or_else(|_| "mock_id".to_string());
+    let fb_token = std::env::var("META_MESSENGER_TOKEN").unwrap_or_else(|_| "mock_token".to_string());
+
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&db_url)
+        .await?;
+    let db_manager = db_layer::SomaDatabaseManager::new(pool);
+
+    let outbound_runner = MetaOutboundRunner::new(&wa_token, &wa_phone_id, &fb_token);
+    let orchestrator = FermentationOrchestrator::new(outbound_runner);
+    let menu_controller = MultiChannelMenuController::new(orchestrator);
+
+    let shared_state = Arc::new(AppState {
+        menu_controller: tokio::sync::Mutex::new(menu_controller),
+        db_manager,
+    });
+
+    let app = Router::new()
+        .route("/api/health", get(system_health_check))
+        .route("/api/v1/webhook/unified", post(process_unified_bot_webhook))
+        .with_state(shared_state.clone());
+
+    let server_port = "0.0.0.0:8080";
+    let listener = TcpListener::bind(server_port).await?;
+    println!("🚀 Compliance-Enforced SomaOS Gateway online at: http://{}", server_port);
+    
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+async fn system_health_check() -> (StatusCode, &'static str) {
+    (StatusCode::OK, "SomaOS Enforcement Kernel Operational")
+}
+
+#[derive(serde::Deserialize)]
+struct UnifiedChannelMessage {
+    pub channel_source: String,
+    pub sender_id: String,
+    pub text_payload: String,
+}
+
+async fn process_unified_bot_webhook(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<UnifiedChannelMessage>,
+) -> (StatusCode, String) {
+    let mut controller = state.menu_controller.lock().await;
+    
+    // 1. Process user message input via your menu directory tree
+    let raw_bot_response = controller.evaluate_channel_input(&payload.sender_id, &payload.text_payload).await;
+    
+    // 2. ⚖️ INTERCEPT OUTBOUND BOT TRAFFIC VIA COMPLIANCE SHIELD FIREWALL
+    let evaluation = SovereignComplianceShield::enforce_regulatory_compliance_checks(&raw_bot_response);
+    
+    if !evaluation.is_permissible_for_delivery {
+        eprintln!("🚨 [COMPLIANCE BREACH INTERCEPTED]: Outbound message blocked. Violations: {:?}", evaluation.security_compliance_flags);
+        
+        let compliance_override_notice = format!(
+            "⚠️ *System Notification* ⚠️\n\nAn outbound response was halted by local network safety filters to comply with the *Drugs and Magic Remedies Act, 1954* or international privacy regulations.\n\n_Reason: Automated diagnostic claims are barred. Please verify your physical prescription documentation labels with a medical professional._"
+        );
+        return (StatusCode::OK, compliance_override_notice);
+    }
+
+    // 3. Append required Ministry of AYUSH & NMC legal disclaimers smoothly
+    let fully_compliant_delivery_text = format!("{}{}", raw_bot_response, evaluation.appended_regulatory_disclaimer);
+
+    (StatusCode::OK, fully_compliant_delivery_text)
+}
+
+
