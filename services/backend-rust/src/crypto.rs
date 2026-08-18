@@ -144,3 +144,47 @@ mod botanical_tests {
     }
 }
 
+
+#[cfg(test)]
+mod compression_and_token_tests {
+    use super::*;
+    use crate::compressor::SovereignCompressor;
+    use crate::mnemonic_validator::{MnemonicValidator, VerificationChallenge};
+
+    #[test]
+    fn test_back_to_back_compression_cycle_integrity() {
+        let raw_vault_json_sample = "{\"vitality_score\":88,\"salud_version\":\"1.1.0\",\"conditions\":[\"Autism\",\"Stress\"]}";
+        
+        // Perform compression step
+        let compressed_bytes = SovereignCompressor::compress_payload(raw_vault_json_sample).unwrap();
+        assert!(!compressed_bytes.is_empty());
+        assert!(compressed_bytes.len() < raw_vault_json_sample.as_bytes().len(), "Compression failed to reduce the byte size.");
+
+        // Perform recovery decompression step
+        let decompressed_string = SovereignCompressor::decompress_payload(&compressed_bytes).unwrap();
+        assert_eq!(raw_vault_json_sample, decompressed_string, "Plaintext parameters failed to reconstruct identically.");
+    }
+
+    #[test]
+    fn test_mnemonic_challenge_response_compliance() {
+        let master_phrase = "ashwagandha kashaya ambali millets salud sovereign privacy zero knowledge mesh nostr nym";
+        
+        // Define a passing user answer configuration matching the master string phrase index vectors
+        let valid_responses = vec![
+            VerificationChallenge { word_index_target: 0, user_provided_string: "Ashwagandha".to_string() }, // Word 1
+            VerificationChallenge { word_index_target: 3, user_provided_string: "millets".to_string() },      // Word 4
+        ];
+
+        let is_valid_pass = MnemonicValidator::verify_mnemonic_onboarding_compliance(master_phrase, &valid_responses);
+        assert!(is_valid_pass, "Mnemonic challenge validation component threw a false rejection error.");
+
+        // Define a failing configuration layout tracking entry faults
+        let invalid_responses = vec![
+            VerificationChallenge { word_index_target: 0, user_provided_string: "WrongWordEntry".to_string() }
+        ];
+
+        let is_invalid_fail = MnemonicValidator::verify_mnemonic_onboarding_compliance(master_phrase, &invalid_responses);
+        assert!(!is_invalid_fail, "Mnemonic validator allowed unverified phrase vectors past system gate controls.");
+    }
+}
+
