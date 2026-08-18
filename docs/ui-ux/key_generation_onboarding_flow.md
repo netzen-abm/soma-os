@@ -1,4 +1,17 @@
-┌──────────────────────────────────────────────┐│    SCREEN 1: SOVEREIGN RE-POSITIONING HUB    │└──────────────────────┬───────────────────────┘│▼ [Action: Hit "Generate Keys"]┌──────────────────────────────────────────────┐│   SCREEN 2: LOCAL ENTROPY CALCULATOR LOOP    │└──────────────────────┬───────────────────────┘│▼ [Action: Auto-derive Seed]┌──────────────────────────────────────────────┐│    SCREEN 3: THE PRIVATE KEY BACKUP VAULT    │└──────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│   SCREEN 1: SOVEREIGN RE-POSITIONING HUB  	 │
+└──────────────────────┬───────────────────────┘
+│
+▼ [Action: Hit "Generate Keys"]
+┌──────────────────────────────────────────────┐
+│ SCREEN 2: LOCAL ENTROPY CALCULATOR LOOP      │  					
+└──────────────────────┬───────────────────────┘
+│
+▼ [Action: Auto-derive Seed]
+┌──────────────────────────────────────────────┐
+│ SCREEN 3: THE PRIVATE KEY BACKUP VAULT			 │ 
+└──────────────────────────────────────────────┘
+
 ---
 
 ## 📱 SCREEN 1: Sovereign Re-Positioning Hub (The Autonomy Screen)
