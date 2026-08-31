@@ -1,0 +1,201 @@
+version: 1
+name: SOMA Research Source Registry
+principle: >-
+  Evidence discovery must be multi-source, geographically diverse and
+  epistemically explicit. PubMed is one retrieval source, never the sole
+  authority.
+
+selection_policy:
+  - Prefer primary and authoritative sources.
+  - Search Indian, regional and international sources when relevant.
+  - Search both published research and registered/ongoing studies where applicable.
+  - Preserve source provenance and verification URLs.
+  - Never combine results into a single evidence score without source-level assessment.
+  - A source's existence does not establish the truth of its claims.
+  - Paid databases are optional; the initial capability must work with free/public sources.
+
+source_classes:
+  biomedical_literature:
+    - id: pubmed
+      geography: global
+      authority: NCBI
+      access: public
+      role: biomedical literature discovery and metadata
+      verification: https://pubmed.ncbi.nlm.nih.gov/
+    - id: europe_pmc
+      geography: global
+      authority: Europe PMC
+      access: public
+      role: biomedical literature, abstracts and open-access full text where licensed
+      verification: https://europepmc.org/
+    - id: who_iris
+      geography: global
+      authority: WHO
+      access: public
+      role: WHO publications and technical evidence
+      verification: https://iris.who.int/
+
+  systematic_reviews_and_evidence_synthesis:
+    - id: cochrane
+      geography: global
+      authority: Cochrane
+      access: mixed
+      role: systematic reviews and evidence synthesis
+      verification: https://www.cochranelibrary.com/
+      note: use public metadata/abstract access where available; do not assume full-text availability
+    - id: epistemonikos
+      geography: global
+      authority: Epistemonikos Foundation
+      access: public
+      role: evidence synthesis discovery and systematic-review mapping
+      verification: https://www.epistemonikos.org/
+
+  clinical_trials_and_registries:
+    - id: ctri
+      geography: india
+      authority: ICMR/National Institute for Research in Digital Health
+      access: public
+      role: Indian clinical trial registration
+      verification: https://ctri.nic.in/
+    - id: who_ictrp
+      geography: global
+      authority: WHO
+      access: public
+      role: cross-registry clinical-trial discovery
+      verification: https://trialsearch.who.int/
+    - id: clinicaltrials_gov
+      geography: global
+      authority: U.S. National Library of Medicine
+      access: public
+      role: international clinical-study registration and results discovery
+      verification: https://clinicaltrials.gov/
+    - id: isrctn
+      geography: global
+      authority: ISRCTN
+      access: public
+      role: clinical trial registry
+      verification: https://www.isrctn.com/
+
+  india_health_research:
+    - id: ayush_research_portal
+      geography: india_and_global
+      authority: Ministry of AYUSH, Government of India
+      access: public
+      role: AYUSH research publications and evidence-based research data
+      verification: https://arp.ayush.gov.in/
+    - id: icmr_data_repository
+      geography: india
+      authority: ICMR
+      access: public_with_research_controls
+      role: Indian health research datasets
+      verification: https://data.icmr.org.in/
+    - id: icmr_portals
+      geography: india
+      authority: ICMR
+      access: public
+      role: discovery of ICMR research portals, networks and registries
+      verification: https://www.icmr.gov.in/portals
+
+  food_nutrition_and_composition:
+    - id: usda_fooddata_central
+      geography: global
+      authority: USDA
+      access: public
+      role: food composition and nutrition data
+      verification: https://fdc.nal.usda.gov/
+    - id: faostat
+      geography: global
+      authority: FAO
+      access: public
+      role: food, agriculture and nutrition-related statistical data
+      verification: https://www.fao.org/faostat/
+    - id: infobank_who
+      geography: global
+      authority: WHO
+      access: public
+      role: health and nutrition information discovery
+      verification: https://www.who.int/data
+
+  traditional_and_indigenous_knowledge:
+    - id: ayush_research_portal
+      geography: india
+      authority: Ministry of AYUSH
+      access: public
+      role: Ayurveda, Yoga and Naturopathy, Unani, Siddha, Homoeopathy and related research
+      verification: https://arp.ayush.gov.in/
+    - id: who_traditional_medicine
+      geography: global
+      authority: WHO
+      access: public
+      role: global traditional medicine evidence, policy and research resources
+      verification: https://www.who.int/teams/global-traditional-medicine-centre
+
+  safety_and_regulatory:
+    - id: fda
+      geography: global
+      authority: U.S. FDA
+      access: public
+      role: regulatory safety and adverse-event information
+      verification: https://www.fda.gov/
+    - id: ema
+      geography: global
+      authority: European Medicines Agency
+      access: public
+      role: medicines safety and regulatory information
+      verification: https://www.ema.europa.eu/
+    - id: cdsco
+      geography: india
+      authority: Central Drugs Standard Control Organisation
+      access: public
+      role: Indian regulatory and safety information
+      verification: https://cdsco.gov.in/
+
+  botanical_and_species_identity:
+    - id: kew_powо
+      geography: global
+      authority: Royal Botanic Gardens, Kew
+      access: public
+      role: botanical nomenclature and plant identity support
+      verification: https://powo.science.kew.org/
+    - id: gbif
+      geography: global
+      authority: GBIF Secretariat
+      access: public
+      role: biodiversity and species occurrence data
+      verification: https://www.gbif.org/
+
+routing:
+  default:
+    literature: [pubmed, europe_pmc]
+    evidence_synthesis: [cochrane, epistemonikos]
+    trials: [ctri, who_ictrp, clinicaltrials_gov, isrctn]
+    safety: [fda, ema, cdsco]
+  india_relevant:
+    literature: [pubmed, europe_pmc, ayush_research_portal, icmr_portals]
+    trials: [ctri, who_ictrp, clinicaltrials_gov]
+    safety: [cdsco, fda, ema]
+    nutrition: [usda_fooddata_central, faostat]
+    traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
+  food_life:
+    literature: [pubmed, europe_pmc]
+    nutrition: [usda_fooddata_central, faostat]
+    traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
+    botanical_identity: [kew_powо, gbif]
+
+multi_source_rules:
+  minimum_source_diversity:
+    default: 2
+    high_risk: 3
+  national_and_global:
+    india_relevant: true
+  contradiction_search: true
+  safety_search: true
+  trial_registry_search: true
+  source_agreement_is_not_truth: true
+  evidence_synthesis_required_before_overall_status: true
+
+failure_rules:
+  provider_unavailable_is_not_no_evidence: true
+  source_specific_failure_must_be_recorded: true
+  if_all_required_sources_fail: PROVIDER_UNAVAILABLE
+  if_sources_complete_and_no_relevant_results: NO_RELEVANT_EVIDENCE_FOUND
