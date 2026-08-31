@@ -33,8 +33,10 @@ impl SovereignCryptoEngine {
         schema_ver: &str,
     ) -> Result<CryptographicProofPackage, Box<dyn std::error::Error>> {
         let rng = SystemRandom::new();
-        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng)?;
-        let key_pair = Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref())?;
+        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng)
+            .map_err(|_| "failed to generate Ed25519 key material")?;
+        let key_pair = Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref())
+            .map_err(|_| "failed to parse generated Ed25519 key material")?;
 
         let payload = LocalZkpPayload {
             anonymized_user_hash: Self::generate_anonymized_user_hash(raw_user_id),
@@ -65,7 +67,6 @@ mod tests {
         let hash_1 = SovereignCryptoEngine::generate_anonymized_user_hash("telegram_user_998877");
         let hash_2 = SovereignCryptoEngine::generate_anonymized_user_hash("telegram_user_998877");
         let hash_3 = SovereignCryptoEngine::generate_anonymized_user_hash("whatsapp_user_112233");
-
         assert_eq!(hash_1, hash_2);
         assert_ne!(hash_1, hash_3);
         assert_eq!(hash_1.len(), 64);
@@ -74,12 +75,9 @@ mod tests {
     #[test]
     fn test_local_health_milestone_signature_generation() {
         let proof_result = SovereignCryptoEngine::sign_health_milestone(
-            "user_biometric_node_01",
-            92,
-            "v1.0.0-salud",
+            "user_biometric_node_01", 92, "v1.0.0-salud",
         );
         assert!(proof_result.is_ok());
-
         let package = proof_result.unwrap();
         assert_eq!(package.public_verification_key_hex.len(), 64);
         assert_eq!(package.signature_proof_hex.len(), 128);
