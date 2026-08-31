@@ -1,116 +1,136 @@
-# Soma-OS
+# SOMA OS
 
+A privacy-first, modular infrastructure for evidence-informed,
+life-oriented systems.
 
+## Core principles
 
-## Getting started
+- Privacy and safety are defaults, not optional features.
+- Personal and sensitive personal data are not collected by default.
+- User data remains on the user's device whenever possible.
+- Any required external data transfer must be explicit, minimized,
+  and protected by appropriate encryption.
+- Shared capabilities belong in shared infrastructure first.
+- Client surfaces must consume shared capabilities rather than duplicate
+  business, evidence, privacy, or safety logic.
+- Evidence is multi-source and traceable.
+- Research discovery is not clinical diagnosis or treatment.
+- Management information must not be presented as a cure or remedy.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Architecture
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+```text
+Client surfaces
+      |
+      v
+Shared SOMA infrastructure
+      |
+      +-- Evidence research
+      +-- Privacy and data policy
+      +-- Safety policy
+      +-- Protocol framework
+      +-- Identity and access
+      +-- Verification
+      |
+      v
+Provider adapters and external sources
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/netzen-abm/soma-os.git
-git branch -M main
-git push -uf origin main
+
+## Evidence research
+
+SOMA does not depend on a single research database.
+
+Relevant research can be discovered across:
+
+- biomedical literature;
+- systematic reviews;
+- clinical-trial registries;
+- Indian research repositories;
+- international and global repositories;
+- food and nutrition databases;
+- traditional-medicine research sources;
+- safety and regulatory sources;
+- botanical and species databases.
+
+Every evidence record should preserve source provenance and a
+user-verifiable original source whenever available.
+
+Multiple database records for the same underlying study are not counted
+as independent evidence.
+
+Provider failure is never interpreted as absence of evidence.
+
+## Health and management boundary
+
+SOMA may present evidence-informed management information where the
+underlying evidence and safety context justify doing so.
+
+It does not diagnose, prescribe, promise cures, or instruct users to
+replace prescribed treatment.
+
+Users should consult an appropriately qualified professional for
+individual medical decisions.
+
+## Privacy architecture
+
+The default data path is:
+
+```text
+User device
+    |
+    +--> Local data and computation
+    |
+    +--> Explicitly requested external capability
+             |
+             +--> Minimized data
+             +--> Protected transport
 ```
 
-## Integrate with your tools
+Personal data should not be sent to research providers merely to answer a
+research question.
 
-* [Set up project integrations](https://gitlab.com/netzen-abm/soma-os/-/settings/integrations)
+## Repository structure
 
-## Collaborate with your team
+```text
+apps/
+services/
+database/
+health-vault/
+protocols/
+legal-shields/
+public/
+ops/
+scripts/
+docs/
+.github/
+```
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+The repository is being consolidated around shared infrastructure.
+Obsolete material is archived before removal.
 
-## Test and Deploy
+## Code maintainability
 
-Use the built-in continuous integration in GitLab.
+Code should remain easy to inspect and maintain.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+- Prefer small modules and functions.
+- Prefer clear names over compressed expressions.
+- Avoid unnecessarily long lines.
+- Keep security-sensitive operations isolated.
+- Keep provider-specific code behind adapter interfaces.
+- Add tests for important failure states.
+- Do not describe unfinished security as production security.
 
-***
+Rust formatting is enforced through `rustfmt.toml`.
 
-# Editing this README
+## Development status
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+SOMA is under active architectural stabilization.
 
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-
-# SomaOS (SomaNet) 🪐
-> A Sovereign, Privacy-by-Default Preventive Medicine & Longevity Command Center.
-
-Inspired by Sid Sijbrandij's "Founder Mode" clinical approach to massive medical data autonomy, SomaOS combines ancient functional wellness (Ayurveda/Naturopathy) with modern decentralized, metadata-private networks.
-
-## 🛡️ Architectural Core
-- **Frontend:** Rust + Dioxus compiled natively to WASM (Web), Android, and iOS.
-- **Interfaces:** Low-friction, privacy-shielded Telegram Mini-App (WebApp) & WhatsApp conversational nodes.
-- **Privacy Layer:** NYM Mixnet (metadata blinding), Zero-Knowledge Proofs (identity-free health verification).
-- **Resilience Layer:** Nostr (decentralized protocol syncing) & Reticulum (offline mesh-radio fallback).
-
-## 📂 Repository Blueprint
-├── apps/
-│   ├── client-dioxus/          # Rust multiplatform frontend (WASM, Android, iOS)
-│   └── telegram-mini-app/      # WebView interface wrapper for Telegram/WhatsApp
-├── services/
-│   ├── backend-rust/           # High-performance analytical core (FastAPI equivalent in Rust)
-│   ├── ai-engine/              # Non-custodial RAG prompts & local model pipelines
-│   └── protocols/              # NYM, Nostr, Reticulum, & Salud routing configs
-└── database/
-    └── medical-core/           # Health-vault schemas & Preventive Medicine records
-
-Show your appreciation to those who have contributed to the project.
+Security-sensitive placeholder implementations are not considered
+production-ready until they use an appropriate, reviewed cryptographic
+design and pass dedicated tests.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+License and contribution terms will be finalized as the repository
+stabilizes.
