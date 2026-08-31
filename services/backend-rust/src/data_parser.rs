@@ -13,7 +13,7 @@ pub struct DrugInteraction {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct MilletProtocol {
+pub struct MilletManagementFramework {
     pub target_condition: String,
     pub millet_cycle: String,
     pub administration_form: String,
@@ -36,7 +36,7 @@ pub struct BotanicalRecord {
     pub botanical_classification: String,
     pub clinical_pharmacology: String,
     pub drug_interaction_pairings: Vec<DrugInteraction>,
-    pub siridhanya_protocols: MilletProtocol,
+    pub siridhanya_protocols: MilletManagementFramework,
     #[serde(default)]
     pub precision_oncology_tracks: Option<PrecisionOncologyTrack>,
 }
@@ -51,7 +51,7 @@ pub struct InterceptionResult {
     pub condition_detected: String,
     pub botanical_found: String,
     pub safety_alert: Option<DrugInteraction>,
-    pub structured_protocol: MilletProtocol,
+    pub structured_management_framework: MilletManagementFramework,
     pub clinical_notes: String,
 }
 
@@ -59,8 +59,8 @@ pub struct InterceptionResult {
 pub struct ClinicalSafetyResponse {
     pub query_match_detected: bool,
     pub clinical_differential_possibilities: Vec<String>,
-    pub multi_modal_treatment_options: Vec<String>,
-    pub traditional_millet_framework: Option<MilletProtocol>,
+    pub management_options: Vec<String>,
+    pub traditional_millet_framework: Option<MilletManagementFramework>,
     pub open_source_precision_oncology_blueprint: Option<PrecisionOncologyTrack>,
     pub required_safety_label_verification_prompt: String,
 }
@@ -77,19 +77,20 @@ impl BotanicalSearchEngine {
         let query_lowercase = user_raw_query.to_lowercase();
 
         for botanical in db.botanicals {
-            let matches_botanical = query_lowercase.contains(&botanical.common_name.to_lowercase())
-                || query_lowercase.contains(&botanical.botanical_classification.to_lowercase());
+            let matches_botanical = query_lowercase
+                .contains(&botanical.common_name.to_lowercase())
+                || query_lowercase
+                    .contains(&botanical.botanical_classification.to_lowercase());
 
-            let matches_condition = query_lowercase.contains(
-                &botanical
-                    .siridhanya_protocols
-                    .target_condition
-                    .to_lowercase(),
-            ) || botanical
-                .siridhanya_protocols
-                .target_condition
-                .split('/')
-                .any(|cond| query_lowercase.contains(cond.trim().to_lowercase().as_str()));
+            let target_condition =
+                &botanical.siridhanya_protocols.target_condition;
+            let matches_condition = query_lowercase
+                .contains(&target_condition.to_lowercase())
+                || target_condition
+                    .split('/')
+                    .any(|condition| {
+                        query_lowercase.contains(condition.trim())
+                    });
 
             if matches_botanical || matches_condition {
                 let triggered_alert = botanical
@@ -105,13 +106,14 @@ impl BotanicalSearchEngine {
                     .cloned();
 
                 return Ok(Some(InterceptionResult {
-                    condition_detected: botanical.siridhanya_protocols.target_condition.clone(),
+                    condition_detected: target_condition.clone(),
                     botanical_found: format!(
                         "{} ({})",
                         botanical.common_name, botanical.sanskrit_name
                     ),
                     safety_alert: triggered_alert,
-                    structured_protocol: botanical.siridhanya_protocols.clone(),
+                    structured_management_framework:
+                        botanical.siridhanya_protocols.clone(),
                     clinical_notes: botanical.clinical_pharmacology.clone(),
                 }));
             }
@@ -132,50 +134,60 @@ impl SomaSearchKernel {
         let query_lowercase = user_raw_text.to_lowercase();
 
         for record in db.botanicals {
-            let target_condition = record.siridhanya_protocols.target_condition.to_lowercase();
+            let target_condition =
+                record.siridhanya_protocols.target_condition.to_lowercase();
             let contains_keyword = target_condition
                 .split('/')
                 .any(|keyword| query_lowercase.contains(keyword.trim()));
 
             if contains_keyword {
                 let differentials = vec![
-                    "Malignant or benign tissue growth anomalies (e.g. Rare Osteosarcoma Variants)"
+                    "Potential malignant or benign tissue-growth conditions."
                         .to_string(),
-                    "Chronic systemic inflammatory metabolic pathways".to_string(),
-                    "Secondary immune system deficiencies or gut microbiome dysbiosis mutations"
+                    "Potential chronic systemic inflammatory or metabolic factors."
+                        .to_string(),
+                    "Potential immune or microbiome-related factors."
                         .to_string(),
                 ];
 
-                let treatment_options = vec![
-                    "Track 1: Traditional dietary kashaya herbal decoctions & unpolished fermented Ambali porridge structures".to_string(),
-                    "Track 2: Deep multi-omic diagnostic analytics (Whole Genome Sequencing, scRNA-seq tumor mapping)".to_string(),
-                    "Track 3: Parallel therapeutic targeting (Personalized peptide vaccine compilation & AlphaFold protein modeling)".to_string(),
+                let management_options = vec![
+                    "Traditional dietary and food-based management framework."
+                        .to_string(),
+                    "Evidence-based diagnostic and monitoring pathways."
+                        .to_string(),
+                    "Clinician-guided personalized management options."
+                        .to_string(),
                 ];
 
                 return Ok(ClinicalSafetyResponse {
                     query_match_detected: true,
                     clinical_differential_possibilities: differentials,
-                    multi_modal_treatment_options: treatment_options,
-                    traditional_millet_framework: Some(record.siridhanya_protocols.clone()),
-                    open_source_precision_oncology_blueprint: record.precision_oncology_tracks.clone(),
-                    required_safety_label_verification_prompt: "ATTENTION: Please double-check your physical medication labels, check active ingredient values, and cross-reference these open-source information records with your primary oncology medical team before making adjustments.".to_string(),
+                    management_options,
+                    traditional_millet_framework:
+                        Some(record.siridhanya_protocols.clone()),
+                    open_source_precision_oncology_blueprint:
+                        record.precision_oncology_tracks.clone(),
+                    required_safety_label_verification_prompt:
+                        "Review medication labels and discuss any management change with an appropriate healthcare professional.".to_string(),
                 });
             }
         }
 
         Ok(ClinicalSafetyResponse {
             query_match_detected: false,
-            clinical_differential_possibilities: vec![],
-            multi_modal_treatment_options: vec![],
+            clinical_differential_possibilities: Vec::new(),
+            management_options: Vec::new(),
             traditional_millet_framework: None,
             open_source_precision_oncology_blueprint: None,
             required_safety_label_verification_prompt:
-                "No matching clinical conditions identified in current index files.".to_string(),
+                "No matching condition was identified in the current index.".to_string(),
         })
     }
 }
 
-fn load_database(db_path: &str) -> Result<BotanicalDatabase, Box<dyn std::error::Error>> {
+fn load_database(
+    db_path: &str,
+) -> Result<BotanicalDatabase, Box<dyn std::error::Error>> {
     let mut file = File::open(Path::new(db_path))?;
     let mut json_string = String::new();
     file.read_to_string(&mut json_string)?;
