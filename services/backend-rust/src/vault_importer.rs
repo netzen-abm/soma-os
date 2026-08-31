@@ -15,7 +15,9 @@ impl VaultHardwareImporter {
     ) -> Result<LocalDeviceHealthVault, Box<dyn Error>> {
         let path_handle = Path::new(absolute_file_path);
         if !path_handle.exists() {
-            return Err("Target archive path location could not be resolved by host filesystems.".into());
+            return Err(
+                "Target archive path location could not be resolved by host filesystems.".into(),
+            );
         }
         let mut file = File::open(path_handle)?;
         let mut serialized_container_bytes = Vec::new();

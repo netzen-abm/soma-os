@@ -22,18 +22,23 @@ impl NonCustodialSyncEngine {
 
         // NOTE: Base64 is transport encoding only, not encryption. Real AES-GCM
         // must be implemented before sensitive health data is broadcast.
-        let local_encrypted_ciphertext_base64 = base64::engine::general_purpose::STANDARD.encode(
-            format!(
+        let local_encrypted_ciphertext_base64 =
+            base64::engine::general_purpose::STANDARD.encode(format!(
                 "AES256GCM_ENCRYPTED_WITH_USER_DEVICE_KEY_LOOPS::{}",
                 serialized_vault_data
-            ),
-        );
+            ));
 
         let current_timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
         let tags = vec![vec!["p".to_string(), user_public_key_hex.to_string()]];
         let serialized_nostr_envelope = serde_json::json!([
-            0, user_public_key_hex, current_timestamp, 4, tags, local_encrypted_ciphertext_base64
-        ]).to_string();
+            0,
+            user_public_key_hex,
+            current_timestamp,
+            4,
+            tags,
+            local_encrypted_ciphertext_base64
+        ])
+        .to_string();
 
         let mut hasher = sha2::Sha256::new();
         hasher.update(serialized_nostr_envelope.as_bytes());
@@ -64,7 +69,9 @@ mod sync_tests {
             current_vitality_score: 95,
         };
         let dummy_pubkey = "0000000000000000000000000000000000000000000000000000000000000000";
-        let built_event = NonCustodialSyncEngine::compile_secure_nostr_backup_event(&mock_vault, dummy_pubkey).unwrap();
+        let built_event =
+            NonCustodialSyncEngine::compile_secure_nostr_backup_event(&mock_vault, dummy_pubkey)
+                .unwrap();
         assert_eq!(built_event.kind, 4);
         assert!(!built_event.content.contains(secret_millet_type));
         assert!(built_event.content.starts_with("QUVTMjU2R0NN"));
