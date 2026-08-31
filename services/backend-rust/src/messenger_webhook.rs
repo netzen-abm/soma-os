@@ -1,8 +1,6 @@
-use axum::{
-    routing::{post, get},
-    Json, Router, http::StatusCode, extract::Query,
-};
-use serde::{Deserialize, Serialize};
+use axum::{extract::Query, http::StatusCode, routing::{get, post}, Json, Router};
+use serde::Deserialize;
+use std::env;
 
 #[derive(Deserialize, Debug)]
 pub struct MessengerHandshakeParams {
@@ -22,8 +20,8 @@ pub struct MessengerWebhookPayload {
 
 #[derive(Deserialize, Debug)]
 pub struct MessengerEntry {
-    pub id: String,
-    pub time: u64,
+    #[allow(dead_code)] pub id: String,
+    #[allow(dead_code)] pub time: u64,
     pub messaging: Vec<MessengerMessagingEvent>,
 }
 
@@ -34,57 +32,38 @@ pub struct MessengerMessagingEvent {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct MessengerSenderWrapper {
-    pub id: String, // Page-Scoped ID (PSID) string tracking identifier
-}
+pub struct MessengerSenderWrapper { pub id: String }
 
 #[derive(Deserialize, Debug)]
 pub struct MessengerMessageContent {
-    pub mid: String,
+    #[allow(dead_code)] pub mid: String,
     pub text: Option<String>,
 }
 
-const MESSENGER_VERIFY_TOKEN: &str = "SOMAOS_CORE_SECURE_TOKEN_STRING_556621";
-
-// Handles the validation handshake routine incoming from Meta platform developer hooks
-async fn verify_messenger_webhook(
-    Query(params): Query<MessengerHandshakeParams>,
-) -> (StatusCode, String) {
-    if params.mode == "subscribe" && params.verify_token == MESSENGER_VERIFY_TOKEN {
-        println!("Messenger Verification Handshake completed successfully.");
-        (StatusCode::OK, params.challenge)
-    } else {
-        (StatusCode::FORBIDDEN, "Handshake Token Refused".to_string())
+async fn verify_messenger_webhook(Query(params): Query<MessengerHandshakeParams>) -> (StatusCode, String) {
+    match env::var("META_VERIFY_TOKEN") {
+        Ok(token) if params.mode == "subscribe" && params.verify_token == token => (StatusCode::OK, params.challenge),
+        Ok(_) => (StatusCode::FORBIDDEN, "Handshake token refused".to_string()),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Webhook verification is not configured".to_string()),
     }
 }
 
-// Ingests real-time continuous user text input strings from Facebook Messenger threads
-async fn inbound_messenger_message_router(
-    Json(payload): Json<MessengerWebhookPayload>,
-) -> StatusCode {
-    if payload.object == "page" {
-        for entry in payload.entry {
-            for event in entry.messaging {
-                if let Some(message_content) = event.message {
-                    let sender_psid = event.sender.id;
-                    if let Some(user_text) = message_content.text {
-                        println!("Inbound Facebook Messenger text from PSID [{}]: {}", sender_psid, user_text);
-                        
-                        // Connects straight into centralized non-custodial onboarding flow modules
-                        // let response_text = onboarding_engine.process_message(&sender_psid, Some(&user_text));
-                    }
+async fn inbound_messenger_message_router(Json(payload): Json<MessengerWebhookPayload>) -> StatusCode {
+    if payload.object != "page" { return StatusCode::BAD_REQUEST; }
+    for entry in payload.entry {
+        for event in entry.messaging {
+            if let Some(message_content) = event.message {
+                if let Some(user_text) = message_content.text {
+                    println!("Received Messenger message from {}: {}", event.sender.id, user_text);
                 }
             }
         }
-        StatusCode::OK
-    } else {
-        StatusCode::BAD_REQUEST
     }
+    StatusCode::OK
 }
 
-// Integrates endpoints seamlessly into unified backend app runtime networks
-pub fn inject_messenger_routes(router: Router) -> Router {
-    router
+pub fn routes() -> Router {
+    Router::new()
         .route("/api/v1/messenger", get(verify_messenger_webhook))
         .route("/api/v1/messenger", post(inbound_messenger_message_router))
 }
