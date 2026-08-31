@@ -39,6 +39,12 @@ jobs:
         with:
           workspaces: "services/backend-rust -> target"
 
+      - name: Remove trailing whitespace before Rustfmt
+        shell: bash
+        run: |
+          find services/backend-rust -type f -name '*.rs' -print0 \
+            | xargs -0 sed -i 's/[[:space:]]*$//'
+
       - name: Normalize Rust formatting
         run: cargo fmt --manifest-path services/backend-rust/Cargo.toml --all
 
