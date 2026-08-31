@@ -1,0 +1,43 @@
+name: SOMA Evidence Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - development
+      - feature/**
+  pull_request:
+    branches:
+      - main
+      - development
+
+jobs:
+  evidence-pipeline:
+    name: Evidence pipeline tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile evidence scripts
+        run: >-
+          python -m compileall -q
+          scripts
+
+      - name: Run evidence pipeline tests
+        run: >-
+          python -m unittest discover
+          -s scripts
+          -p "*_test.py"
+          -v
+
+      - name: Run controlled migration pilot
+        run: >-
+          python scripts/pilot_medical_migration.py
+          scripts/fixtures/medical_migration_pilot.json
