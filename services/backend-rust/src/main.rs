@@ -17,7 +17,6 @@ mod crypto;
 mod data_parser;
 mod db_layer;
 mod device_sync;
-mod fetch_engine;
 mod key_restoration;
 mod messenger_webhook;
 mod meta_outbound;
