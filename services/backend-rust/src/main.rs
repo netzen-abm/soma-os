@@ -23,6 +23,8 @@ mod meta_outbound;
 mod messenger_webhook;
 mod mnemonic_validator;
 mod nostr_client;
+mod privacy_policy;
+mod shared_infrastructure;
 mod vault_exporter;
 mod vault_importer;
 mod whatsapp_webhook;
