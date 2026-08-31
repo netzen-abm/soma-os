@@ -9,12 +9,22 @@ use std::{env, sync::Arc};
 use tokio::net::TcpListener;
 
 mod ambali_timer;
+mod backup_scheduler;
 mod bot_menus;
 mod compliance_shield;
+mod compressor;
 mod crypto;
+mod data_parser;
 mod db_layer;
+mod device_sync;
+mod fetch_engine;
+mod key_restoration;
 mod meta_outbound;
 mod messenger_webhook;
+mod mnemonic_validator;
+mod nostr_client;
+mod vault_exporter;
+mod vault_importer;
 mod whatsapp_webhook;
 
 use ambali_timer::FermentationOrchestrator;
@@ -64,9 +74,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/api/health", get(system_health_check))
         .route("/api/v1/webhook/unified", post(process_unified_bot_webhook))
-        .with_state(shared_state)
         .merge(whatsapp_webhook::routes())
-        .merge(messenger_webhook::routes());
+        .merge(messenger_webhook::routes())
+        .with_state(shared_state);
 
     let bind_address = env::var("SOMA_BIND_ADDRESS")
         .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
