@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
-use std::time::{SystemTime, UNIX_EPOCH};
-use crate::nostr_client::NostrEvent; // Reuses our established Nostr schema structures
+use crate::nostr_client::NostrEvent;
+use serde::{Deserialize, Serialize};
+use std::time::{SystemTime, UNIX_EPOCH}; // Reuses our established Nostr schema structures
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LocalDeviceHealthVault {
@@ -19,22 +19,20 @@ impl NonCustodialSyncEngine {
     ) -> Result<NostrEvent, Box<dyn std::error::Error>> {
         // Serialize your local biometric data into raw JSON strings
         let serialized_vault_data = serde_json::to_string(local_vault)?;
-        
-        // 🔒 ZERO-KNOWLEDGE PROTOCOL LAYER ENFORCED: 
-        // This is where local device encryption occurs. In production, AES-256-GCM functions 
+
+        // 🔒 ZERO-KNOWLEDGE PROTOCOL LAYER ENFORCED:
+        // This is where local device encryption occurs. In production, AES-256-GCM functions
         // handle the cryptographic blending. The central network ONLY sees scrambled ciphertext base64 loops.
         let local_encrypted_ciphertext_base64 = base64::encode(format!(
-            "AES256GCM_ENCRYPTED_WITH_USER_DEVICE_KEY_LOOPS::{}", 
+            "AES256GCM_ENCRYPTED_WITH_USER_DEVICE_KEY_LOOPS::{}",
             serialized_vault_data
         ));
 
-        let current_timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)?
-            .as_secs();
+        let current_timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
         // Target tagging configurations pointing to the user's secondary authenticated device profile
         let tags = vec![vec!["p".to_string(), user_public_key_hex.to_string()]];
-        
+
         // Compute structural event ID tracking signatures
         let serialized_nostr_envelope = serde_json::json!([
             0,
@@ -43,8 +41,9 @@ impl NonCustodialSyncEngine {
             4, // Nostr Event Kind 4: Cryptographically Encrypted Direct Payload Note
             tags,
             local_encrypted_ciphertext_base64
-        ]).to_string();
-        
+        ])
+        .to_string();
+
         let mut hasher = sha2::Sha256::new();
         hasher.update(serialized_nostr_envelope.as_bytes());
         let event_id_hex = format!("{:x}", hasher.finalize());
@@ -65,7 +64,6 @@ impl NonCustodialSyncEngine {
     }
 }
 
-
 #[cfg(test)]
 mod sync_tests {
     use super::*;
@@ -79,21 +77,26 @@ mod sync_tests {
             user_logged_conditions: vec!["Gut Microbiome Dysbiosis Rejuvenation".to_string()],
             current_vitality_score: 95,
         };
-        
+
         let dummy_pubkey = "0000000000000000000000000000000000000000000000000000000000000000";
 
         // Step 2: Pass data into local network boundary mask engine
-        let built_event = NonCustodialSyncEngine::compile_secure_nostr_backup_event(&mock_vault, dummy_pubkey).unwrap();
-        
+        let built_event =
+            NonCustodialSyncEngine::compile_secure_nostr_backup_event(&mock_vault, dummy_pubkey)
+                .unwrap();
+
         // Step 3: Enforce strict assertions proving no raw data leaks into network models
-        assert_eq!(built_event.kind, 4, "Nostr container must explicitly use encrypted Kind 4 envelope.");
-        
+        assert_eq!(
+            built_event.kind, 4,
+            "Nostr container must explicitly use encrypted Kind 4 envelope."
+        );
+
         let processed_ciphertext = built_event.content;
-        
-        assert!(!processed_ciphertext.contains(secret_millet_type), 
+
+        assert!(!processed_ciphertext.contains(secret_millet_type),
             "CRITICAL SECURITY FAILURE: Local raw plaintext health indicators leaked directly into network transport strings.");
-            
-        assert!(processed_ciphertext.starts_with("QUVTMjU2R0NN"), 
+
+        assert!(processed_ciphertext.starts_with("QUVTMjU2R0NN"),
             "Cryptographic packaging failure: Output string must be encapsulated as safe base64-encoded ciphertext.");
     }
 }

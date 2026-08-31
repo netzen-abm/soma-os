@@ -1,4 +1,9 @@
-use axum::{extract::Query, http::StatusCode, routing::{get, post}, Json, Router};
+use axum::{
+    extract::Query,
+    http::StatusCode,
+    routing::{get, post},
+    Json, Router,
+};
 use serde::Deserialize;
 use std::env;
 
@@ -19,13 +24,20 @@ struct WebhookPayload {
 }
 
 #[derive(Deserialize, Debug)]
-struct Entry { changes: Vec<Change> }
+struct Entry {
+    changes: Vec<Change>,
+}
 
 #[derive(Deserialize, Debug)]
-struct Change { value: Value, field: String }
+struct Change {
+    value: Value,
+    field: String,
+}
 
 #[derive(Deserialize, Debug)]
-struct Value { messages: Option<Vec<Message>> }
+struct Value {
+    messages: Option<Vec<Message>>,
+}
 
 #[derive(Deserialize, Debug)]
 struct Message {
@@ -36,7 +48,9 @@ struct Message {
 }
 
 #[derive(Deserialize, Debug)]
-struct TextBody { body: String }
+struct TextBody {
+    body: String,
+}
 
 async fn verify(Query(params): Query<VerificationParams>) -> (StatusCode, String) {
     match env::var("META_VERIFY_TOKEN") {
@@ -44,7 +58,10 @@ async fn verify(Query(params): Query<VerificationParams>) -> (StatusCode, String
             (StatusCode::OK, params.challenge)
         }
         Ok(_) => (StatusCode::FORBIDDEN, "Token mismatch".to_string()),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Webhook verification is not configured".to_string()),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Webhook verification is not configured".to_string(),
+        ),
     }
 }
 
@@ -54,11 +71,16 @@ async fn receive(Json(payload): Json<WebhookPayload>) -> StatusCode {
     }
     for entry in payload.entry {
         for change in entry.changes {
-            if change.field != "messages" { continue; }
+            if change.field != "messages" {
+                continue;
+            }
             if let Some(messages) = change.value.messages {
                 for message in messages {
                     if let Some(text) = message.text {
-                        println!("Received WhatsApp message from {}: {}", message.from, text.body);
+                        println!(
+                            "Received WhatsApp message from {}: {}",
+                            message.from, text.body
+                        );
                     }
                 }
             }

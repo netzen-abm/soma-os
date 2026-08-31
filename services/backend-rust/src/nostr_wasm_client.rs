@@ -14,7 +14,7 @@ impl WasmNostrClient {
     pub fn connect_and_fetch_backup(relay_url: &str, user_pubkey_hex: &str) -> Result<WasmNostrClient, JsValue> {
         // Spawn browser-native WebSocket context allocations via web-sys abstractions
         let ws = WebSocket::new(relay_url)?;
-        
+
         let pubkey_clone = user_pubkey_hex.to_string();
         let ws_clone = ws.clone();
 

@@ -29,7 +29,7 @@ impl LocalStateReconstructor {
 
         // Step 3: Reconstitute the native relational database schema rows directly onto user hardware memory
         let reconstructed_vault: LocalDeviceHealthVault = serde_json::from_str(&raw_json_plaintext)?;
-        
+
         println!("🔒 Local state data package decrypted and compiled successfully. Vault layout initialized on new device environment.");
         Ok(reconstructed_vault)
     }

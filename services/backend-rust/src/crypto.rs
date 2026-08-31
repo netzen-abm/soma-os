@@ -1,7 +1,7 @@
 use ring::rand::SystemRandom;
 use ring::signature::{Ed25519KeyPair, KeyPair};
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LocalZkpPayload {
@@ -73,7 +73,11 @@ mod tests {
 
     #[test]
     fn test_local_health_milestone_signature_generation() {
-        let proof_result = SovereignCryptoEngine::sign_health_milestone("user_biometric_node_01", 92, "v1.0.0-salud");
+        let proof_result = SovereignCryptoEngine::sign_health_milestone(
+            "user_biometric_node_01",
+            92,
+            "v1.0.0-salud",
+        );
         assert!(proof_result.is_ok());
 
         let package = proof_result.unwrap();

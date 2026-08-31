@@ -19,8 +19,8 @@ mod db_layer;
 mod device_sync;
 mod fetch_engine;
 mod key_restoration;
-mod meta_outbound;
 mod messenger_webhook;
+mod meta_outbound;
 mod mnemonic_validator;
 mod nostr_client;
 mod privacy_policy;
@@ -80,8 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(messenger_webhook::routes())
         .with_state(shared_state);
 
-    let bind_address = env::var("SOMA_BIND_ADDRESS")
-        .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let bind_address =
+        env::var("SOMA_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
     let listener = TcpListener::bind(&bind_address).await?;
 
     println!("SomaOS backend listening on {bind_address}");
@@ -118,6 +118,9 @@ async fn process_unified_bot_webhook(
 
     (
         StatusCode::OK,
-        format!("{}{}", raw_response, evaluation.appended_regulatory_disclaimer),
+        format!(
+            "{}{}",
+            raw_response, evaluation.appended_regulatory_disclaimer
+        ),
     )
 }

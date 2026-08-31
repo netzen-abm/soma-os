@@ -1,9 +1,9 @@
-use serde::{Serialize, Deserialize};
+use crate::device_sync::LocalDeviceHealthVault;
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
-use crate::device_sync::LocalDeviceHealthVault; // Pulls from your established data model
+use std::time::{SystemTime, UNIX_EPOCH}; // Pulls from your established data model
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct USBBackupContainer {
@@ -25,16 +25,14 @@ impl VaultHardwareExporter {
         let raw_json_string = serde_json::to_string(vault)?;
 
         // 🔒 ZERO-KNOWLEDGE BOUNDARY RE-ENFORCED:
-        // Local device isolation. Data is cryptographically scrambled in place before 
+        // Local device isolation. Data is cryptographically scrambled in place before
         // touching filesystem write pipelines.
         let embedded_ciphertext = base64::encode(format!(
             "HARDWARE_DISCONNECTED_AES256GCM_CIPHERTEXT::{}",
             raw_json_string
         ));
 
-        let current_timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)?
-            .as_secs();
+        let current_timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
         // Step 2: Build the structural portable transport metadata wrapper
         let backup_container = USBBackupContainer {
@@ -53,7 +51,10 @@ impl VaultHardwareExporter {
         let serialized_container_bytes = serde_json::to_vec(&backup_container)?;
         file_handle.write_all(&serialized_container_bytes)?;
 
-        println!("💾 Vault export execution completed successfully. Target filename: {}", filename);
+        println!(
+            "💾 Vault export execution completed successfully. Target filename: {}",
+            filename
+        );
         Ok(absolute_target_path.to_string_lossy().into_owned())
     }
 }

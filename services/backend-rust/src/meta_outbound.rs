@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::{env, error::Error};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WhatsAppTextObject { pub body: String }
+pub struct WhatsAppTextObject {
+    pub body: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WhatsAppOutboundMessage {
@@ -14,10 +16,14 @@ pub struct WhatsAppOutboundMessage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MessengerRecipient { pub id: String }
+pub struct MessengerRecipient {
+    pub id: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MessengerMessageObject { pub text: String }
+pub struct MessengerMessageObject {
+    pub text: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessengerOutboundMessage {
@@ -46,23 +52,55 @@ impl MetaOutboundRunner {
         }
     }
 
-    pub async fn send_whatsapp_text(&self, to_phone: &str, message_body: &str) -> Result<Response, Box<dyn Error>> {
-        let url = format!("https://graph.facebook.com/{}/{}/messages", self.graph_api_version, self.whatsapp_phone_number_id);
+    pub async fn send_whatsapp_text(
+        &self,
+        to_phone: &str,
+        message_body: &str,
+    ) -> Result<Response, Box<dyn Error>> {
+        let url = format!(
+            "https://graph.facebook.com/{}/{}/messages",
+            self.graph_api_version, self.whatsapp_phone_number_id
+        );
         let payload = WhatsAppOutboundMessage {
             messaging_product: "whatsapp".to_string(),
             to: to_phone.to_string(),
             r#type: "text".to_string(),
-            text: WhatsAppTextObject { body: message_body.to_string() },
+            text: WhatsAppTextObject {
+                body: message_body.to_string(),
+            },
         };
-        Ok(self.client.post(url).bearer_auth(&self.whatsapp_token).json(&payload).send().await?)
+        Ok(self
+            .client
+            .post(url)
+            .bearer_auth(&self.whatsapp_token)
+            .json(&payload)
+            .send()
+            .await?)
     }
 
-    pub async fn send_messenger_text(&self, recipient_psid: &str, message_body: &str) -> Result<Response, Box<dyn Error>> {
-        let url = format!("https://graph.facebook.com/{}/me/messages", self.graph_api_version);
+    pub async fn send_messenger_text(
+        &self,
+        recipient_psid: &str,
+        message_body: &str,
+    ) -> Result<Response, Box<dyn Error>> {
+        let url = format!(
+            "https://graph.facebook.com/{}/me/messages",
+            self.graph_api_version
+        );
         let payload = MessengerOutboundMessage {
-            recipient: MessengerRecipient { id: recipient_psid.to_string() },
-            message: MessengerMessageObject { text: message_body.to_string() },
+            recipient: MessengerRecipient {
+                id: recipient_psid.to_string(),
+            },
+            message: MessengerMessageObject {
+                text: message_body.to_string(),
+            },
         };
-        Ok(self.client.post(url).bearer_auth(&self.messenger_token).json(&payload).send().await?)
+        Ok(self
+            .client
+            .post(url)
+            .bearer_auth(&self.messenger_token)
+            .json(&payload)
+            .send()
+            .await?)
     }
 }

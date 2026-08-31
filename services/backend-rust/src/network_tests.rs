@@ -13,7 +13,7 @@ mod network_tests {
         let local_mock_relay_endpoint = "ws://127.0.0.1:8077";
 
         let connection_handshake = connect_async(local_mock_relay_endpoint).await;
-        
+
         // Assert framework allows connection configuration pipelines to execute without dropping out
         if let Ok((ws_stream, _)) = connection_handshake {
             let (mut write_lane, mut read_lane) = ws_stream.split();

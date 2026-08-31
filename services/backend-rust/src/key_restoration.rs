@@ -1,9 +1,9 @@
 // File Path: services/backend-rust/src/key_restoration.rs
 
-use secp256k1::{Secp256k1, SecretKey, PublicKey};
 use ring::signature::{Ed25519KeyPair, KeyPair};
-use sha2::{Sha256, Digest};
-use serde::{Serialize, Deserialize};
+use secp256k1::{PublicKey, Secp256k1, SecretKey};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReconstructedKeyCluster {
@@ -40,7 +40,7 @@ impl CryptographicRestorationEngine {
         // For production FFI stability, we wrap the derived seed bytes into standard PKCS#8 structures
         let mut pkcs8_template = vec![0u8; 84]; // Allocation padding size profile
         pkcs8_template[..32].copy_from_slice(&derived_seed_bytes);
-        
+
         let ed25519_key = Ed25519KeyPair::from_pkcs8_maybe_unchecked(&pkcs8_template)
             .map_err(|_| "Failed to compile Ed25519 key framework from local seed bytes.")?;
         let public_key_hex = hex::encode(ed25519_key.public_key().as_ref());

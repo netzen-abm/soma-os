@@ -14,9 +14,10 @@ pub fn use_botanical_search(cx: &ScopeState) -> &UseCoroutine<ClientSearchQuery>
             let client = reqwest::Client::new();
             while let Some(query_packet) = rx.next().await {
                 println!("Streaming out network search request packet over secure proxy loops...");
-                
+
                 let target_endpoint = "http://127.0.0";
-                let response = client.post(target_endpoint)
+                let response = client
+                    .post(target_endpoint)
                     .json(&query_packet)
                     .send()
                     .await;
@@ -28,7 +29,9 @@ pub fn use_botanical_search(cx: &ScopeState) -> &UseCoroutine<ClientSearchQuery>
                             // Fire update patterns to render state tree widgets dynamically here
                         }
                     }
-                    Err(e) => eprintln!("Network routing infrastructure failure footprint: {:?}", e),
+                    Err(e) => {
+                        eprintln!("Network routing infrastructure failure footprint: {:?}", e)
+                    }
                 }
             }
         }

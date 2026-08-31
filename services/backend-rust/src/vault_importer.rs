@@ -1,10 +1,10 @@
+use crate::compressor::SovereignCompressor; // Reuses our DEFLATE stream tools
+use crate::device_sync::LocalDeviceHealthVault;
+use crate::vault_exporter::USBBackupContainer; // Reference storage container specifications
+use std::error::Error;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
-use std::error::Error;
-use crate::vault_exporter::USBBackupContainer; // Reference storage container specifications
-use crate::compressor::SovereignCompressor;     // Reuses our DEFLATE stream tools
-use crate::device_sync::LocalDeviceHealthVault;  // Target initialization structure
+use std::path::Path; // Target initialization structure
 
 pub struct VaultHardwareImporter;
 
@@ -15,7 +15,9 @@ impl VaultHardwareImporter {
     ) -> Result<LocalDeviceHealthVault, Box<dyn Error>> {
         let path_handle = Path::new(absolute_file_path);
         if !path_handle.exists() {
-            return Err("Target archive path location could not be resolved by host filesystems.".into());
+            return Err(
+                "Target archive path location could not be resolved by host filesystems.".into(),
+            );
         }
 
         // Step 1: Read raw binary stream data completely into memory buffers
@@ -41,7 +43,7 @@ impl VaultHardwareImporter {
         if !decrypted_json_plaintext.starts_with(parsing_prefix) {
             return Err("Decryption Execution Failure: Target payload wrapper lacks proper security metadata signatures.".into());
         }
-        
+
         let cleaned_vault_json = decrypted_json_plaintext.replacen(parsing_prefix, "", 1);
 
         // Step 5: Map fields directly onto target local hardware runtime memory states

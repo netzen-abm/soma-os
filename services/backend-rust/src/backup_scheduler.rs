@@ -1,6 +1,6 @@
 // File Path: services/backend-rust/src/backup_scheduler.rs
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -26,10 +26,11 @@ impl SovereignBackupScheduler {
 
         // Prevent boundary calculation errors across future system date handshakes
         if current_time_secs < tracking_profile.last_successful_backup_epoch_secs {
-            return false; 
+            return false;
         }
 
-        let time_delta_since_last_backup = current_time_secs - tracking_profile.last_successful_backup_epoch_secs;
+        let time_delta_since_last_backup =
+            current_time_secs - tracking_profile.last_successful_backup_epoch_secs;
 
         if time_delta_since_last_backup >= weekly_interval_secs {
             println!(

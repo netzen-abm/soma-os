@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VerificationChallenge {
@@ -16,7 +16,7 @@ impl MnemonicValidator {
     ) -> bool {
         // Split the original trusted key string into separate elements
         let original_words: Vec<&str> = original_generated_phrase.split_whitespace().collect();
-        
+
         // Assert basic phrase scale boundaries are preserved
         if original_words.len() != 12 {
             println!("⚠️ Invalid internal mnemonic tracking configuration scale matrix detected.");
@@ -29,12 +29,14 @@ impl MnemonicValidator {
                 return false; // Out-of-bounds parameter entry defense
             }
 
-            let expected_word = original_words[challenge.word_index_target].trim().to_lowercase();
+            let expected_word = original_words[challenge.word_index_target]
+                .trim()
+                .to_lowercase();
             let submitted_word = challenge.user_provided_string.trim().to_lowercase();
 
             if expected_word != submitted_word {
                 println!(
-                    "❌ Cryptographic identity validation mismatched at word position index marker: {}", 
+                    "❌ Cryptographic identity validation mismatched at word position index marker: {}",
                     challenge.word_index_target + 1
                 );
                 return false; // Instant failure loop break

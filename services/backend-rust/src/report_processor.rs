@@ -33,13 +33,13 @@ pub async fn handle_lab_report_upload(
     // Iterate through multi-part stream blocks securely
     while let Ok(Some(mut field)) = multipart_payload.next_field().await {
         let field_name = field.name().unwrap_or_default().to_string();
-        
+
         if field_name == "lab_report_pdf" {
             let mut binary_chunk_accumulator = Vec::new();
-            
+
             while let Ok(Some(chunk_bytes)) = field.chunk().await {
                 binary_chunk_accumulator.extend_from_slice(&chunk_bytes);
-                
+
                 // Active firewall checking block preventing memory overflow attacks
                 if binary_chunk_accumulator.len() > MAX_UPLOAD_SIZE_BYTES {
                     return (
@@ -54,7 +54,7 @@ pub async fn handle_lab_report_upload(
             }
 
             println!("📋 Ingested binary lab report document stream bytes: {}", binary_chunk_accumulator.len());
-            
+
             // In an end-to-end native compilation, bind a local engine library wrapper (such as pdfium or lopdf)
             // to extract raw strings without sending files to external third-party cloud engines.
             raw_text_buffer = String::from_utf8_lossy(&binary_chunk_accumulator).into_owned();
@@ -75,7 +75,7 @@ pub async fn handle_lab_report_upload(
     // Emulate intelligent key biomarker scanning rules across the text string signature
     let lower_text = raw_text_buffer.to_lowercase();
     let contains_critical_indicators = lower_text.contains("alkaline phosphatase") || lower_text.contains("osteolytic");
-    
+
     let analysis_output = ExtractedReportData {
         text_signature_extracted: format!("SomaOS Extracted Data: {}", raw_text_buffer.chars().take(200).collect::<String>()),
         detected_biomarkers_count: if contains_critical_indicators { 2 } else { 0 },

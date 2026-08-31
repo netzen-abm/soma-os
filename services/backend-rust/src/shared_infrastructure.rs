@@ -82,7 +82,9 @@ mod tests {
     #[test]
     fn security_and_knowledge_capabilities_are_not_claimed_validated() {
         assert_eq!(
-            capability("security.authenticated_encryption").unwrap().status,
+            capability("security.authenticated_encryption")
+                .unwrap()
+                .status,
             CapabilityStatus::Proposed
         );
         assert_eq!(
