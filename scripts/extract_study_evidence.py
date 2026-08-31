@@ -21,6 +21,14 @@ FIELD_PATTERNS = {
     ),
 }
 
+DESIGN_SIGNALS = (
+    ("randomized", "RANDOMIZED_SIGNAL"),
+    ("randomised", "RANDOMIZED_SIGNAL"),
+    ("clinical trial", "CLINICAL_TRIAL_SIGNAL"),
+    ("observational", "OBSERVATIONAL_SIGNAL"),
+    ("systematic review", "SYSTEMATIC_REVIEW_SIGNAL"),
+    ("meta-analysis", "META_ANALYSIS_SIGNAL"),
+)
 
 
 def extract_explicit_fields(source: dict[str, Any]) -> dict[str, Any]:
@@ -44,19 +52,15 @@ def extract_explicit_fields(source: dict[str, Any]) -> dict[str, Any]:
         "limitations": [],
         "extraction_status": "NOT_EXTRACTED",
         "extraction_method": "EXPLICIT_METADATA_ONLY",
+        "source_span_required": True,
+        "human_review_required": True,
     }
 
     lowered = text.lower()
-    if "randomized" in lowered or "randomised" in lowered:
-        result["study_design"] = "RANDOMIZED_SIGNAL"
-    elif "clinical trial" in lowered:
-        result["study_design"] = "CLINICAL_TRIAL_SIGNAL"
-    elif "observational" in lowered:
-        result["study_design"] = "OBSERVATIONAL_SIGNAL"
-    elif "systematic review" in lowered:
-        result["study_design"] = "SYSTEMATIC_REVIEW_SIGNAL"
-    elif "meta-analysis" in lowered:
-        result["study_design"] = "META_ANALYSIS_SIGNAL"
+    for phrase, signal in DESIGN_SIGNALS:
+        if phrase in lowered:
+            result["study_design"] = signal
+            break
 
     for field, pattern in FIELD_PATTERNS.items():
         match = re.search(pattern, text, flags=re.IGNORECASE)
@@ -68,11 +72,15 @@ def extract_explicit_fields(source: dict[str, Any]) -> dict[str, Any]:
         else:
             result[field] = f"{match.group(1)} {match.group(2)}"
 
-    if any(value is not None for value in result.values()):
+    extracted_fields = (
+        result["study_design"],
+        result["sample_size"],
+        result["duration_or_follow_up"],
+    )
+    if any(value is not None for value in extracted_fields):
         result["extraction_status"] = "PARTIALLY_EXTRACTED"
 
     return result
-
 
 
 def extract_document(document: dict[str, Any]) -> dict[str, Any]:
@@ -93,7 +101,6 @@ def extract_document(document: dict[str, Any]) -> dict[str, Any]:
         "study_extraction_mode": "EXPLICIT_METADATA_ONLY",
         "records": records,
     }
-
 
 
 def main() -> int:
