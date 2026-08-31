@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/canonical-draft-health-claim.schema.json",
+  "title": "SOMA Canonical Draft Health Evidence Claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["claim_id", "claim", "knowledge_class", "evidence_status", "sources", "safety", "review", "migration_metadata"],
+  "properties": {
+    "claim_id": {"type": "string", "pattern": "^SOMA-[A-Z0-9-]+$"},
+    "claim": {"type": ["string", "null"]},
+    "knowledge_class": {"type": ["string", "null"]},
+    "evidence_status": {"type": "string", "enum": ["UNREVIEWED", "SOURCE_FOUND", "SOURCE_VERIFIED", "EVIDENCE_ASSESSED", "SAFETY_REVIEWED", "PUBLISHED", "WITHDRAWN"]},
+    "evidence_level": {"type": ["string", "null"], "enum": [null, "NOT_ASSESSED", "VERY_LOW", "LOW", "MODERATE", "HIGH"]},
+    "population_context": {"type": ["string", "null"]},
+    "intervention_or_exposure": {"type": ["string", "null"]},
+    "outcome": {"type": ["string", "null"]},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "uncertainty": {"type": "array", "items": {"type": "string"}},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "safety": {"$ref": "#/$defs/safety"},
+    "management_boundary": {"type": "string", "enum": ["INFORMATION_ONLY", "MANAGEMENT_SUPPORT", "CLINICIAN_GUIDED"]},
+    "prohibited_claims": {"type": "array", "items": {"type": "string"}},
+    "review": {"$ref": "#/$defs/review"},
+    "migration_metadata": {"type": "object", "additionalProperties": true}
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_type", "title", "verification_url"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "source_type": {"type": "string"},
+        "title": {"type": "string"},
+        "publisher": {"type": ["string", "null"]},
+        "publication_date": {"type": ["string", "null"]},
+        "verification_url": {"type": "string", "format": "uri"},
+        "source_summary": {"type": ["string", "null"]}
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "interaction_notes", "professional_review_required"],
+      "properties": {
+        "status": {"type": "string", "enum": ["NOT_ASSESSED", "REVIEWED", "SAFETY_CONCERN", "CONTRAINDICATION_IDENTIFIED"]},
+        "interaction_notes": {"type": "array", "items": {"type": "string"}},
+        "professional_review_required": {"type": "boolean"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_state", "last_verified"],
+      "properties": {
+        "review_state": {"type": "string", "enum": ["UNREVIEWED", "SOURCE_FOUND", "SOURCE_VERIFIED", "EVIDENCE_ASSESSED", "SAFETY_REVIEWED", "PUBLISHED", "WITHDRAWN"]},
+        "reviewer": {"type": ["string", "null"]},
+        "last_verified": {"type": ["string", "null"], "format": "date"}
+      }
+    }
+  }
+}
