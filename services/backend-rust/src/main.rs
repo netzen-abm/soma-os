@@ -72,11 +72,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db_manager,
     });
 
-    let app = Router::new()
+    // Merge stateless webhook routers before introducing the application state.
+    let app = whatsapp_webhook::routes()
+        .merge(messenger_webhook::routes())
         .route("/api/health", get(system_health_check))
         .route("/api/v1/webhook/unified", post(process_unified_bot_webhook))
-        .merge(whatsapp_webhook::routes())
-        .merge(messenger_webhook::routes())
         .with_state(shared_state);
 
     let bind_address =
@@ -108,7 +108,6 @@ async fn process_unified_bot_webhook(
             "Outbound message blocked by compliance shield: {:?}",
             evaluation.security_compliance_flags
         );
-
         return (
             StatusCode::UNPROCESSABLE_ENTITY,
             "Response blocked by the SOMA-OS compliance policy.".to_string(),
