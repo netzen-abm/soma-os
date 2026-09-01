@@ -6,7 +6,7 @@ from policy_kernel import Decision, PolicyKernel, PolicyRequest
 
 REGISTRY = Path(__file__).with_name("capability_registry.json")
 GRANTS = {
-    ("agent", "evidence.research", "read"): True,
+    ("agent-1", "evidence.research", "read"): True,
 }
 
 
@@ -23,9 +23,15 @@ class PolicyKernelTests(unittest.TestCase):
             context={},
         )
 
-    def test_registered_capability_uses_explicit_grant(self):
+    def test_registered_capability_uses_identity_grant(self):
         result = self.kernel.evaluate(self.request)
         self.assertEqual(result.decision, Decision.ALLOW)
+
+    def test_different_identity_fails_closed(self):
+        request = self._with_request(principal_id="agent-2")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "authorization_required")
 
     def test_missing_grant_fails_closed(self):
         request = self._with_request(action="write")
@@ -45,6 +51,12 @@ class PolicyKernelTests(unittest.TestCase):
         request = self._with_request(principal_id="")
         result = self.kernel.evaluate(request)
         self.assertEqual(result.decision, Decision.DENY)
+
+    def test_malformed_context_fails_closed(self):
+        request = self._with_request(context=None)
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "invalid_request")
 
     def test_human_review_precedes_grant(self):
         request = self._with_context(human_review="required")
