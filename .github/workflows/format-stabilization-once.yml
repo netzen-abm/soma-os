@@ -1,3 +1,4 @@
+# One-time formatter; remove after stabilization is formatted.
 name: SOMA One-Time Stabilization Formatter
 
 on:
