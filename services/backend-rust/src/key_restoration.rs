@@ -11,12 +11,9 @@ pub struct ReconstructedKeyCluster {
 pub struct CryptographicRestorationEngine;
 
 impl CryptographicRestorationEngine {
-    pub fn rebuild_keys_from_mnemonic(
-        _mnemonic_phrase: &str,
-    ) -> Result<ReconstructedKeyCluster, Box<dyn Error>> {
+    pub fn rebuild_keys_from_mnemonic(_mnemonic_phrase: &str) -> Result<ReconstructedKeyCluster, Box<dyn Error>> {
         Err(std::io::Error::other(
-            "Mnemonic recovery is disabled until a standards-compliant mnemonic "
-                .to_string()
+            "Mnemonic recovery is disabled until a standards-compliant mnemonic ".to_string()
                 + "derivation scheme, secure key handling, and recovery tests "
                 + "are implemented.",
         )

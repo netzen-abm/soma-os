@@ -8,8 +8,7 @@ impl VaultHardwareImporter {
         _absolute_file_path: &str,
     ) -> Result<LocalDeviceHealthVault, Box<dyn Error>> {
         Err(std::io::Error::other(
-            "Vault import is disabled until authenticated encryption, integrity "
-                .to_string()
+            "Vault import is disabled until authenticated encryption, integrity ".to_string()
                 + "verification, and key lifecycle management are implemented "
                 + "and tested.",
         )
