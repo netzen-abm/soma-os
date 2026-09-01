@@ -1,7 +1,7 @@
 # SOMA Policy Kernel v0.1
 
-**Status:** Proposed implementation contract
-**Branch:** `feature/policy-kernel-foundation`
+**Status:** Foundation contract
+**Version:** 0.1.0
 
 ## Purpose
 
@@ -44,7 +44,7 @@ REQUIRE_HUMAN_REVIEW
 DEGRADE
 ```
 
-Unknown, malformed, stale, or insufficiently authorized requests fail closed.
+Unknown, malformed, or insufficiently authorized requests fail closed.
 
 ## Policy precedence
 
@@ -66,6 +66,17 @@ A lower layer cannot override a higher safety or authorization constraint.
 User preferences can shape permitted behavior but cannot grant authority that
 system or organization policy forbids.
 
+## Authorization grants
+
+The v0.1 evaluator consumes explicit grants supplied by a trusted policy
+source. A request's own context must never be able to create its authorization
+grant. The evaluator therefore denies a request unless its principal type,
+capability, and action match an explicit positive grant.
+
+The grant store is intentionally outside the evaluator. A later implementation
+may load grants from a database, policy service, signed policy bundle, or other
+approved source without changing the decision contract.
+
 ## Delegation
 
 Delegation must be explicit, scoped, time-bounded, and auditable. An agent
@@ -77,20 +88,19 @@ Production access must use least privilege and scoped authorization. Stored
 conversation memory, prior consent, or agent assertions are not sufficient by
 themselves to authorize a new consequential operation.
 
-## Consent
+## Consent and human review
 
 Consent is a policy input, not an unconditional permission token. The kernel
 must evaluate whether consent is applicable to the requested capability,
 resource, purpose, scope, and current context.
 
-## Human review
-
 High-risk actions may require human review even when a technical credential
 would permit execution. Review requirements must be explicit and auditable.
 
-## Audit event
+## Audit event contract
 
-A consequential decision should record, at minimum:
+A consequential decision should eventually produce an audit event containing,
+at minimum:
 
 ```text
 request_id
@@ -105,8 +115,10 @@ reason_codes
 timestamp
 ```
 
-Sensitive payloads and secrets must not be copied into the audit record merely
-to make an event easier to debug.
+The v0.1 evaluator does not persist audit events itself. Audit emission belongs
+to the surrounding gateway/runtime so that policy evaluation remains
+side-effect free. Sensitive payloads and secrets must not be copied into audit
+records merely to make an event easier to debug.
 
 ## Adapter rule
 
@@ -118,8 +130,8 @@ capability contracts.
 ## Determinism
 
 The v0.1 evaluator must be deterministic for the same normalized request,
-policy version, and policy inputs. Network calls and model inference do not
-belong inside the core decision function.
+policy version, registry, and grant set. Network calls and model inference do
+not belong inside the core decision function.
 
 ## Versioning
 
@@ -133,4 +145,5 @@ a new contract version and compatibility review before adoption by `main`.
 - unrestricted agent delegation;
 - automatic permission escalation;
 - production cryptography activation;
-- protocol-specific authorization logic inside the kernel.
+- protocol-specific authorization logic inside the kernel;
+- persistent audit storage inside the evaluator.
