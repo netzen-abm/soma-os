@@ -17,10 +17,7 @@ impl SovereignCompressor {
         // Finalize writing stream processes to recover byte slices
         let compressed_bytes = encoder.finish()?;
 
-        println!(
-            "🗜️ Data compression complete. Extracted compressed block bytes: {}",
-            compressed_bytes.len()
-        );
+        println!("🗜️ Data compression complete. Extracted compressed block bytes: {}", compressed_bytes.len());
         Ok(compressed_bytes)
     }
 

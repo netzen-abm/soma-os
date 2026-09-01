@@ -29,9 +29,7 @@ impl MnemonicValidator {
                 return false; // Out-of-bounds parameter entry defense
             }
 
-            let expected_word = original_words[challenge.word_index_target]
-                .trim()
-                .to_lowercase();
+            let expected_word = original_words[challenge.word_index_target].trim().to_lowercase();
             let submitted_word = challenge.user_provided_string.trim().to_lowercase();
 
             if expected_word != submitted_word {

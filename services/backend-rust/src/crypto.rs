@@ -31,22 +31,17 @@ impl SovereignCryptoEngine {
         raw_user_id: &str,
         vitality_score: u8,
         schema_ver: &str,
-    ) -> Result<
-        CryptographicVerificationPackage,
-        Box<dyn std::error::Error>,
-    > {
+    ) -> Result<CryptographicVerificationPackage, Box<dyn std::error::Error>> {
         let rng = SystemRandom::new();
-        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng)
-            .map_err(|_| "failed to generate Ed25519 key material")?;
+        let pkcs8_bytes =
+            Ed25519KeyPair::generate_pkcs8(&rng).map_err(|_| "failed to generate Ed25519 key material")?;
         let key_pair = Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref())
             .map_err(|_| "failed to parse generated Ed25519 key material")?;
 
         let payload = LocalVerificationPayload {
             anonymized_user_hash: Self::generate_anonymized_user_hash(raw_user_id),
             verified_vitality_score: vitality_score,
-            timestamp_epoch: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)?
-                .as_secs(),
+            timestamp_epoch: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs(),
             salud_schema_version: schema_ver.to_string(),
         };
 
@@ -55,9 +50,7 @@ impl SovereignCryptoEngine {
 
         Ok(CryptographicVerificationPackage {
             raw_payload: payload,
-            public_verification_key_hex: hex::encode(
-                key_pair.public_key().as_ref(),
-            ),
+            public_verification_key_hex: hex::encode(key_pair.public_key().as_ref()),
             signature_hex: hex::encode(signature.as_ref()),
         })
     }
@@ -69,18 +62,9 @@ mod tests {
 
     #[test]
     fn test_anonymized_user_hash_generation() {
-        let hash_1 =
-            SovereignCryptoEngine::generate_anonymized_user_hash(
-                "telegram_user_998877",
-            );
-        let hash_2 =
-            SovereignCryptoEngine::generate_anonymized_user_hash(
-                "telegram_user_998877",
-            );
-        let hash_3 =
-            SovereignCryptoEngine::generate_anonymized_user_hash(
-                "whatsapp_user_112233",
-            );
+        let hash_1 = SovereignCryptoEngine::generate_anonymized_user_hash("telegram_user_998877");
+        let hash_2 = SovereignCryptoEngine::generate_anonymized_user_hash("telegram_user_998877");
+        let hash_3 = SovereignCryptoEngine::generate_anonymized_user_hash("whatsapp_user_112233");
 
         assert_eq!(hash_1, hash_2);
         assert_ne!(hash_1, hash_3);
@@ -89,27 +73,13 @@ mod tests {
 
     #[test]
     fn test_local_health_milestone_signature_generation() {
-        let result =
-            SovereignCryptoEngine::sign_health_milestone(
-                "user_biometric_node_01",
-                92,
-                "v1.0.0-salud",
-            );
+        let result = SovereignCryptoEngine::sign_health_milestone("user_biometric_node_01", 92, "v1.0.0-salud");
 
         assert!(result.is_ok());
         let package = result.unwrap();
-        assert_eq!(
-            package.public_verification_key_hex.len(),
-            64
-        );
+        assert_eq!(package.public_verification_key_hex.len(), 64);
         assert_eq!(package.signature_hex.len(), 128);
-        assert_eq!(
-            package.raw_payload.verified_vitality_score,
-            92,
-        );
-        assert_eq!(
-            package.raw_payload.salud_schema_version,
-            "v1.0.0-salud",
-        );
+        assert_eq!(package.raw_payload.verified_vitality_score, 92,);
+        assert_eq!(package.raw_payload.salud_schema_version, "v1.0.0-salud",);
     }
 }

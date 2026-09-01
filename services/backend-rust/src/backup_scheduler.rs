@@ -12,12 +12,8 @@ pub struct BackupMetadataTrackingLog {
 pub struct SovereignBackupScheduler;
 
 impl SovereignBackupScheduler {
-    pub fn evaluate_weekly_backup_alert_requirement(
-        tracking_profile: &BackupMetadataTrackingLog,
-    ) -> bool {
-        let current_time_secs = match SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-        {
+    pub fn evaluate_weekly_backup_alert_requirement(tracking_profile: &BackupMetadataTrackingLog) -> bool {
+        let current_time_secs = match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(duration) => duration.as_secs(),
             Err(_) => return false,
         };
@@ -26,8 +22,7 @@ impl SovereignBackupScheduler {
             return false;
         }
 
-        let elapsed = current_time_secs
-            - tracking_profile.last_successful_backup_epoch_secs;
+        let elapsed = current_time_secs - tracking_profile.last_successful_backup_epoch_secs;
 
         elapsed >= WEEKLY_INTERVAL_SECS
     }

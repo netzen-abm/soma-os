@@ -54,14 +54,9 @@ struct TextBody {
 
 async fn verify(Query(params): Query<VerificationParams>) -> (StatusCode, String) {
     match env::var("META_VERIFY_TOKEN") {
-        Ok(token) if params.mode == "subscribe" && params.verify_token == token => {
-            (StatusCode::OK, params.challenge)
-        }
+        Ok(token) if params.mode == "subscribe" && params.verify_token == token => (StatusCode::OK, params.challenge),
         Ok(_) => (StatusCode::FORBIDDEN, "Token mismatch".to_string()),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Webhook verification is not configured".to_string(),
-        ),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Webhook verification is not configured".to_string()),
     }
 }
 
@@ -77,10 +72,7 @@ async fn receive(Json(payload): Json<WebhookPayload>) -> StatusCode {
             if let Some(messages) = change.value.messages {
                 for message in messages {
                     if let Some(text) = message.text {
-                        println!(
-                            "Received WhatsApp message from {}: {}",
-                            message.from, text.body
-                        );
+                        println!("Received WhatsApp message from {}: {}", message.from, text.body);
                     }
                 }
             }
@@ -90,7 +82,5 @@ async fn receive(Json(payload): Json<WebhookPayload>) -> StatusCode {
 }
 
 pub fn routes() -> Router {
-    Router::new()
-        .route("/api/v1/whatsapp", get(verify))
-        .route("/api/v1/whatsapp", post(receive))
+    Router::new().route("/api/v1/whatsapp", get(verify)).route("/api/v1/whatsapp", post(receive))
 }

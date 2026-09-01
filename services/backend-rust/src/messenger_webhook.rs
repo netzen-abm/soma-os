@@ -50,24 +50,15 @@ pub struct MessengerMessageContent {
     pub text: Option<String>,
 }
 
-async fn verify_messenger_webhook(
-    Query(params): Query<MessengerHandshakeParams>,
-) -> (StatusCode, String) {
+async fn verify_messenger_webhook(Query(params): Query<MessengerHandshakeParams>) -> (StatusCode, String) {
     match env::var("META_VERIFY_TOKEN") {
-        Ok(token) if params.mode == "subscribe" && params.verify_token == token => {
-            (StatusCode::OK, params.challenge)
-        }
+        Ok(token) if params.mode == "subscribe" && params.verify_token == token => (StatusCode::OK, params.challenge),
         Ok(_) => (StatusCode::FORBIDDEN, "Handshake token refused".to_string()),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Webhook verification is not configured".to_string(),
-        ),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Webhook verification is not configured".to_string()),
     }
 }
 
-async fn inbound_messenger_message_router(
-    Json(payload): Json<MessengerWebhookPayload>,
-) -> StatusCode {
+async fn inbound_messenger_message_router(Json(payload): Json<MessengerWebhookPayload>) -> StatusCode {
     if payload.object != "page" {
         return StatusCode::BAD_REQUEST;
     }
@@ -75,10 +66,7 @@ async fn inbound_messenger_message_router(
         for event in entry.messaging {
             if let Some(message_content) = event.message {
                 if let Some(user_text) = message_content.text {
-                    println!(
-                        "Received Messenger message from {}: {}",
-                        event.sender.id, user_text
-                    );
+                    println!("Received Messenger message from {}: {}", event.sender.id, user_text);
                 }
             }
         }

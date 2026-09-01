@@ -52,10 +52,7 @@ impl SomaDatabaseManager {
     }
 
     // Fetch historical metric records for an explicit tracking signature safely without index identification exposure
-    pub async fn get_logs_by_user_hash(
-        &self,
-        user_hash: &str,
-    ) -> Result<Vec<DbVitalRecord>, Box<dyn Error>> {
+    pub async fn get_logs_by_user_hash(&self, user_hash: &str) -> Result<Vec<DbVitalRecord>, Box<dyn Error>> {
         let select_query = r#"
             SELECT log_id, anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex
             FROM anonymized_user_vitals

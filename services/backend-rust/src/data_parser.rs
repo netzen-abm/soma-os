@@ -77,43 +77,30 @@ impl BotanicalSearchEngine {
         let query_lowercase = user_raw_query.to_lowercase();
 
         for botanical in db.botanicals {
-            let matches_botanical = query_lowercase
-                .contains(&botanical.common_name.to_lowercase())
-                || query_lowercase
-                    .contains(&botanical.botanical_classification.to_lowercase());
+            let matches_botanical = query_lowercase.contains(&botanical.common_name.to_lowercase())
+                || query_lowercase.contains(&botanical.botanical_classification.to_lowercase());
 
-            let target_condition =
-                &botanical.siridhanya_protocols.target_condition;
-            let matches_condition = query_lowercase
-                .contains(&target_condition.to_lowercase())
-                || target_condition
-                    .split('/')
-                    .any(|condition| {
-                        query_lowercase.contains(condition.trim())
-                    });
+            let target_condition = &botanical.siridhanya_protocols.target_condition;
+            let matches_condition = query_lowercase.contains(&target_condition.to_lowercase())
+                || target_condition.split('/').any(|condition| query_lowercase.contains(condition.trim()));
 
             if matches_botanical || matches_condition {
                 let triggered_alert = botanical
                     .drug_interaction_pairings
                     .iter()
                     .find(|interaction| {
-                        interaction.example_drugs.iter().any(|drug| {
-                            active_user_prescriptions
-                                .iter()
-                                .any(|rx| rx.eq_ignore_ascii_case(drug))
-                        })
+                        interaction
+                            .example_drugs
+                            .iter()
+                            .any(|drug| active_user_prescriptions.iter().any(|rx| rx.eq_ignore_ascii_case(drug)))
                     })
                     .cloned();
 
                 return Ok(Some(InterceptionResult {
                     condition_detected: target_condition.clone(),
-                    botanical_found: format!(
-                        "{} ({})",
-                        botanical.common_name, botanical.sanskrit_name
-                    ),
+                    botanical_found: format!("{} ({})", botanical.common_name, botanical.sanskrit_name),
                     safety_alert: triggered_alert,
-                    structured_management_framework:
-                        botanical.siridhanya_protocols.clone(),
+                    structured_management_framework: botanical.siridhanya_protocols.clone(),
                     clinical_notes: botanical.clinical_pharmacology.clone(),
                 }));
             }
@@ -134,29 +121,20 @@ impl SomaSearchKernel {
         let query_lowercase = user_raw_text.to_lowercase();
 
         for record in db.botanicals {
-            let target_condition =
-                record.siridhanya_protocols.target_condition.to_lowercase();
-            let contains_keyword = target_condition
-                .split('/')
-                .any(|keyword| query_lowercase.contains(keyword.trim()));
+            let target_condition = record.siridhanya_protocols.target_condition.to_lowercase();
+            let contains_keyword = target_condition.split('/').any(|keyword| query_lowercase.contains(keyword.trim()));
 
             if contains_keyword {
                 let differentials = vec![
-                    "Potential malignant or benign tissue-growth conditions."
-                        .to_string(),
-                    "Potential chronic systemic inflammatory or metabolic factors."
-                        .to_string(),
-                    "Potential immune or microbiome-related factors."
-                        .to_string(),
+                    "Potential malignant or benign tissue-growth conditions.".to_string(),
+                    "Potential chronic systemic inflammatory or metabolic factors.".to_string(),
+                    "Potential immune or microbiome-related factors.".to_string(),
                 ];
 
                 let management_options = vec![
-                    "Traditional dietary and food-based management framework."
-                        .to_string(),
-                    "Evidence-based diagnostic and monitoring pathways."
-                        .to_string(),
-                    "Clinician-guided personalized management options."
-                        .to_string(),
+                    "Traditional dietary and food-based management framework.".to_string(),
+                    "Evidence-based diagnostic and monitoring pathways.".to_string(),
+                    "Clinician-guided personalized management options.".to_string(),
                 ];
 
                 return Ok(ClinicalSafetyResponse {
@@ -179,15 +157,13 @@ impl SomaSearchKernel {
             management_options: Vec::new(),
             traditional_millet_framework: None,
             open_source_precision_oncology_blueprint: None,
-            required_safety_label_verification_prompt:
-                "No matching condition was identified in the current index.".to_string(),
+            required_safety_label_verification_prompt: "No matching condition was identified in the current index."
+                .to_string(),
         })
     }
 }
 
-fn load_database(
-    db_path: &str,
-) -> Result<BotanicalDatabase, Box<dyn std::error::Error>> {
+fn load_database(db_path: &str) -> Result<BotanicalDatabase, Box<dyn std::error::Error>> {
     let mut file = File::open(Path::new(db_path))?;
     let mut json_string = String::new();
     file.read_to_string(&mut json_string)?;

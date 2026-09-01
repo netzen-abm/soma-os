@@ -12,11 +12,7 @@ impl MultiChannelMenuController {
     }
 
     // Standardized processing matrix handling single character entry points across Telegram, WhatsApp, and Messenger threads
-    pub async fn evaluate_channel_input(
-        &mut self,
-        user_identifier: &str,
-        user_raw_text: &str,
-    ) -> String {
+    pub async fn evaluate_channel_input(&mut self, user_identifier: &str, user_raw_text: &str) -> String {
         let normalized_command = user_raw_text.trim();
 
         match normalized_command {

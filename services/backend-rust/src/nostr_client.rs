@@ -3,10 +3,7 @@ use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio_tungstenite::{
-    connect_async,
-    tungstenite::protocol::Message,
-};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NostrEvent {
@@ -22,22 +19,8 @@ pub struct NostrEvent {
 pub struct NostrBroadcastEngine;
 
 impl NostrBroadcastEngine {
-    fn calculate_event_id(
-        pubkey: &str,
-        created_at: u64,
-        kind: u32,
-        tags: &[Vec<String>],
-        content: &str,
-    ) -> String {
-        let serialized = serde_json::json!([
-            0,
-            pubkey,
-            created_at,
-            kind,
-            tags,
-            content
-        ])
-        .to_string();
+    fn calculate_event_id(pubkey: &str, created_at: u64, kind: u32, tags: &[Vec<String>], content: &str) -> String {
+        let serialized = serde_json::json!([0, pubkey, created_at, kind, tags, content]).to_string();
 
         let mut hasher = Sha256::new();
         hasher.update(serialized.as_bytes());
@@ -55,21 +38,11 @@ impl NostrBroadcastEngine {
         let public_key = PublicKey::from_secret_key(&secp, &secret_key);
         let pubkey_hex = hex::encode(&public_key.serialize()[1..33]);
 
-        let current_timestamp =
-            SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        let current_timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
-        let tags = vec![vec![
-            "t".to_string(),
-            "somaos_vitals".to_string(),
-        ]];
+        let tags = vec![vec!["t".to_string(), "somaos_vitals".to_string()]];
 
-        let event_id = Self::calculate_event_id(
-            &pubkey_hex,
-            current_timestamp,
-            1,
-            &tags,
-            update_message,
-        );
+        let event_id = Self::calculate_event_id(&pubkey_hex, current_timestamp, 1, &tags, update_message);
 
         // Signing is intentionally disabled until a standards-compliant
         // Nostr Schnorr implementation is integrated and tested.

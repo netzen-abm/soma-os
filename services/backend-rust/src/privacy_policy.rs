@@ -39,9 +39,7 @@ impl PrivacyPolicy {
     ) -> bool {
         match class {
             DataClass::Public | DataClass::NonPersonal => minimized,
-            DataClass::Personal | DataClass::SensitivePersonal => {
-                explicit_user_authorization && encrypted && minimized
-            }
+            DataClass::Personal | DataClass::SensitivePersonal => explicit_user_authorization && encrypted && minimized,
         }
     }
 }
@@ -52,41 +50,15 @@ mod tests {
 
     #[test]
     fn personal_data_is_local_by_default() {
-        assert_eq!(
-            PrivacyPolicy::default_disposition(DataClass::Personal),
-            DataDisposition::LocalOnly
-        );
-        assert_eq!(
-            PrivacyPolicy::default_disposition(DataClass::SensitivePersonal),
-            DataDisposition::LocalOnly
-        );
+        assert_eq!(PrivacyPolicy::default_disposition(DataClass::Personal), DataDisposition::LocalOnly);
+        assert_eq!(PrivacyPolicy::default_disposition(DataClass::SensitivePersonal), DataDisposition::LocalOnly);
     }
 
     #[test]
     fn sensitive_transfer_requires_all_guards() {
-        assert!(!PrivacyPolicy::transfer_allowed(
-            DataClass::SensitivePersonal,
-            false,
-            true,
-            true
-        ));
-        assert!(!PrivacyPolicy::transfer_allowed(
-            DataClass::SensitivePersonal,
-            true,
-            false,
-            true
-        ));
-        assert!(!PrivacyPolicy::transfer_allowed(
-            DataClass::SensitivePersonal,
-            true,
-            true,
-            false
-        ));
-        assert!(PrivacyPolicy::transfer_allowed(
-            DataClass::SensitivePersonal,
-            true,
-            true,
-            true
-        ));
+        assert!(!PrivacyPolicy::transfer_allowed(DataClass::SensitivePersonal, false, true, true));
+        assert!(!PrivacyPolicy::transfer_allowed(DataClass::SensitivePersonal, true, false, true));
+        assert!(!PrivacyPolicy::transfer_allowed(DataClass::SensitivePersonal, true, true, false));
+        assert!(PrivacyPolicy::transfer_allowed(DataClass::SensitivePersonal, true, true, true));
     }
 }

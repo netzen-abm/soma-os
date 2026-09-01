@@ -26,10 +26,7 @@ impl FermentationOrchestrator {
 
     // Spin up an isolated tracking worker for a user's fermenting porridge batch
     pub async fn trigger_fermentation_timer(&mut self, user_phone: &str, millet: &str) {
-        let current_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
         // 8 hours fermentation standard defined by Dr. Khadar Vali's protocols
         let fermentation_hours = 8;
@@ -41,12 +38,8 @@ impl FermentationOrchestrator {
             target_duration_hours: fermentation_hours,
         };
 
-        self.active_timers
-            .insert(user_phone.to_string(), timer_profile.clone());
-        println!(
-            "🚀 Fermentation tracker initialized for {}. Millet: {}",
-            user_phone, millet
-        );
+        self.active_timers.insert(user_phone.to_string(), timer_profile.clone());
+        println!("🚀 Fermentation tracker initialized for {}. Millet: {}", user_phone, millet);
 
         // Spawn a background thread worker to wait out the maturation period asynchronously
         let runner_clone = self.outbound_runner.clone();
@@ -63,18 +56,9 @@ impl FermentationOrchestrator {
                 millet_name
             );
 
-            match runner_clone
-                .send_whatsapp_text(&phone, &warning_template)
-                .await
-            {
-                Ok(_) => println!(
-                    "✅ WhatsApp fermentation alert sent successfully to {}",
-                    phone
-                ),
-                Err(e) => eprintln!(
-                    "❌ Outbound WhatsApp timer notification channel error: {:?}",
-                    e
-                ),
+            match runner_clone.send_whatsapp_text(&phone, &warning_template).await {
+                Ok(_) => println!("✅ WhatsApp fermentation alert sent successfully to {}", phone),
+                Err(e) => eprintln!("❌ Outbound WhatsApp timer notification channel error: {:?}", e),
             }
         });
     }
