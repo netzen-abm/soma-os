@@ -16,7 +16,11 @@ impl VaultHardwareExporter {
         _vault: &LocalDeviceHealthVault,
         _target_usb_directory: &str,
     ) -> Result<String, Box<dyn std::error::Error>> {
-        Err("Vault export is disabled until authenticated encryption and key ".to_string()
-            + "lifecycle management are implemented and tested.".into())
+        Err(std::io::Error::other(
+            "Vault export is disabled until authenticated encryption and key "
+                .to_string()
+                + "lifecycle management are implemented and tested.",
+        )
+        .into())
     }
 }
