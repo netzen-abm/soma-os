@@ -6,7 +6,7 @@ from policy_kernel import Decision, PolicyKernel, PolicyRequest
 
 REGISTRY = Path(__file__).with_name("capability_registry.json")
 GRANTS = {
-    ("agent-1", "evidence.research", "read"): True,
+    ("agent", "evidence.research", "read", "research-source"): True,
 }
 
 
@@ -23,12 +23,24 @@ class PolicyKernelTests(unittest.TestCase):
             context={},
         )
 
-    def test_registered_capability_uses_identity_grant(self):
+    def test_registered_capability_uses_identity_and_resource_grant(self):
         result = self.kernel.evaluate(self.request)
         self.assertEqual(result.decision, Decision.ALLOW)
 
     def test_different_identity_fails_closed(self):
         request = self._with_request(principal_id="agent-2")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "authorization_required")
+
+    def test_principal_type_mismatch_fails_closed(self):
+        request = self._with_request(principal_type="user")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "principal_type_mismatch")
+
+    def test_resource_type_is_part_of_grant(self):
+        request = self._with_request(resource_type="user-profile")
         result = self.kernel.evaluate(request)
         self.assertEqual(result.decision, Decision.DENY)
         self.assertEqual(result.reason_code, "authorization_required")
