@@ -92,35 +92,20 @@ mod tests {
 
     #[test]
     fn evidence_capabilities_are_shared_but_not_overclaimed() {
-        assert_eq!(
-            capability("knowledge.provenance").unwrap().status,
-            CapabilityStatus::Experimental
-        );
-        assert_eq!(
-            capability("knowledge.evidence").unwrap().status,
-            CapabilityStatus::Experimental
-        );
-        assert_eq!(
-            capability("data.evidence_migration").unwrap().status,
-            CapabilityStatus::Experimental
-        );
+        assert_eq!(capability("knowledge.provenance").unwrap().status, CapabilityStatus::Experimental);
+        assert_eq!(capability("knowledge.evidence").unwrap().status, CapabilityStatus::Experimental);
+        assert_eq!(capability("data.evidence_migration").unwrap().status, CapabilityStatus::Experimental);
     }
 
     #[test]
     fn adapter_boundary_is_a_shared_infrastructure_capability() {
-        let capability = capability("infrastructure.capability_adapter_boundary")
-            .expect("capability adapter boundary");
+        let capability = capability("infrastructure.capability_adapter_boundary").expect("capability adapter boundary");
         assert_eq!(capability.domain, CapabilityDomain::Infrastructure);
         assert_eq!(capability.status, CapabilityStatus::Validated);
     }
 
     #[test]
     fn security_capability_is_not_claimed_validated() {
-        assert_eq!(
-            capability("security.authenticated_encryption")
-                .unwrap()
-                .status,
-            CapabilityStatus::Proposed
-        );
+        assert_eq!(capability("security.authenticated_encryption").unwrap().status, CapabilityStatus::Proposed);
     }
 }
