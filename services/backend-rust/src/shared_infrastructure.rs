@@ -117,7 +117,9 @@ mod tests {
     #[test]
     fn security_capability_is_not_claimed_validated() {
         assert_eq!(
-            capability("security.authenticated_encryption").unwrap().status,
+            capability("security.authenticated_encryption")
+                .unwrap()
+                .status,
             CapabilityStatus::Proposed
         );
     }
