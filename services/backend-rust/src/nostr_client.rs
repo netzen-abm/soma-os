@@ -24,12 +24,7 @@ mod tests {
 
     #[tokio::test]
     async fn broadcast_fails_closed_without_validated_signing() {
-        let result = NostrBroadcastEngine::broadcast_botanical_update(
-            "wss://example.invalid",
-            "00",
-            "test",
-        )
-        .await;
+        let result = NostrBroadcastEngine::broadcast_botanical_update("wss://example.invalid", "00", "test").await;
 
         assert!(result.is_err());
     }
