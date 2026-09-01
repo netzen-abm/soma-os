@@ -53,7 +53,9 @@ pub struct MessengerMessageContent {
     pub text: Option<String>,
 }
 
-async fn verify_messenger_webhook(Query(params): Query<MessengerHandshakeParams>) -> (StatusCode, String) {
+async fn verify_messenger_webhook(
+    Query(params): Query<MessengerHandshakeParams>,
+) -> (StatusCode, String) {
     match env::var("META_VERIFY_TOKEN") {
         Ok(token) if params.mode == "subscribe" && params.verify_token == token => {
             (StatusCode::OK, params.challenge)
@@ -66,7 +68,9 @@ async fn verify_messenger_webhook(Query(params): Query<MessengerHandshakeParams>
     }
 }
 
-async fn inbound_messenger_message_router(Json(payload): Json<MessengerWebhookPayload>) -> StatusCode {
+async fn inbound_messenger_message_router(
+    Json(payload): Json<MessengerWebhookPayload>,
+) -> StatusCode {
     if payload.object != "page" {
         return StatusCode::BAD_REQUEST;
     }
