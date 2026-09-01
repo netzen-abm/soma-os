@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/source-provenance.schema.json",
+  "title": "SOMA Source Span Provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_id", "verification_url", "extraction_status", "spans"],
+  "properties": {
+    "source_id": {"type": "string", "minLength": 1},
+    "verification_url": {"type": "string", "format": "uri"},
+    "verification_state": {
+      "type": "string",
+      "enum": [
+        "NOT_CHECKED",
+        "VERIFIED",
+        "REDIRECTED",
+        "UNAVAILABLE",
+        "INVALID",
+        "PLACEHOLDER",
+        "REQUIRES_MANUAL_REVIEW"
+      ]
+    },
+    "extraction_status": {
+      "type": "string",
+      "enum": [
+        "NOT_EXTRACTED",
+        "PARTIALLY_EXTRACTED",
+        "EXTRACTED",
+        "REQUIRES_SOURCE_REVIEW"
+      ]
+    },
+    "spans": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/span"}
+    }
+  },
+  "$defs": {
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "locator_type", "locator", "verification_state"],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "locator_type": {
+          "type": "string",
+          "enum": [
+            "PAGE",
+            "SECTION",
+            "PARAGRAPH",
+            "TABLE",
+            "FIGURE",
+            "LINE",
+            "ANCHOR",
+            "DOCUMENT_OFFSET"
+          ]
+        },
+        "locator": {"type": "string", "minLength": 1},
+        "quoted_text": {"type": ["string", "null"]},
+        "verification_state": {
+          "type": "string",
+          "enum": [
+            "UNVERIFIED",
+            "SOURCE_CONFIRMED",
+            "REVIEWED"
+          ]
+        }
+      }
+    }
+  }
+}

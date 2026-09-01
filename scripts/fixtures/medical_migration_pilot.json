@@ -1,0 +1,10 @@
+{
+  "version": "pilot-1",
+  "botanicals": [
+    {
+      "common_name": "Pilot Botanical",
+      "source": "https://example.org/source",
+      "claim": "This is informational management content."
+    }
+  ]
+}
