@@ -1,5 +1,7 @@
+import json
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Mapping
 
 
@@ -33,11 +35,18 @@ POLICY_VERSION = "0.1.0"
 
 
 class PolicyKernel:
-    """Small deterministic policy boundary; integrations live outside it."""
+    """Deterministic policy boundary using registry and explicit grants."""
+
+    def __init__(self, registry: Mapping[str, object]):
+        self._capabilities = self._index_capabilities(registry)
 
     def evaluate(self, request: PolicyRequest) -> PolicyDecision:
         if not self._request_is_valid(request):
             return self._deny("invalid_request")
+
+        capability = self._capabilities.get(request.capability_id)
+        if capability is None:
+            return self._deny("unknown_capability")
 
         if request.context.get("human_review") == "required":
             return PolicyDecision(
@@ -56,6 +65,9 @@ class PolicyKernel:
         if request.context.get("deny") == "true":
             return self._deny("policy_denied")
 
+        if request.context.get("grant") != "true":
+            return self._deny("authorization_required")
+
         if request.context.get("degrade") == "true":
             return PolicyDecision(
                 Decision.DEGRADE,
@@ -68,6 +80,28 @@ class PolicyKernel:
             POLICY_VERSION,
             "policy_allowed",
         )
+
+    @staticmethod
+    def from_registry_file(path: Path) -> "PolicyKernel":
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return PolicyKernel(data)
+
+    @staticmethod
+    def _index_capabilities(
+        registry: Mapping[str, object],
+    ) -> dict[str, Mapping[str, object]]:
+        capabilities = registry.get("capabilities")
+        if not isinstance(capabilities, list):
+            return {}
+
+        indexed: dict[str, Mapping[str, object]] = {}
+        for capability in capabilities:
+            if not isinstance(capability, dict):
+                continue
+            capability_id = capability.get("id")
+            if isinstance(capability_id, str) and capability_id.strip():
+                indexed[capability_id] = capability
+        return indexed
 
     @staticmethod
     def _request_is_valid(request: PolicyRequest) -> bool:
