@@ -56,14 +56,9 @@ struct TextBody {
 
 async fn verify(Query(params): Query<VerificationParams>) -> (StatusCode, String) {
     match env::var("META_VERIFY_TOKEN") {
-        Ok(token) if params.mode == "subscribe" && params.verify_token == token => {
-            (StatusCode::OK, params.challenge)
-        }
+        Ok(token) if params.mode == "subscribe" && params.verify_token == token => (StatusCode::OK, params.challenge),
         Ok(_) => (StatusCode::FORBIDDEN, "Token mismatch".to_string()),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Webhook verification is not configured".to_string(),
-        ),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Webhook verification is not configured".to_string()),
     }
 }
 
