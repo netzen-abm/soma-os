@@ -20,6 +20,24 @@
       "surfaces": ["research-tools"]
     },
     {
+      "id": "agent.platform",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "policy": ["privacy", "safety", "authorization", "provenance"],
+      "adapters": ["agent-runtime", "openclaw"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
+      "id": "protocol.mcp",
+      "version": "0.1.0",
+      "status": "adapter-boundary",
+      "maturity": "development",
+      "policy": ["authorization", "privacy", "safety", "provenance"],
+      "adapters": ["mcp-client", "mcp-server"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
       "id": "protocol.nostr",
       "version": "0.1.0",
       "status": "adapter-boundary",
