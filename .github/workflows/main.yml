@@ -12,8 +12,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-auto-format-policy: "staged-capability"
-
 jobs:
   code-audit:
     name: Rust format, compile and lint
