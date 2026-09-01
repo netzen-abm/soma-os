@@ -1,6 +1,5 @@
 use crate::nostr_client::NostrEvent;
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LocalDeviceHealthVault {
