@@ -71,7 +71,7 @@ class PolicyKernel:
             return self._deny("policy_denied")
 
         grant_key = (
-            request.principal_type,
+            request.principal_id,
             request.capability_id,
             request.action,
         )
@@ -118,6 +118,9 @@ class PolicyKernel:
 
     @staticmethod
     def _request_is_valid(request: PolicyRequest) -> bool:
+        if not isinstance(request.context, Mapping):
+            return False
+
         fields = (
             request.principal_id,
             request.principal_type,
@@ -126,7 +129,10 @@ class PolicyKernel:
             request.resource_id,
             request.action,
         )
-        return all(bool(value.strip()) for value in fields)
+        return all(
+            isinstance(value, str) and bool(value.strip())
+            for value in fields
+        )
 
     @staticmethod
     def _deny(reason_code: str) -> PolicyDecision:
