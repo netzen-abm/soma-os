@@ -1,7 +1,7 @@
 # SOMA Security Capability Status
 
-**Date:** 2026-08-31
-**Branch:** `stabilization/baseline-audit`
+**Date:** 2026-09-01  
+**Branch:** `main`
 
 ## Purpose
 
@@ -14,8 +14,8 @@ using stronger security terminology than the code supports.
 | --- | --- | --- |
 | Ed25519 local signing | IMPLEMENTED | Digital signature generation is implemented. |
 | SHA-256 hashing | IMPLEMENTED | Hashing is implemented. |
-| Nostr event ID hashing | IMPLEMENTED | Event ID calculation is implemented. |
-| Nostr Schnorr event signing | BLOCKED | Not implemented; do not claim signed Nostr events. |
+| Nostr event ID/data contract | IMPLEMENTED | The event contract remains available to dependent modules. |
+| Nostr Schnorr event signing | BLOCKED | Not implemented; Nostr broadcasting is fail-closed. |
 | Vault authenticated encryption | BLOCKED | Not implemented; vault export remains disabled. |
 | Vault integrity verification | BLOCKED | Not implemented; vault import remains disabled. |
 | Mnemonic standards-based recovery | BLOCKED | Not implemented; recovery remains disabled. |
@@ -32,9 +32,10 @@ integrity protection.
 
 ## Nostr boundary
 
-The current Nostr module calculates an event ID and derives a public key from
-a secp256k1 secret key, but deliberately leaves the event signature empty until
-a standards-compliant Schnorr implementation is integrated and tested.
+The Nostr event contract is retained because device-sync code depends on it,
+but the broadcast operation now fails closed. No unsigned, empty-signature, or
+mock-signed event is emitted. Standards-compliant Schnorr signing must be
+implemented and independently tested before broadcasting is enabled.
 
 Therefore Nostr event publication must not be described as cryptographically
 signed in the current state.
