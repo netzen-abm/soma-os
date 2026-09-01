@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1.0",
+  "capabilities": [
+    {
+      "id": "evidence.research",
+      "version": "0.1.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "policy": ["privacy", "safety", "provenance"],
+      "adapters": ["research-providers"],
+      "surfaces": ["web", "future-client-surfaces"]
+    },
+    {
+      "id": "evidence.migration",
+      "version": "0.1.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "policy": ["provenance", "safety", "publication-gate"],
+      "adapters": [],
+      "surfaces": ["research-tools"]
+    },
+    {
+      "id": "agent.platform",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "policy": ["privacy", "safety", "authorization", "provenance"],
+      "adapters": ["agent-runtime", "openclaw"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
+      "id": "protocol.mcp",
+      "version": "0.1.0",
+      "status": "adapter-boundary",
+      "maturity": "development",
+      "policy": ["authorization", "privacy", "safety", "provenance"],
+      "adapters": ["mcp-client", "mcp-server"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
+      "id": "protocol.nostr",
+      "version": "0.1.0",
+      "status": "adapter-boundary",
+      "maturity": "development",
+      "policy": ["authorization", "privacy", "auditability"],
+      "adapters": ["nostr"],
+      "surfaces": ["future-client-surfaces"]
+    },
+    {
+      "id": "protocol.web3",
+      "version": "0.1.0",
+      "status": "adapter-boundary",
+      "maturity": "planned",
+      "policy": ["authorization", "privacy", "user-choice"],
+      "adapters": ["web3-wallet", "blockchain"],
+      "surfaces": ["future-client-surfaces"]
+    },
+    {
+      "id": "identity.decentralized",
+      "version": "0.1.0",
+      "status": "adapter-boundary",
+      "maturity": "planned",
+      "policy": ["consent", "privacy", "authorization"],
+      "adapters": ["did", "verifiable-credentials"],
+      "surfaces": ["future-client-surfaces"]
+    },
+    {
+      "id": "storage.content-addressed",
+      "version": "0.1.0",
+      "status": "adapter-boundary",
+      "maturity": "planned",
+      "policy": ["privacy", "provenance", "retention"],
+      "adapters": ["ipfs", "future-content-addressed-provider"],
+      "surfaces": ["future-client-surfaces"]
+    },
+    {
+      "id": "intelligence.ai",
+      "version": "0.1.0",
+      "status": "optional",
+      "maturity": "development",
+      "policy": ["privacy", "safety", "provenance", "user-choice"],
+      "adapters": ["ai-provider"],
+      "surfaces": ["web", "future-client-surfaces"]
+    }
+  ]
+}
