@@ -1,7 +1,7 @@
 # SOMA Repository Cleanup Manifest
 
-**Date:** 2026-08-31
-**Branch:** `stabilization/baseline-audit`
+**Date:** 2026-09-01  
+**Branch:** `main`  
 **Policy:** Audit → verify → classify → archive → verify → delete.
 
 ## Rules
