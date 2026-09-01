@@ -32,20 +32,25 @@ class PolicyDecision:
 
 
 POLICY_VERSION = "0.1.0"
+GrantKey = tuple[str, str, str]
 
 
 class PolicyKernel:
     """Deterministic policy boundary using registry and explicit grants."""
 
-    def __init__(self, registry: Mapping[str, object]):
+    def __init__(
+        self,
+        registry: Mapping[str, object],
+        grants: Mapping[GrantKey, bool],
+    ):
         self._capabilities = self._index_capabilities(registry)
+        self._grants = dict(grants)
 
     def evaluate(self, request: PolicyRequest) -> PolicyDecision:
         if not self._request_is_valid(request):
             return self._deny("invalid_request")
 
-        capability = self._capabilities.get(request.capability_id)
-        if capability is None:
+        if request.capability_id not in self._capabilities:
             return self._deny("unknown_capability")
 
         if request.context.get("human_review") == "required":
@@ -65,7 +70,12 @@ class PolicyKernel:
         if request.context.get("deny") == "true":
             return self._deny("policy_denied")
 
-        if request.context.get("grant") != "true":
+        grant_key = (
+            request.principal_type,
+            request.capability_id,
+            request.action,
+        )
+        if self._grants.get(grant_key) is not True:
             return self._deny("authorization_required")
 
         if request.context.get("degrade") == "true":
@@ -82,9 +92,12 @@ class PolicyKernel:
         )
 
     @staticmethod
-    def from_registry_file(path: Path) -> "PolicyKernel":
+    def from_registry_file(
+        path: Path,
+        grants: Mapping[GrantKey, bool],
+    ) -> "PolicyKernel":
         data = json.loads(path.read_text(encoding="utf-8"))
-        return PolicyKernel(data)
+        return PolicyKernel(data, grants)
 
     @staticmethod
     def _index_capabilities(
