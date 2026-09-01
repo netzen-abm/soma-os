@@ -1,5 +1,5 @@
 # SOMA Rust formatting policy.
-# Keep source readable and reviewable.
+# Keep source readable, reviewable, and easy to maintain.
 max_width = 88
-use_small_heuristics = "Max"
+use_small_heuristics = "Default"
 newline_style = "Unix"
