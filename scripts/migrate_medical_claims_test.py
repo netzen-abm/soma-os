@@ -66,4 +66,46 @@ def test_migration_preserves_risk_and_legacy_sources(tmp_path: Path) -> None:
 
     assert record["migration_metadata"]["risk_language_hits"]
     assert record["migration_metadata"]["legacy_source_values"]
+    assert record["sources"][0]["verification_url"] == (
+        "https://example.org/source"
+    )
+    assert record["sources"][0]["source_type"] == "LEGACY_UNCLASSIFIED"
     assert record["management_boundary"] == "INFORMATION_ONLY"
+
+
+def test_invalid_source_reference_is_not_promoted(tmp_path: Path) -> None:
+    queue = {
+        "source_report": "legacy.json",
+        "items": [
+            {
+                "document_index": 8,
+                "risk_language_hits": [],
+                "source_values": [
+                    {"path": "$.source", "value": "not-a-url"},
+                ],
+            }
+        ],
+    }
+
+    result = run_migration(tmp_path, queue)
+    record = result["records"][0]
+
+    assert record["sources"] == []
+    assert record["evidence_status"] == "UNREVIEWED"
+    assert record["migration_metadata"]["publication_eligible"] is False
+
+
+def test_migration_output_is_json_serializable(tmp_path: Path) -> None:
+    queue = {
+        "source_report": "legacy.json",
+        "items": [
+            {
+                "document_index": 9,
+                "risk_language_hits": [{"term": "cure"}],
+                "source_values": [],
+            }
+        ],
+    }
+
+    result = run_migration(tmp_path, queue)
+    json.dumps(result)
