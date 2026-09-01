@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Map reviewed legacy findings into canonical claim-shaped records."""
+"""Map legacy findings into conservative canonical draft records."""
 
 from __future__ import annotations
 
@@ -7,18 +7,43 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 
 DEFAULT_BOUNDARY = "INFORMATION_ONLY"
 
 
+def build_sources(item: dict[str, Any]) -> list[dict[str, Any]]:
+    """Preserve source references without asserting their credibility."""
+    sources: list[dict[str, Any]] = []
+
+    for position, value in enumerate(item.get("source_values", []), 1):
+        url = str(value.get("value", ""))
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            continue
+
+        sources.append(
+            {
+                "source_id": f"LEGACY-SOURCE-{item['document_index']:04d}-{position:02d}",
+                "source_type": "LEGACY_UNCLASSIFIED",
+                "title": "Legacy source reference",
+                "publisher": None,
+                "publication_date": None,
+                "verification_url": url,
+                "source_summary": None,
+            }
+        )
+
+    return sources
+
+
 def map_item(item: dict[str, Any]) -> dict[str, Any]:
-    """Create a conservative canonical record from one review item."""
+    """Create a conservative canonical draft record."""
     index = item["document_index"]
-    claim_id = f"SOMA-LEGACY-{index:04d}"
 
     return {
-        "claim_id": claim_id,
+        "claim_id": f"SOMA-LEGACY-{index:04d}",
         "claim": None,
         "knowledge_class": None,
         "evidence_status": "UNREVIEWED",
@@ -32,7 +57,7 @@ def map_item(item: dict[str, Any]) -> dict[str, Any]:
         "uncertainty": [
             "Canonical fields require source and expert review."
         ],
-        "sources": [],
+        "sources": build_sources(item),
         "safety": {
             "status": "NOT_ASSESSED",
             "interaction_notes": [],
