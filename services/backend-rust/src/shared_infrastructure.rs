@@ -15,6 +15,7 @@ pub enum CapabilityDomain {
     Knowledge,
     Intelligence,
     Transport,
+    Infrastructure,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,9 +34,9 @@ pub struct CapabilityDescriptor {
 
 /// Canonical registry of shared capabilities.
 ///
-/// This is intentionally small at the foundation stage. New domain features
-/// should reference a shared capability here before being implemented as an
-/// application-specific module.
+/// New domain features should register a reusable capability here before being
+/// implemented as an application-specific module. This keeps capabilities
+/// discoverable and reusable across web, mobile, bots, AI and protocol adapters.
 pub const CAPABILITIES: &[CapabilityDescriptor] = &[
     CapabilityDescriptor {
         id: "privacy.local_first",
@@ -50,17 +51,27 @@ pub const CAPABILITIES: &[CapabilityDescriptor] = &[
     CapabilityDescriptor {
         id: "knowledge.provenance",
         domain: CapabilityDomain::Provenance,
-        status: CapabilityStatus::Proposed,
+        status: CapabilityStatus::Experimental,
     },
     CapabilityDescriptor {
         id: "knowledge.evidence",
         domain: CapabilityDomain::Evidence,
-        status: CapabilityStatus::Proposed,
+        status: CapabilityStatus::Experimental,
+    },
+    CapabilityDescriptor {
+        id: "data.evidence_migration",
+        domain: CapabilityDomain::Data,
+        status: CapabilityStatus::Experimental,
     },
     CapabilityDescriptor {
         id: "spatial.point_mapping",
         domain: CapabilityDomain::Spatial,
         status: CapabilityStatus::Proposed,
+    },
+    CapabilityDescriptor {
+        id: "infrastructure.capability_adapter_boundary",
+        domain: CapabilityDomain::Infrastructure,
+        status: CapabilityStatus::Validated,
     },
 ];
 
@@ -80,8 +91,21 @@ mod tests {
     }
 
     #[test]
-    fn security_and_knowledge_capabilities_are_not_claimed_validated() {
+    fn evidence_capabilities_are_shared_but_not_overclaimed() {
+        assert_eq!(capability("knowledge.provenance").unwrap().status, CapabilityStatus::Experimental);
+        assert_eq!(capability("knowledge.evidence").unwrap().status, CapabilityStatus::Experimental);
+        assert_eq!(capability("data.evidence_migration").unwrap().status, CapabilityStatus::Experimental);
+    }
+
+    #[test]
+    fn adapter_boundary_is_a_shared_infrastructure_capability() {
+        let capability = capability("infrastructure.capability_adapter_boundary").expect("capability adapter boundary");
+        assert_eq!(capability.domain, CapabilityDomain::Infrastructure);
+        assert_eq!(capability.status, CapabilityStatus::Validated);
+    }
+
+    #[test]
+    fn security_capability_is_not_claimed_validated() {
         assert_eq!(capability("security.authenticated_encryption").unwrap().status, CapabilityStatus::Proposed);
-        assert_eq!(capability("knowledge.provenance").unwrap().status, CapabilityStatus::Proposed);
     }
 }
