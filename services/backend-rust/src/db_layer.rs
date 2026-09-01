@@ -17,7 +17,9 @@ pub struct SomaDatabaseManager {
 
 impl SomaDatabaseManager {
     pub fn new(connection_pool: PgPool) -> Self {
-        Self { pool: connection_pool }
+        Self {
+            pool: connection_pool,
+        }
     }
 
     // Insert a new anonymized zero-knowledge validation state verification entry into target persistence engine
@@ -30,7 +32,7 @@ impl SomaDatabaseManager {
         proof_hex: &str,
     ) -> Result<i32, Box<dyn Error>> {
         let insert_query = r#"
-            INSERT INTO anonymized_user_vitals 
+            INSERT INTO anonymized_user_vitals
             (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING log_id;

@@ -1,0 +1,41 @@
+{
+  "provider_id": "pubmed",
+  "test_case": "siridhanya-diabetes-management",
+  "research_scope": "EXACT_PROTOCOL_AND_COMPONENTS",
+  "normalized_queries": [
+    "(siridhanya OR millets) AND (diabetes OR glycemic OR glucose)",
+    "(finger millet OR foxtail millet OR little millet OR kodo millet OR barnyard millet) AND (type 2 diabetes OR glycemic)",
+    "(millet) AND (diabetes) AND (adverse effects OR interactions OR safety)"
+  ],
+  "expected_provider_states": [
+    "COMPLETED_WITH_RESULTS",
+    "COMPLETED_NO_RESULTS",
+    "PROVIDER_UNAVAILABLE",
+    "RATE_LIMITED"
+  ],
+  "expected_classification_rules": {
+    "exact_protocol_study": "DIRECT_EXACT_PROTOCOL",
+    "study_of_major_millet_component": "DIRECT_COMPONENT",
+    "study_of_related_millet_intervention": "RELATED_INTERVENTION",
+    "mechanistic_study_only": "MECHANISTIC",
+    "observational_millet_diabetes_association": "OBSERVATIONAL_ASSOCIATION",
+    "animal_or_laboratory_only": "PRECLINICAL"
+  },
+  "expected_safety_rules": [
+    "Safety must be assessed separately from efficacy.",
+    "A positive efficacy study must not bypass the safety gate.",
+    "Provider failure must not become NO_RELEVANT_EVIDENCE_FOUND."
+  ],
+  "expected_user_boundary": {
+    "classification": "DISEASE_MANAGEMENT",
+    "is_remedy": false,
+    "is_cure_claim": false,
+    "professional_review_required": true,
+    "medication_boundary": "Do not stop, replace, or alter prescribed treatment based on this information."
+  },
+  "expected_no_evidence_declaration": "We did not identify directly relevant supporting research for this exact protocol in the sources searched as of [date]. This does not establish that the protocol is ineffective; it means that SOMA has not identified sufficient directly relevant evidence to establish its effectiveness.",
+  "verification": {
+    "provider": "PubMed",
+    "url_pattern": "https://pubmed.ncbi.nlm.nih.gov/{PMID}/"
+  }
+}

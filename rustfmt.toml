@@ -1,0 +1,7 @@
+# SOMA Rust formatting policy.
+# Keep source readable, reviewable, and easy to maintain.
+# The repository contains deliberately readable multi-line constructs; use
+# conservative width limits without forcing unrelated single-line rewrites.
+max_width = 120
+use_small_heuristics = "Off"
+newline_style = "Unix"

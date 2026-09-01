@@ -1,7 +1,7 @@
+use crate::meta_outbound::MetaOutboundRunner;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::time::{sleep, Duration};
-use crate::meta_outbound::MetaOutboundRunner; // Hooks into your established Meta Cloud API client
+use tokio::time::{sleep, Duration}; // Hooks into your established Meta Cloud API client
 
 #[derive(Clone, Debug)]
 pub struct AmbaliTimer {
@@ -26,14 +26,11 @@ impl FermentationOrchestrator {
 
     // Spin up an isolated tracking worker for a user's fermenting porridge batch
     pub async fn trigger_fermentation_timer(&mut self, user_phone: &str, millet: &str) {
-        let current_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
         // 8 hours fermentation standard defined by Dr. Khadar Vali's protocols
-        let fermentation_hours = 8; 
-        
+        let fermentation_hours = 8;
+
         let timer_profile = AmbaliTimer {
             user_phone: user_phone.to_string(),
             millet_type: millet.to_string(),

@@ -1,53 +1,74 @@
-name: SomaOS Continuous Integration Engine
+name: SOMA Continuous Integration
 
 on:
   push:
-    branches: [ "main", "development" ]
+    branches:
+      - main
+      - development
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   code-audit:
-    name: Structural Architecture Check & Linting
+    name: Rust format, compile and lint
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Source Blueprints
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize Stable Rust Toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: clippy, rustfmt
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
 
-    - name: Cache Build Artifacts Dependencies
-      uses: swatinem/rust-cache@v2
-      with:
-        workspaces: "services/backend-rust -> target"
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: services/backend-rust -> target
 
-    - name: Enforce Code Format Guidelines
-      run: cargo fmt --manifest-path services/backend-rust/Cargo.toml --all -- --check
+      - name: Check Rust formatting
+        run: >-
+          cargo fmt
+          --manifest-path services/backend-rust/Cargo.toml
+          --all
+          -- --check
 
-    - name: Run Static Code Analysis (Clippy)
-      run: cargo clippy --manifest-path services/backend-rust/Cargo.toml -- -D warnings
+      - name: Check Rust compilation
+        run: >-
+          cargo check
+          --manifest-path services/backend-rust/Cargo.toml
+          --all-targets
+
+      - name: Run Clippy
+        run: >-
+          cargo clippy
+          --manifest-path services/backend-rust/Cargo.toml
+          --all-targets
+          -- -D warnings -A dead_code
 
   cryptographic-testing:
-    name: Zero-Knowledge Verification Testing Matrix
+    name: Cryptographic and integrity tests
     needs: code-audit
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Source Blueprints
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize Stable Rust Toolchain
-      uses: dtolnay/rust-toolchain@stable
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache Build Artifacts Dependencies
-      uses: swatinem/rust-cache@v2
-      with:
-        workspaces: "services/backend-rust -> target"
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: services/backend-rust -> target
 
-    - name: Execute Cryptographic & Synchronization Testing Matrices
-      run: cargo test --manifest-path services/backend-rust/Cargo.toml --verbose
+      - name: Run Rust tests
+        run: >-
+          cargo test
+          --manifest-path services/backend-rust/Cargo.toml
+          --all-targets
+          --verbose

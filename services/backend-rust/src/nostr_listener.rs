@@ -13,7 +13,7 @@ impl NostrLiveListener {
         // Establish network socket connection lines to the designated peer-to-peer relay node location
         let (ws_stream, _) = connect_async(relay_url).await?;
         println!("📡 P2P Sync Node Online: Listening to stream channels at: {}", relay_url);
-        
+
         let (mut write_lane, mut read_lane) = ws_stream.split();
 
         // Register a global subscription event channel filter capturing custom text updates (Kind 1)
@@ -38,10 +38,10 @@ impl NostrLiveListener {
                         if parsed_json[0] == "EVENT" {
                             let event_content_text = parsed_json[2]["content"].as_str().unwrap_or("");
                             let broadcasting_pubkey = parsed_json[2]["pubkey"].as_str().unwrap_or("");
-                            
+
                             println!("🔒 Decoded Inbound P2P Synchronization Packet from Node: {}", broadcasting_pubkey);
                             println!("📝 Discovered Knowledge Content String: {}", event_content_text);
-                            
+
                             // Route parameters directly down to database parsing files to refresh local files indexes
                             // data_parser::update_local_knowledge_base(event_content_text);
                         }
