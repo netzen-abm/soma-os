@@ -32,7 +32,7 @@ class PolicyDecision:
 
 
 POLICY_VERSION = "0.1.0"
-GrantKey = tuple[str, str, str]
+GrantKey = tuple[str, str, str, str]
 
 
 class PolicyKernel:
@@ -50,8 +50,13 @@ class PolicyKernel:
         if not self._request_is_valid(request):
             return self._deny("invalid_request")
 
-        if request.capability_id not in self._capabilities:
+        capability = self._capabilities.get(request.capability_id)
+        if capability is None:
             return self._deny("unknown_capability")
+
+        registered_principal_type = capability.get("principal_type")
+        if registered_principal_type is not None and registered_principal_type != request.principal_type:
+            return self._deny("principal_type_mismatch")
 
         if request.context.get("human_review") == "required":
             return PolicyDecision(
@@ -71,9 +76,10 @@ class PolicyKernel:
             return self._deny("policy_denied")
 
         grant_key = (
-            request.principal_id,
+            request.principal_type,
             request.capability_id,
             request.action,
+            request.resource_type,
         )
         if self._grants.get(grant_key) is not True:
             return self._deny("authorization_required")
