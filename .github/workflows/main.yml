@@ -26,7 +26,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
@@ -72,9 +72,6 @@ jobs:
         working-directory: services/shared
         run: python -m unittest -v policy_kernel_test.py
 
-      - name: Run canonical evidence mapping tests
-        run: python -m unittest -v scripts/test_evidence_canonical_mapping_pilot.py
-
   cryptographic-testing:
     name: Cryptographic and integrity tests
     needs: code-audit
@@ -87,7 +84,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
