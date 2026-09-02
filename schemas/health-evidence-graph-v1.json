@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/health-evidence-graph-v1.json",
+  "title": "SOMA Health Evidence Graph Entity v1",
+  "description": "Canonical evidence entity contract preserving claims, sources, assessment, safety, applicability, uncertainty and provenance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "entity_type", "schema_version", "status", "provenance"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "entity_type": {"type": "string", "enum": ["claim", "source", "study", "population", "intervention", "outcome", "evidence_assessment", "safety_assessment", "applicability"]},
+    "schema_version": {"const": "1.0.0"},
+    "status": {"type": "string", "enum": ["UNREVIEWED", "SOURCE_FOUND", "SOURCE_VERIFIED", "EVIDENCE_ASSESSED", "SAFETY_REVIEWED", "PUBLISHED", "WITHDRAWN"]},
+    "statement": {"type": "string", "minLength": 1},
+    "claim_type": {"type": "string", "minLength": 1},
+    "source_class": {"type": "string", "enum": ["peer_reviewed", "trial_registry", "official", "institutional", "expert_educational", "commercial", "social_self_published"]},
+    "title": {"type": "string", "minLength": 1},
+    "publisher": {"type": "string", "minLength": 1},
+    "publication_date": {"type": "string", "format": "date"},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "url": {"type": "string", "format": "uri"},
+    "persistent_identifier": {"type": "string", "minLength": 1},
+    "evidence_level": {"type": "string", "enum": ["E0_UNKNOWN", "E1_PLAUSIBLE", "E2_PRELIMINARY", "E3_SUPPORTED", "E4_WELL_SUPPORTED"]},
+    "safety_classification": {"type": "string", "enum": ["LOW_CONCERN", "CONTEXT_DEPENDENT", "CLINICALLY_SIGNIFICANT_CAUTION", "CONTRAINDICATED", "INSUFFICIENT_SAFETY_EVIDENCE"]},
+    "assessment": {"type": "object", "additionalProperties": true},
+    "safety": {"type": "object", "additionalProperties": true},
+    "applicability": {"type": "object", "additionalProperties": true},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "uncertainty": {"type": "array", "items": {"type": "string"}},
+    "relationships": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["type", "target_ref"], "properties": {"type": {"type": "string", "enum": ["SUPPORTED_BY", "CHALLENGED_BY", "DERIVED_FROM", "REPORTS_ON", "STUDIES", "APPLIES_TO", "INVOLVES_INTERVENTION", "MEASURES_OUTCOME", "HAS_SAFETY_ASSESSMENT", "HAS_APPLICABILITY", "HAS_LIMITATION", "HAS_UNCERTAINTY", "SUPERSEDES", "DUPLICATE_OF", "CONTRADICTS"]}, "target_ref": {"type": "string", "minLength": 1}}}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["source_ref", "method"], "properties": {"source_ref": {"type": "string", "minLength": 1}, "method": {"type": "string", "minLength": 1}, "span": {"type": "string", "minLength": 1}, "reviewer_ref": {"type": "string", "minLength": 1}, "transformation_history": {"type": "array", "items": {"type": "string"}}}},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {"if": {"properties": {"entity_type": {"const": "claim"}}, "required": ["entity_type"]}, "then": {"required": ["statement", "claim_type", "evidence_level", "uncertainty"]}},
+    {"if": {"properties": {"entity_type": {"const": "source"}}, "required": ["entity_type"]}, "then": {"required": ["source_class", "title"]}}
+  ]
+}
