@@ -13,6 +13,21 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  health-contracts:
+    name: Health State and Evidence contract validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate health contracts
+        run: python scripts/validate_health_contracts.py
+
   code-audit:
     name: Rust format, compile and lint
     runs-on: ubuntu-latest
