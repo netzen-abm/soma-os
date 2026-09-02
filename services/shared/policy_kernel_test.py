@@ -6,7 +6,7 @@ from policy_kernel import Decision, PolicyKernel, PolicyRequest
 
 REGISTRY = Path(__file__).with_name("capability_registry.json")
 GRANTS = {
-    ("agent-1", "evidence.research", "read"): True,
+    ("agent-1", "agent", "evidence.research", "research-source", "read"): True,
 }
 
 
@@ -23,12 +23,24 @@ class PolicyKernelTests(unittest.TestCase):
             context={},
         )
 
-    def test_registered_capability_uses_identity_grant(self):
+    def test_registered_capability_uses_scoped_identity_grant(self):
         result = self.kernel.evaluate(self.request)
         self.assertEqual(result.decision, Decision.ALLOW)
 
     def test_different_identity_fails_closed(self):
         request = self._with_request(principal_id="agent-2")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "authorization_required")
+
+    def test_principal_type_mismatch_fails_closed(self):
+        request = self._with_request(principal_type="user")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "principal_type_mismatch")
+
+    def test_resource_type_is_part_of_grant(self):
+        request = self._with_request(resource_type="user-profile")
         result = self.kernel.evaluate(request)
         self.assertEqual(result.decision, Decision.DENY)
         self.assertEqual(result.reason_code, "authorization_required")
@@ -40,12 +52,18 @@ class PolicyKernelTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "authorization_required")
 
     def test_unknown_capability_fails_closed(self):
-        request = self._with_request(
-            capability_id="unknown.capability",
-        )
+        request = self._with_request(capability_id="unknown.capability")
         result = self.kernel.evaluate(request)
         self.assertEqual(result.decision, Decision.DENY)
         self.assertEqual(result.reason_code, "unknown_capability")
+
+    def test_invalid_capability_principal_types_fail_closed(self):
+        registry = {"capabilities": [{"id": "broken.capability"}]}
+        kernel = PolicyKernel(registry, {})
+        request = self._with_request(capability_id="broken.capability")
+        result = kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "invalid_capability_principal_types")
 
     def test_missing_identity_fails_closed(self):
         request = self._with_request(principal_id="")
