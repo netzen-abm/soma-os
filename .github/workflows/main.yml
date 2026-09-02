@@ -26,7 +26,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: Cache Rust dependencies
-        uses: swatin/rust-cache@v2
+        uses: swatinem/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
@@ -51,7 +51,7 @@ jobs:
           -- -D warnings -A dead_code
 
   shared-infrastructure:
-    name: Shared infrastructure governance and policy tests
+    name: Shared infrastructure governance and health contract tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -67,6 +67,9 @@ jobs:
 
       - name: Validate architecture and evidence governance invariants
         run: python scripts/validate_architecture_governance_gate.py
+
+      - name: Validate Health State and Evidence contracts
+        run: python scripts/validate_health_contracts.py
 
       - name: Run Policy Kernel tests
         working-directory: services/shared
@@ -84,7 +87,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: swatin/rust-cache@v2
+        uses: swatinem/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
