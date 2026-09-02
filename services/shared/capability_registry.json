@@ -1,11 +1,12 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "capabilities": [
     {
       "id": "evidence.research",
       "version": "0.1.0",
       "status": "implemented",
       "maturity": "validated",
+      "principal_types": ["agent"],
       "policy": ["privacy", "safety", "provenance"],
       "adapters": ["research-providers"],
       "surfaces": ["web", "future-client-surfaces"]
@@ -15,6 +16,7 @@
       "version": "0.1.0",
       "status": "implemented",
       "maturity": "validated",
+      "principal_types": ["agent"],
       "policy": ["provenance", "safety", "publication-gate"],
       "adapters": [],
       "surfaces": ["research-tools"]
@@ -24,6 +26,7 @@
       "version": "0.1.0",
       "status": "architecture",
       "maturity": "development",
+      "principal_types": ["agent"],
       "policy": ["privacy", "safety", "authorization", "provenance"],
       "adapters": ["agent-runtime", "openclaw"],
       "surfaces": ["web", "mobile", "future-client-surfaces"]
@@ -33,6 +36,7 @@
       "version": "0.1.0",
       "status": "adapter-boundary",
       "maturity": "development",
+      "principal_types": ["agent"],
       "policy": ["authorization", "privacy", "safety", "provenance"],
       "adapters": ["mcp-client", "mcp-server"],
       "surfaces": ["web", "mobile", "future-client-surfaces"]
@@ -42,6 +46,7 @@
       "version": "0.1.0",
       "status": "adapter-boundary",
       "maturity": "development",
+      "principal_types": ["agent"],
       "policy": ["authorization", "privacy", "auditability"],
       "adapters": ["nostr"],
       "surfaces": ["future-client-surfaces"]
@@ -51,6 +56,7 @@
       "version": "0.1.0",
       "status": "adapter-boundary",
       "maturity": "planned",
+      "principal_types": ["agent"],
       "policy": ["authorization", "privacy", "user-choice"],
       "adapters": ["web3-wallet", "blockchain"],
       "surfaces": ["future-client-surfaces"]
@@ -60,6 +66,7 @@
       "version": "0.1.0",
       "status": "adapter-boundary",
       "maturity": "planned",
+      "principal_types": ["agent"],
       "policy": ["consent", "privacy", "authorization"],
       "adapters": ["did", "verifiable-credentials"],
       "surfaces": ["future-client-surfaces"]
@@ -69,6 +76,7 @@
       "version": "0.1.0",
       "status": "adapter-boundary",
       "maturity": "planned",
+      "principal_types": ["agent"],
       "policy": ["privacy", "provenance", "retention"],
       "adapters": ["ipfs", "future-content-addressed-provider"],
       "surfaces": ["future-client-surfaces"]
@@ -78,6 +86,7 @@
       "version": "0.1.0",
       "status": "optional",
       "maturity": "development",
+      "principal_types": ["agent"],
       "policy": ["privacy", "safety", "provenance", "user-choice"],
       "adapters": ["ai-provider"],
       "surfaces": ["web", "future-client-surfaces"]
