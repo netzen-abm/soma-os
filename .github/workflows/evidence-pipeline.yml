@@ -40,6 +40,10 @@ jobs:
           python scripts/validate_evidence_canonical_mapping_pilot.py
           scripts/fixtures/evidence_canonical_mapping_pilot.json
 
+      - name: Validate architecture and governance invariants
+        run: >-
+          python scripts/validate_architecture_governance_gate.py
+
       - name: Run controlled migration pilot
         run: >-
           python scripts/pilot_medical_migration.py
