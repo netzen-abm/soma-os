@@ -17,9 +17,7 @@ FIXTURES = ROOT / "scripts/fixtures/evidence_canonical_mapping_pilot.json"
 REQUIRED_CAPABILITY_FIELDS = {
     "id", "version", "status", "maturity", "principal_types", "policy", "adapters", "surfaces"
 }
-FORBIDDEN_EVIDENCE_PROMOTION = {
-    "traditional knowledge", "analytical assay", "search result"
-}
+FORBIDDEN_KINDS = {"traditional_knowledge", "analytical_assay", "search_result"}
 
 
 def fail(message: str) -> None:
@@ -61,20 +59,24 @@ def main() -> int:
 
     if not FIXTURES.exists():
         fail(f"missing evidence mapping fixtures: {FIXTURES}")
-    fixtures = json.loads(FIXTURES.read_text(encoding="utf-8"))
+    fixture_document = json.loads(FIXTURES.read_text(encoding="utf-8"))
+    fixtures = fixture_document.get("records")
     if not isinstance(fixtures, list):
-        fail("evidence mapping fixtures must be a list")
+        fail("evidence mapping fixtures must contain a records list")
 
     for fixture in fixtures:
-        name = str(fixture.get("name", "unknown"))
-        canonical = fixture.get("canonical", {})
-        if not isinstance(canonical, dict):
-            fail(f"fixture canonical object missing: {name}")
-        if canonical.get("evidence_level") == "E4_WELL_SUPPORTED" and fixture.get("legacy_evidence_state") == "STRONG":
+        name = str(fixture.get("id", "unknown"))
+        kind = str(fixture.get("kind", "")).lower()
+        expected_level = fixture.get("expected_level")
+        legacy_state = fixture.get("legacy_evidence_state")
+        if expected_level == "E4_WELL_SUPPORTED" and legacy_state == "STRONG":
             fail(f"legacy STRONG must not silently promote to E4: {name}")
-        source_class = str(fixture.get("source_class", "")).lower()
-        if source_class in FORBIDDEN_EVIDENCE_PROMOTION and canonical.get("evidence_level") not in {None, "E0_UNKNOWN"}:
-            fail(f"{source_class} fixture cannot be promoted without explicit evidence assessment: {name}")
+        if kind in FORBIDDEN_KINDS and expected_level not in {None, "E0_UNKNOWN"}:
+            fail(f"{kind} fixture cannot be promoted without explicit evidence assessment: {name}")
+        if kind == "safety" and fixture.get("efficacy_level") not in {None, "E0_UNKNOWN"}:
+            fail(f"safety fixture must keep efficacy independent: {name}")
+        if kind == "search_result" and fixture.get("directness") != "NO_RELEVANT_EVIDENCE_FOUND":
+            warnings.append(f"search-result fixture should use no-evidence directness: {name}")
 
     if "intelligence.ai" in ids:
         ai = next(c for c in capabilities if c["id"] == "intelligence.ai")
@@ -87,9 +89,8 @@ def main() -> int:
             warnings.append("Nostr status should remain non-operational until real signing is verified")
 
     print("PASS: architecture and evidence governance invariants")
-    if warnings:
-        for warning in warnings:
-            print(f"WARN: {warning}")
+    for warning in warnings:
+        print(f"WARN: {warning}")
     return 0
 
 
