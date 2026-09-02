@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.dev/schemas/evidence-canonical-mapping-v1.json",
+  "title": "SOMA Evidence Canonical Mapping Contract v1",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["from_models", "entity_mappings", "vocabulary_mappings", "relationship_mappings", "loss_rules", "invariants"],
+  "properties": {
+    "from_models": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "entity_mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["legacy", "canonical", "mapping_mode"],
+        "properties": {
+          "legacy": {"type": "string"},
+          "canonical": {"type": ["string", "null"]},
+          "mapping_mode": {"enum": ["DIRECT", "COMPOSED", "REFERENCE", "SPECIALIZED", "UNKNOWN"]},
+          "preserve_legacy": {"type": "boolean"},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "vocabulary_mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["legacy", "canonical", "inflation_allowed"],
+        "properties": {
+          "legacy": {"type": "string"},
+          "canonical": {"type": "string"},
+          "inflation_allowed": {"const": false},
+          "mapping_basis": {"type": "string"}
+        }
+      }
+    },
+    "relationship_mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["legacy", "canonical", "preserve_direction"],
+        "properties": {
+          "legacy": {"type": "string"},
+          "canonical": {"type": "string"},
+          "preserve_direction": {"type": "boolean"}
+        }
+      }
+    },
+    "loss_rules": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "invariants": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
