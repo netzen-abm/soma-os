@@ -35,6 +35,11 @@ jobs:
       - name: Run evidence pipeline tests
         run: python -m pytest scripts -q
 
+      - name: Validate canonical evidence mapping pilot
+        run: >-
+          python scripts/validate_evidence_canonical_mapping_pilot.py
+          scripts/fixtures/evidence_canonical_mapping_pilot.json
+
       - name: Run controlled migration pilot
         run: >-
           python scripts/pilot_medical_migration.py
