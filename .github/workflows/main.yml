@@ -26,7 +26,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
@@ -50,6 +50,28 @@ jobs:
           --all-targets
           -- -D warnings -A dead_code
 
+  shared-infrastructure:
+    name: Shared infrastructure governance and policy tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate capability registry JSON
+        run: python -m json.tool services/shared/capability_registry.json > /dev/null
+
+      - name: Validate architecture and evidence governance invariants
+        run: python scripts/validate_architecture_governance_gate.py
+
+      - name: Run Policy Kernel tests
+        working-directory: services/shared
+        run: python -m unittest -v policy_kernel_test.py
+
   cryptographic-testing:
     name: Cryptographic and integrity tests
     needs: code-audit
@@ -62,7 +84,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
