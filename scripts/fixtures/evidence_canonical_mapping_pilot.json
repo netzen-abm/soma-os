@@ -1,0 +1,19 @@
+{
+  "version": "evidence-canonical-mapping-pilot-1",
+  "records": [
+    {"id":"exact-001","kind":"protocol","legacy_evidence_state":"STRONG","directness":"DIRECT_EXACT_PROTOCOL","expected_level":"E0_UNKNOWN","expected_safety":"INSUFFICIENT_SAFETY_EVIDENCE"},
+    {"id":"component-001","kind":"study","legacy_evidence_state":"MODERATE","directness":"DIRECT_COMPONENT","expected_level":"E0_UNKNOWN"},
+    {"id":"indirect-001","kind":"study","legacy_evidence_state":"STRONG","directness":"RELATED_INTERVENTION","expected_level":"E0_UNKNOWN"},
+    {"id":"contradictory-001","kind":"study","legacy_evidence_state":"MIXED","directness":"INDIRECT","expected_level":"E0_UNKNOWN","relationship":"CONTRADICTS"},
+    {"id":"traditional-001","kind":"traditional_knowledge","legacy_evidence_state":"STRONG","directness":"INDIRECT","expected_level":"E0_UNKNOWN","knowledge_class":"TRADITIONAL_REPORT"},
+    {"id":"analytical-001","kind":"analytical_assay","legacy_evidence_state":"STRONG","directness":"MECHANISTIC","expected_level":"E0_UNKNOWN","clinical_efficacy":false},
+    {"id":"preclinical-001","kind":"study","legacy_evidence_state":"MODERATE","directness":"PRECLINICAL","expected_level":"E0_UNKNOWN","clinical_efficacy":false},
+    {"id":"null-001","kind":"search_result","legacy_evidence_state":"INSUFFICIENT","directness":"NO_RELEVANT_EVIDENCE_FOUND","expected_level":"E0_UNKNOWN","search_finding":true},
+    {"id":"limited-001","kind":"claim","legacy_evidence_state":"LIMITED","directness":"INDIRECT","expected_level":"E0_UNKNOWN"},
+    {"id":"indirect-state-001","kind":"claim","legacy_evidence_state":"INDIRECT","directness":"INDIRECT","expected_level":"E0_UNKNOWN"},
+    {"id":"safety-001","kind":"safety","legacy_evidence_state":"INSUFFICIENT","directness":"INDIRECT","expected_safety":"INSUFFICIENT_SAFETY_EVIDENCE","efficacy_level":"E0_UNKNOWN"},
+    {"id":"duplicate-a","kind":"source","stable_identifier":"doi:10.1000/example","expected_duplicate_of":"duplicate-b"},
+    {"id":"duplicate-b","kind":"source","stable_identifier":"doi:10.1000/example","expected_duplicate_of":"duplicate-a"},
+    {"id":"missing-provenance-001","kind":"claim","legacy_evidence_state":"STRONG","directness":"INDIRECT","expected_level":"E0_UNKNOWN","provenance_status":"UNKNOWN"}
+  ]
+}
