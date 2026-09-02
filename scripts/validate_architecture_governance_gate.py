@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Validate core SOMA architecture/governance invariants.
+
+This is intentionally conservative: it fails on structural violations that can
+be proven mechanically and reports warnings for items that require review.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REGISTRY = ROOT / "services/shared/capability_registry.json"
+MAPPING = ROOT / "schemas/evidence-canonical-mapping-v1.json"
+FIXTURES = ROOT / "scripts/fixtures/evidence_canonical_mapping_pilot.json"
+
+REQUIRED_CAPABILITY_FIELDS = {
+    "id", "version", "status", "maturity", "principal_types", "policy", "adapters", "surfaces"
+}
+FORBIDDEN_EVIDENCE_PROMOTION = {
+    "traditional knowledge", "analytical assay", "search result"
+}
+
+
+def fail(message: str) -> None:
+    raise SystemExit(f"FAIL: {message}")
+
+
+def main() -> int:
+    warnings: list[str] = []
+
+    if not REGISTRY.exists():
+        fail(f"missing capability registry: {REGISTRY}")
+    registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+    capabilities = registry.get("capabilities")
+    if not isinstance(capabilities, list) or not capabilities:
+        fail("capability registry must contain a non-empty capabilities list")
+
+    ids: set[str] = set()
+    for capability in capabilities:
+        if not REQUIRED_CAPABILITY_FIELDS <= capability.keys():
+            fail(f"capability is missing required fields: {capability}")
+        cid = capability["id"]
+        if cid in ids:
+            fail(f"duplicate capability id: {cid}")
+        ids.add(cid)
+        if not capability["principal_types"]:
+            fail(f"capability has empty principal_types: {cid}")
+        if not isinstance(capability["policy"], list) or not capability["policy"]:
+            fail(f"capability has no policy controls: {cid}")
+        if not isinstance(capability["adapters"], list) or not isinstance(capability["surfaces"], list):
+            fail(f"adapters/surfaces must be arrays: {cid}")
+
+    if not MAPPING.exists():
+        fail(f"missing canonical mapping schema: {MAPPING}")
+    mapping = json.loads(MAPPING.read_text(encoding="utf-8"))
+    vocabulary = mapping.get("vocabulary_mappings", [])
+    for item in vocabulary:
+        if item.get("inflation_allowed") is True:
+            fail("evidence vocabulary mapping permits strength inflation")
+
+    if not FIXTURES.exists():
+        fail(f"missing evidence mapping fixtures: {FIXTURES}")
+    fixtures = json.loads(FIXTURES.read_text(encoding="utf-8"))
+    if not isinstance(fixtures, list):
+        fail("evidence mapping fixtures must be a list")
+
+    for fixture in fixtures:
+        name = str(fixture.get("name", "unknown"))
+        canonical = fixture.get("canonical", {})
+        if not isinstance(canonical, dict):
+            fail(f"fixture canonical object missing: {name}")
+        if canonical.get("evidence_level") == "E4_WELL_SUPPORTED" and fixture.get("legacy_evidence_state") == "STRONG":
+            fail(f"legacy STRONG must not silently promote to E4: {name}")
+        source_class = str(fixture.get("source_class", "")).lower()
+        if source_class in FORBIDDEN_EVIDENCE_PROMOTION and canonical.get("evidence_level") not in {None, "E0_UNKNOWN"}:
+            fail(f"{source_class} fixture cannot be promoted without explicit evidence assessment: {name}")
+
+    if "intelligence.ai" in ids:
+        ai = next(c for c in capabilities if c["id"] == "intelligence.ai")
+        if ai.get("status") != "optional" or "user-choice" not in ai.get("policy", []):
+            fail("AI capability must remain optional and governed by user-choice")
+
+    if "protocol.nostr" in ids:
+        nostr = next(c for c in capabilities if c["id"] == "protocol.nostr")
+        if nostr.get("status") not in {"adapter-boundary", "planned"}:
+            warnings.append("Nostr status should remain non-operational until real signing is verified")
+
+    print("PASS: architecture and evidence governance invariants")
+    if warnings:
+        for warning in warnings:
+            print(f"WARN: {warning}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
