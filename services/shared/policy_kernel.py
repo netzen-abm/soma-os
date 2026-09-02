@@ -31,12 +31,12 @@ class PolicyDecision:
     reason_code: str
 
 
-POLICY_VERSION = "0.1.0"
-GrantKey = tuple[str, str, str]
+POLICY_VERSION = "0.2.0"
+GrantKey = tuple[str, str, str, str, str]
 
 
 class PolicyKernel:
-    """Deterministic policy boundary using registry and explicit grants."""
+    """Deterministic, fail-closed policy boundary for shared capabilities."""
 
     def __init__(
         self,
@@ -50,8 +50,15 @@ class PolicyKernel:
         if not self._request_is_valid(request):
             return self._deny("invalid_request")
 
-        if request.capability_id not in self._capabilities:
+        capability = self._capabilities.get(request.capability_id)
+        if capability is None:
             return self._deny("unknown_capability")
+
+        principal_types = capability.get("principal_types")
+        if not self._valid_principal_types(principal_types):
+            return self._deny("invalid_capability_principal_types")
+        if request.principal_type not in principal_types:
+            return self._deny("principal_type_mismatch")
 
         if request.context.get("human_review") == "required":
             return PolicyDecision(
@@ -72,7 +79,9 @@ class PolicyKernel:
 
         grant_key = (
             request.principal_id,
+            request.principal_type,
             request.capability_id,
+            request.resource_type,
             request.action,
         )
         if self._grants.get(grant_key) is not True:
@@ -115,6 +124,14 @@ class PolicyKernel:
             if isinstance(capability_id, str) and capability_id.strip():
                 indexed[capability_id] = capability
         return indexed
+
+    @staticmethod
+    def _valid_principal_types(value: object) -> bool:
+        return (
+            isinstance(value, list)
+            and bool(value)
+            and all(isinstance(item, str) and bool(item.strip()) for item in value)
+        )
 
     @staticmethod
     def _request_is_valid(request: PolicyRequest) -> bool:
