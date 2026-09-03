@@ -71,6 +71,10 @@ jobs:
       - name: Validate Health State and Evidence contracts
         run: python scripts/validate_health_contracts.py
 
+      - name: Run Health State and Evidence contract tests
+        working-directory: services/shared
+        run: python -m unittest -v health_contract_test.py
+
       - name: Run Policy Kernel tests
         working-directory: services/shared
         run: python -m unittest -v policy_kernel_test.py
