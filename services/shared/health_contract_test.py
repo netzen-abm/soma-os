@@ -1,6 +1,9 @@
+import copy
 import json
 import unittest
 from pathlib import Path
+
+from jsonschema import Draft202012Validator
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +21,15 @@ class HealthContractTests(unittest.TestCase):
             name: json.loads(path.read_text(encoding="utf-8"))
             for name, path in SCHEMAS.items()
         }
+        for schema in cls.schemas.values():
+            Draft202012Validator.check_schema(schema)
+
+    def assert_valid(self, schema_name, instance):
+        Draft202012Validator(self.schemas[schema_name]).validate(instance)
+
+    def assert_invalid(self, schema_name, instance):
+        errors = list(Draft202012Validator(self.schemas[schema_name]).iter_errors(instance))
+        self.assertTrue(errors, f"expected {schema_name} instance to be invalid")
 
     def assert_schema_shape(self, schema):
         self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
@@ -64,6 +76,160 @@ class HealthContractTests(unittest.TestCase):
         self.assertIn("EVIDENCE_INFORMS_INTERPRETATION", relationships)
         self.assertIn("PERSONAL_RESPONSE_OBSERVED_AFTER_INTERVENTION", relationships)
         self.assertIn("method", schema["properties"]["provenance"]["required"])
+
+    def test_positive_health_observation_instance(self):
+        self.assert_valid("health_state", {
+            "id": "hs-obs-001",
+            "subject_ref": "person-001",
+            "entity_type": "observation",
+            "schema_version": "1.0.0",
+            "status": "active",
+            "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration",
+            "value": 7.5,
+            "unit": "hours",
+            "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health",
+            "uncertainty": "reported",
+        })
+
+    def test_negative_observation_missing_uncertainty(self):
+        instance = {
+            "id": "hs-obs-002",
+            "subject_ref": "person-001",
+            "entity_type": "observation",
+            "schema_version": "1.0.0",
+            "status": "active",
+            "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration",
+            "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health",
+        }
+        self.assert_invalid("health_state", instance)
+
+    def test_negative_health_state_unknown_root_property(self):
+        instance = {
+            "id": "hs-obs-003",
+            "subject_ref": "person-001",
+            "entity_type": "observation",
+            "schema_version": "1.0.0",
+            "status": "active",
+            "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration",
+            "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health",
+            "uncertainty": "reported",
+            "unexpected_field": True,
+        }
+        self.assert_invalid("health_state", instance)
+
+    def test_positive_interpretation_instance(self):
+        self.assert_valid("health_state", {
+            "id": "hs-int-001",
+            "subject_ref": "person-001",
+            "entity_type": "interpretation",
+            "schema_version": "1.0.0",
+            "status": "active",
+            "recorded_time": "2026-09-03T12:05:00Z",
+            "provenance": {"origin": "system", "method": "rule_based"},
+            "classification": "derived_health",
+            "uncertainty": "inferred",
+            "relationships": [{"type": "DERIVED_FROM", "target_ref": "hs-obs-001"}],
+        })
+
+    def test_negative_interpretation_missing_relationships(self):
+        instance = {
+            "id": "hs-int-002",
+            "subject_ref": "person-001",
+            "entity_type": "interpretation",
+            "schema_version": "1.0.0",
+            "status": "active",
+            "recorded_time": "2026-09-03T12:05:00Z",
+            "provenance": {"origin": "system", "method": "rule_based"},
+            "classification": "derived_health",
+            "uncertainty": "inferred",
+        }
+        self.assert_invalid("health_state", instance)
+
+    def test_positive_evidence_claim_instance(self):
+        self.assert_valid("evidence", {
+            "id": "ev-claim-001",
+            "entity_type": "claim",
+            "schema_version": "1.0.0",
+            "status": "EVIDENCE_ASSESSED",
+            "statement": "Example research claim",
+            "claim_type": "association",
+            "evidence_level": "E3_SUPPORTED",
+            "uncertainty": "reported",
+            "provenance": {"source_ref": "source-001", "method": "literature_review"},
+        })
+
+    def test_negative_evidence_claim_missing_evidence_level(self):
+        instance = {
+            "id": "ev-claim-002",
+            "entity_type": "claim",
+            "schema_version": "1.0.0",
+            "status": "UNREVIEWED",
+            "statement": "Example research claim",
+            "claim_type": "association",
+            "uncertainty": "reported",
+            "provenance": {"source_ref": "source-001", "method": "literature_review"},
+        }
+        self.assert_invalid("evidence", instance)
+
+    def test_evidence_strength_and_safety_can_coexist_without_collapsing(self):
+        instance = {
+            "id": "ev-claim-003",
+            "entity_type": "claim",
+            "schema_version": "1.0.0",
+            "status": "SAFETY_REVIEWED",
+            "statement": "Example claim requiring safety qualification",
+            "claim_type": "intervention_effect",
+            "evidence_level": "E3_SUPPORTED",
+            "safety_classification": "CONTRAINDICATED",
+            "uncertainty": "reported",
+            "provenance": {"source_ref": "source-002", "method": "evidence_assessment"},
+        }
+        self.assert_valid("evidence", instance)
+
+    def test_positive_directional_link_instance(self):
+        self.assert_valid("link", {
+            "id": "link-001",
+            "schema_version": "1.0.0",
+            "health_state_ref": "hs-int-001",
+            "evidence_ref": "ev-claim-001",
+            "relationship": "EVIDENCE_INFORMS_INTERPRETATION",
+            "provenance": {"method": "policy_governed_reference"},
+        })
+
+    def test_negative_directional_link_invalid_relationship(self):
+        instance = {
+            "id": "link-002",
+            "schema_version": "1.0.0",
+            "health_state_ref": "hs-int-001",
+            "evidence_ref": "ev-claim-001",
+            "relationship": "SUPPORTS",
+            "provenance": {"method": "policy_governed_reference"},
+        }
+        self.assert_invalid("link", instance)
+
+    def test_personal_observation_is_not_accepted_as_evidence_claim(self):
+        observation = {
+            "id": "hs-obs-004",
+            "subject_ref": "person-001",
+            "entity_type": "observation",
+            "schema_version": "1.0.0",
+            "status": "active",
+            "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration",
+            "value": 7.5,
+            "unit": "hours",
+            "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health",
+            "uncertainty": "reported",
+        }
+        self.assert_valid("health_state", observation)
+        self.assert_invalid("evidence", observation)
 
     def test_unknown_root_properties_are_rejected_by_contract(self):
         for schema in self.schemas.values():
