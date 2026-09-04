@@ -49,8 +49,10 @@ pub async fn begin_protected_transaction<'a>(
         return Err(error);
     }
 
-    if let Err(error) =
-        sqlx::query("SELECT set_config('soma.data_domain', $1, true)").bind(&context.data_domain).execute(&mut *tx).await
+    if let Err(error) = sqlx::query("SELECT set_config('soma.data_domain', $1, true)")
+        .bind(&context.data_domain)
+        .execute(&mut *tx)
+        .await
     {
         let _ = tx.rollback().await;
         return Err(error);
