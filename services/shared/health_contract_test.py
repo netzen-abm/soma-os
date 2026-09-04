@@ -127,199 +127,103 @@ class HealthContractTests(unittest.TestCase):
         self.assertIn("method", schema["properties"]["provenance"]["required"])
 
     def test_positive_health_observation_instance(self):
-        self.assert_valid(
-            "health_state",
-            {
-                "id": "hs-obs-001",
-                "subject_ref": "person-001",
-                "entity_type": "observation",
-                "schema_version": "1.0.0",
-                "status": "active",
-                "recorded_time": "2026-09-03T12:00:00Z",
-                "concept": "sleep_duration",
-                "value": 7.5,
-                "unit": "hours",
-                "provenance": {"origin": "user", "method": "self_report"},
-                "classification": "personal_health",
-                "uncertainty": "reported",
-            },
-        )
+        self.assert_valid("health_state", {
+            "id": "hs-obs-001", "subject_ref": "person-001", "entity_type": "observation",
+            "schema_version": "1.0.0", "status": "active", "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration", "value": 7.5, "unit": "hours",
+            "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health", "uncertainty": "reported",
+        })
 
     def test_negative_observation_missing_uncertainty(self):
-        self.assert_invalid(
-            "health_state",
-            {
-                "id": "hs-obs-002",
-                "subject_ref": "person-001",
-                "entity_type": "observation",
-                "schema_version": "1.0.0",
-                "status": "active",
-                "recorded_time": "2026-09-03T12:00:00Z",
-                "concept": "sleep_duration",
-                "provenance": {"origin": "user", "method": "self_report"},
-                "classification": "personal_health",
-            },
-        )
+        self.assert_invalid("health_state", {
+            "id": "hs-obs-002", "subject_ref": "person-001", "entity_type": "observation",
+            "schema_version": "1.0.0", "status": "active", "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration", "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health",
+        })
 
     def test_negative_unknown_root_property(self):
-        self.assert_invalid(
-            "health_state",
-            {
-                "id": "hs-obs-003",
-                "subject_ref": "person-001",
-                "entity_type": "observation",
-                "schema_version": "1.0.0",
-                "status": "active",
-                "recorded_time": "2026-09-03T12:00:00Z",
-                "concept": "sleep_duration",
-                "provenance": {"origin": "user", "method": "self_report"},
-                "classification": "personal_health",
-                "uncertainty": "reported",
-                "unexpected_field": True,
-            },
-        )
+        self.assert_invalid("health_state", {
+            "id": "hs-obs-003", "subject_ref": "person-001", "entity_type": "observation",
+            "schema_version": "1.0.0", "status": "active", "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration", "provenance": {"origin": "user", "method": "self_report"},
+            "classification": "personal_health", "uncertainty": "reported", "unexpected_field": True,
+        })
 
     def test_positive_interpretation_instance(self):
-        self.assert_valid(
-            "health_state",
-            {
-                "id": "hs-int-001",
-                "subject_ref": "person-001",
-                "entity_type": "interpretation",
-                "schema_version": "1.0.0",
-                "status": "active",
-                "recorded_time": "2026-09-03T12:05:00Z",
-                "provenance": {"origin": "system", "method": "rule_based"},
-                "classification": "derived_health",
-                "uncertainty": "inferred",
-                "relationships": [{"type": "DERIVED_FROM", "target_ref": "hs-obs-001"}],
-            },
-        )
+        self.assert_valid("health_state", {
+            "id": "hs-int-001", "subject_ref": "person-001", "entity_type": "interpretation",
+            "schema_version": "1.0.0", "status": "active", "recorded_time": "2026-09-03T12:05:00Z",
+            "provenance": {"origin": "system", "method": "rule_based"}, "classification": "derived_health",
+            "uncertainty": "inferred", "relationships": [{"type": "DERIVED_FROM", "target_ref": "hs-obs-001"}],
+        })
 
     def test_negative_interpretation_missing_relationships(self):
-        self.assert_invalid(
-            "health_state",
-            {
-                "id": "hs-int-002",
-                "subject_ref": "person-001",
-                "entity_type": "interpretation",
-                "schema_version": "1.0.0",
-                "status": "active",
-                "recorded_time": "2026-09-03T12:05:00Z",
-                "provenance": {"origin": "system", "method": "rule_based"},
-                "classification": "derived_health",
-                "uncertainty": "inferred",
-            },
-        )
+        self.assert_invalid("health_state", {
+            "id": "hs-int-002", "subject_ref": "person-001", "entity_type": "interpretation",
+            "schema_version": "1.0.0", "status": "active", "recorded_time": "2026-09-03T12:05:00Z",
+            "provenance": {"origin": "system", "method": "rule_based"}, "classification": "derived_health",
+            "uncertainty": "inferred",
+        })
 
     def test_positive_evidence_claim_instance(self):
-        self.assert_valid(
-            "evidence",
-            {
-                "id": "ev-claim-001",
-                "entity_type": "claim",
-                "schema_version": "1.0.0",
-                "status": "EVIDENCE_ASSESSED",
-                "statement": "Example research claim",
-                "claim_type": "association",
-                "evidence_level": "E3_SUPPORTED",
-                "uncertainty": ["reported"],
-                "provenance": {"source_ref": "source-001", "method": "literature_review"},
-            },
-        )
+        self.assert_valid("evidence", {
+            "id": "ev-claim-001", "entity_type": "claim", "schema_version": "1.0.0",
+            "status": "EVIDENCE_ASSESSED", "statement": "Example research claim", "claim_type": "association",
+            "evidence_level": "E3_SUPPORTED", "uncertainty": ["reported"],
+            "provenance": {"source_ref": "source-001", "method": "literature_review"},
+        })
 
     def test_negative_evidence_claim_missing_evidence_level(self):
-        self.assert_invalid(
-            "evidence",
-            {
-                "id": "ev-claim-002",
-                "entity_type": "claim",
-                "schema_version": "1.0.0",
-                "status": "UNREVIEWED",
-                "statement": "Example research claim",
-                "claim_type": "association",
-                "uncertainty": ["reported"],
-                "provenance": {"source_ref": "source-001", "method": "literature_review"},
-            },
-        )
+        self.assert_invalid("evidence", {
+            "id": "ev-claim-002", "entity_type": "claim", "schema_version": "1.0.0",
+            "status": "UNREVIEWED", "statement": "Example research claim", "claim_type": "association",
+            "uncertainty": ["reported"], "provenance": {"source_ref": "source-001", "method": "literature_review"},
+        })
 
     def test_evidence_strength_and_safety_can_coexist(self):
-        self.assert_valid(
-            "evidence",
-            {
-                "id": "ev-claim-003",
-                "entity_type": "claim",
-                "schema_version": "1.0.0",
-                "status": "SAFETY_REVIEWED",
-                "statement": "Example claim requiring safety qualification",
-                "claim_type": "intervention_effect",
-                "evidence_level": "E3_SUPPORTED",
-                "safety_classification": "CONTRAINDICATED",
-                "uncertainty": ["reported"],
-                "provenance": {"source_ref": "source-002", "method": "evidence_assessment"},
-            },
-        )
+        self.assert_valid("evidence", {
+            "id": "ev-claim-003", "entity_type": "claim", "schema_version": "1.0.0",
+            "status": "SAFETY_REVIEWED", "statement": "Example claim requiring safety qualification",
+            "claim_type": "intervention_effect", "evidence_level": "E3_SUPPORTED",
+            "safety_classification": "CONTRAINDICATED", "uncertainty": ["reported"],
+            "provenance": {"source_ref": "source-002", "method": "evidence_assessment"},
+        })
 
     def test_positive_directional_link_instance(self):
-        self.assert_valid(
-            "link",
-            {
-                "id": "link-001",
-                "schema_version": "1.0.0",
-                "health_state_ref": "hs-int-001",
-                "evidence_ref": "ev-claim-001",
-                "relationship": "EVIDENCE_INFORMS_INTERPRETATION",
-                "provenance": {"method": "policy_governed_reference"},
-            },
-        )
+        self.assert_valid("link", {
+            "id": "link-001", "schema_version": "1.0.0", "health_state_ref": "hs-int-001",
+            "evidence_ref": "ev-claim-001", "relationship": "EVIDENCE_INFORMS_INTERPRETATION",
+            "provenance": {"method": "policy_governed_reference"},
+        })
 
     def test_negative_directional_link_invalid_relationship(self):
-        self.assert_invalid(
-            "link",
-            {
-                "id": "link-002",
-                "schema_version": "1.0.0",
-                "health_state_ref": "hs-int-001",
-                "evidence_ref": "ev-claim-001",
-                "relationship": "SUPPORTS",
-                "provenance": {"method": "policy_governed_reference"},
-            },
-        )
+        self.assert_invalid("link", {
+            "id": "link-002", "schema_version": "1.0.0", "health_state_ref": "hs-int-001",
+            "evidence_ref": "ev-claim-001", "relationship": "SUPPORTS",
+            "provenance": {"method": "policy_governed_reference"},
+        })
 
     def test_personal_observation_is_not_evidence_claim(self):
         observation = {
-            "id": "hs-obs-004",
-            "subject_ref": "person-001",
-            "entity_type": "observation",
-            "schema_version": "1.0.0",
-            "status": "active",
-            "recorded_time": "2026-09-03T12:00:00Z",
-            "concept": "sleep_duration",
-            "value": 7.5,
-            "unit": "hours",
+            "id": "hs-obs-004", "subject_ref": "person-001", "entity_type": "observation",
+            "schema_version": "1.0.0", "status": "active", "recorded_time": "2026-09-03T12:00:00Z",
+            "concept": "sleep_duration", "value": 7.5, "unit": "hours",
             "provenance": {"origin": "user", "method": "self_report"},
-            "classification": "personal_health",
-            "uncertainty": "reported",
+            "classification": "personal_health", "uncertainty": "reported",
         }
         self.assert_valid("health_state", observation)
         self.assertNotEqual(observation["entity_type"], "claim")
 
     def test_unknown_root_properties_rejected(self):
-        self.assert_invalid(
-            "evidence",
-            {
-                "id": "ev-claim-004",
-                "entity_type": "claim",
-                "schema_version": "1.0.0",
-                "status": "UNREVIEWED",
-                "statement": "Example",
-                "claim_type": "association",
-                "evidence_level": "E1_PLAUSIBLE",
-                "uncertainty": ["reported"],
-                "provenance": {"source_ref": "source-004", "method": "literature_review"},
-                "unexpected_field": True,
-            },
-        )
+        self.assert_invalid("evidence", {
+            "id": "ev-claim-004", "entity_type": "claim", "schema_version": "1.0.0",
+            "status": "UNREVIEWED", "statement": "Example", "claim_type": "association",
+            "evidence_level": "E1_PLAUSIBLE", "uncertainty": ["reported"],
+            "provenance": {"source_ref": "source-004", "method": "literature_review"},
+            "unexpected_field": True,
+        })
 
 
 if __name__ == "__main__":
