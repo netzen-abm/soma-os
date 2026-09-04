@@ -13,14 +13,23 @@ async fn test_pool() -> Option<PgPool> {
     let url = std::env::var("SOMA_TEST_DATABASE_URL")
         .ok()
         .filter(|value| !value.trim().is_empty())?;
-    PgPoolOptions::new().max_connections(4).connect(&url).await.ok()
+    Some(
+        PgPoolOptions::new()
+            .max_connections(4)
+            .connect(&url)
+            .await
+            .expect("SOMA_TEST_DATABASE_URL must point to a reachable PostgreSQL test database"),
+    )
 }
 
 async fn prepare(pool: &PgPool) {
     PREPARED
         .get_or_init(|| async {
             for migration in MIGRATIONS {
-                sqlx::raw_sql(migration).execute(pool).await.unwrap();
+                sqlx::raw_sql(migration)
+                    .execute(pool)
+                    .await
+                    .expect("protected-data test migrations must apply cleanly");
             }
         })
         .await;
@@ -98,8 +107,20 @@ async fn scoped_hash_uniqueness_allows_same_hash_across_scopes_and_rejects_same_
 
     let hash = "a".repeat(64);
     let insert = "INSERT INTO anonymized_user_vitals (tenant_id, data_domain, anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, $2, $3, 'pk', 1, '1.0', 'sig')";
-    sqlx::query(insert).bind("tenant-a").bind("domain-a").bind(&hash).execute(&pool).await.unwrap();
-    sqlx::query(insert).bind("tenant-b").bind("domain-b").bind(&hash).execute(&pool).await.unwrap();
+    sqlx::query(insert)
+        .bind("tenant-a")
+        .bind("domain-a")
+        .bind(&hash)
+        .execute(&pool)
+        .await
+        .unwrap();
+    sqlx::query(insert)
+        .bind("tenant-b")
+        .bind("domain-b")
+        .bind(&hash)
+        .execute(&pool)
+        .await
+        .unwrap();
 
     let duplicate = sqlx::query(insert)
         .bind("tenant-a")
