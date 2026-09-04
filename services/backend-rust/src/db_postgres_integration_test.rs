@@ -1,10 +1,13 @@
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+use tokio::sync::OnceCell;
 
 const MIGRATIONS: &[&str] = &[
     include_str!("../../../database/migrations/0001_initialize_zk_logs.sql"),
     include_str!("../../../database/migrations/0003_protected_data_scope_transition.sql"),
     include_str!("../../../database/migrations/0004_scoped_anonymized_hash.sql"),
 ];
+
+static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 async fn test_pool() -> Option<PgPool> {
     let url = std::env::var("SOMA_TEST_DATABASE_URL")
@@ -14,9 +17,13 @@ async fn test_pool() -> Option<PgPool> {
 }
 
 async fn prepare(pool: &PgPool) {
-    for migration in MIGRATIONS {
-        sqlx::raw_sql(migration).execute(pool).await.unwrap();
-    }
+    PREPARED
+        .get_or_init(|| async {
+            for migration in MIGRATIONS {
+                sqlx::raw_sql(migration).execute(pool).await.unwrap();
+            }
+        })
+        .await;
 }
 
 #[tokio::test]
