@@ -30,12 +30,11 @@ def enforce_authorized_operation(
 ) -> EnforcementDecision:
     """Compose verified identity/scope checks with Policy Kernel v0.3.
 
-    This function is an enforcement boundary, not a second authorization engine.
-    Security-sensitive identity and target fields are authoritative only from the
-    supplied trusted IdentityContext/target binding. Caller metadata is checked
-    for attempted overrides but is never merged into the trusted context.
+    This is an enforcement boundary, not a second authorization engine. Trusted
+    identity/scope fields come only from the supplied IdentityContext and explicit
+    target binding. Caller/model/MCP metadata cannot broaden that context.
     """
-    if not _valid_identity_context(identity_context):
+    if not _valid_identity_context(identity_context, now=now):
         return _deny("invalid_identity_context")
 
     if caller_metadata and _attempts_to_broaden(caller_metadata, identity_context):
@@ -60,7 +59,7 @@ def enforce_authorized_operation(
     return EnforcementDecision(True, "authorized", decision)
 
 
-def _valid_identity_context(context: Mapping[str, object], now: datetime | None = None) -> bool:
+def _valid_identity_context(context: Mapping[str, object], *, now: datetime | None = None) -> bool:
     required = (
         "context_id",
         "schema_version",
@@ -73,13 +72,26 @@ def _valid_identity_context(context: Mapping[str, object], now: datetime | None 
         "assurance_level",
         "issued_at",
     )
-    if not all(isinstance(context.get(key), str) and str(context[key]).strip() for key in required if key not in {"authentication_provenance", "tenant_scope", "data_domain_scope"}):
+    if any(key not in context for key in required):
+        return False
+    scalar_fields = (
+        "context_id",
+        "schema_version",
+        "principal_id",
+        "principal_type",
+        "authentication_status",
+        "assurance_level",
+        "issued_at",
+    )
+    if not all(isinstance(context.get(key), str) and context[key].strip() for key in scalar_fields):
         return False
     if context.get("schema_version") != "1.0.0":
         return False
     if context.get("authentication_status") != "VERIFIED":
         return False
     if context.get("principal_type") not in {"person", "agent", "service", "application", "device"}:
+        return False
+    if context.get("assurance_level") not in {"LOW", "SUBSTANTIAL", "HIGH"}:
         return False
 
     provenance = context.get("authentication_provenance")
@@ -105,7 +117,7 @@ def _valid_identity_context(context: Mapping[str, object], now: datetime | None 
         if "expires_at" in context and _parse_timestamp(str(context["expires_at"])) <= now.astimezone(timezone.utc):
             return False
 
-    # Credentials, tokens and secrets must never be part of this boundary.
+    # Credentials, tokens and secrets must never cross this boundary.
     forbidden = {"token", "access_token", "refresh_token", "credential", "secret", "password", "session_material"}
     if forbidden.intersection(context.keys()):
         return False
@@ -139,9 +151,7 @@ def _attempts_to_broaden(metadata: Mapping[str, object], context: Mapping[str, o
         if field not in metadata:
             continue
         if field in {"tenant_scope", "data_domain_scope"}:
-            supplied = metadata[field]
-            trusted = context[field]
-            if supplied != trusted:
+            if metadata[field] != context[field]:
                 return True
         elif metadata[field] != context.get(field):
             return True
