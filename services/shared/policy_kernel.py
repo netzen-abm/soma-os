@@ -31,8 +31,8 @@ class PolicyDecision:
     reason_code: str
 
 
-POLICY_VERSION = "0.2.0"
-GrantKey = tuple[str, str, str, str, str]
+POLICY_VERSION = "0.3.0"
+GrantKey = tuple[str, str, str, str, str, str]
 
 
 class PolicyKernel:
@@ -82,6 +82,7 @@ class PolicyKernel:
             request.principal_type,
             request.capability_id,
             request.resource_type,
+            request.resource_id,
             request.action,
         )
         if self._grants.get(grant_key) is not True:
