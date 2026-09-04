@@ -74,6 +74,9 @@ jobs:
       - name: Validate IdentityContext JSON contract
         run: python -m json.tool schemas/identity-context-v1.json > /dev/null
 
+      - name: Validate Authorization Enforcement Context JSON contract
+        run: python -m json.tool schemas/authorization-enforcement-context-v1.json > /dev/null
+
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
@@ -85,6 +88,10 @@ jobs:
       - name: Run IdentityContext contract tests
         working-directory: services/shared
         run: python identity_context_test.py
+
+      - name: Run Identity Authorization Enforcement tests
+        working-directory: services/shared
+        run: python identity_authorization_enforcement_test.py
 
   cryptographic-testing:
     name: Cryptographic and integrity tests
