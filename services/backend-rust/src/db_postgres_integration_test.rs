@@ -37,7 +37,9 @@ async fn prepare(pool: &PgPool) {
 
 #[tokio::test]
 async fn transaction_local_scope_survives_pool_reuse_without_leakage() {
-    let Some(pool) = test_pool().await else { return };
+    let Some(pool) = test_pool().await else {
+        return;
+    };
     prepare(&pool).await;
 
     let mut tx = pool.begin().await.unwrap();
@@ -65,7 +67,9 @@ async fn transaction_local_scope_survives_pool_reuse_without_leakage() {
 
 #[tokio::test]
 async fn concurrent_transactions_cannot_cross_contaminate_scope() {
-    let Some(pool) = test_pool().await else { return };
+    let Some(pool) = test_pool().await else {
+        return;
+    };
     prepare(&pool).await;
 
     let mut tx_a = pool.begin().await.unwrap();
@@ -102,7 +106,9 @@ async fn concurrent_transactions_cannot_cross_contaminate_scope() {
 
 #[tokio::test]
 async fn scoped_hash_uniqueness_allows_same_hash_across_scopes_and_rejects_same_scope_duplicate() {
-    let Some(pool) = test_pool().await else { return };
+    let Some(pool) = test_pool().await else {
+        return;
+    };
     prepare(&pool).await;
 
     let hash = "a".repeat(64);
@@ -133,7 +139,9 @@ async fn scoped_hash_uniqueness_allows_same_hash_across_scopes_and_rejects_same_
 
 #[tokio::test]
 async fn legacy_null_scope_is_not_made_accessible_by_scoped_queries() {
-    let Some(pool) = test_pool().await else { return };
+    let Some(pool) = test_pool().await else {
+        return;
+    };
     prepare(&pool).await;
 
     let hash = "b".repeat(64);
