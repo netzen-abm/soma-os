@@ -1,8 +1,7 @@
 -- Legacy Data Classification & Quarantine v1
 --
--- This migration records the disposition of pre-isolation rows without assigning
--- inferred tenant or data-domain scope. It intentionally does not enable RLS or
--- promote any legacy record into the protected population.
+-- This migration creates an append-only classification record for pre-isolation
+-- rows. It never assigns inferred tenant/data-domain scope and does not enable RLS.
 
 CREATE TABLE IF NOT EXISTS anonymized_user_vitals_legacy_classification (
     classification_id BIGSERIAL PRIMARY KEY,
@@ -40,11 +39,11 @@ CREATE INDEX IF NOT EXISTS idx_legacy_classification_state
     ON anonymized_user_vitals_legacy_classification(classification_state);
 
 COMMENT ON TABLE anonymized_user_vitals_legacy_classification IS
-    'Auditable disposition metadata for pre-isolation health-vital records; classification never infers protected scope.';
+    'Append-only classification evidence for pre-isolation health-vital records; classification never infers protected scope.';
 
--- A legacy record must have at most one current classification disposition.
-CREATE UNIQUE INDEX IF NOT EXISTS uq_legacy_classification_log_id
-    ON anonymized_user_vitals_legacy_classification(legacy_log_id);
+-- This table intentionally permits multiple classification records for one legacy row,
+-- preserving the history of review/reclassification decisions. A later gate may define
+-- how the latest verified disposition is selected without destroying prior evidence.
 
--- Do not add NOT NULL scope or RLS here. Those are later gates after classification
--- and quarantine have been verified against real migration data.
+-- Do not add NOT NULL scope, mutate legacy rows, or enable RLS here. Those are later
+-- gates after classification and quarantine have been verified against real data.
