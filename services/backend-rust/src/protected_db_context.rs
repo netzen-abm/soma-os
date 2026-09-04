@@ -24,7 +24,10 @@ impl ProtectedDbContext {
             return Err("protected database scope contains control characters".into());
         }
 
-        Ok(Self { tenant_id, data_domain })
+        Ok(Self {
+            tenant_id,
+            data_domain,
+        })
     }
 }
 
@@ -39,19 +42,15 @@ pub async fn begin_protected_transaction<'a>(
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    if let Err(error) = sqlx::query("SELECT set_config('soma.tenant_id', $1, true)")
-        .bind(&context.tenant_id)
-        .execute(&mut *tx)
-        .await
+    if let Err(error) =
+        sqlx::query("SELECT set_config('soma.tenant_id', $1, true)").bind(&context.tenant_id).execute(&mut *tx).await
     {
         let _ = tx.rollback().await;
         return Err(error);
     }
 
-    if let Err(error) = sqlx::query("SELECT set_config('soma.data_domain', $1, true)")
-        .bind(&context.data_domain)
-        .execute(&mut *tx)
-        .await
+    if let Err(error) =
+        sqlx::query("SELECT set_config('soma.data_domain', $1, true)").bind(&context.data_domain).execute(&mut *tx).await
     {
         let _ = tx.rollback().await;
         return Err(error);
