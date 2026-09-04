@@ -61,15 +61,15 @@
 
 ## 3. Policy and authorization infrastructure
 
-- [ ] Hardened principal-scoped authorization contract merged to main.
+- [x] Canonical principal-scoped authorization contract merged to main via Policy Kernel v0.3.
 - [x] Principal ID and principal type isolation tested.
 - [x] Resource type isolation tested.
-- [ ] Resource instance isolation merged to main.
+- [x] Resource instance isolation merged to main via Policy Kernel v0.3.
 - [x] Unknown capability fails closed.
 - [x] Malformed policy/capability declaration fails closed.
 - [ ] Consent semantics defined.
 - [ ] Human-review/approval semantics defined.
-- [ ] Tenant/data-domain isolation model defined where required.
+- [x] Tenant/data-domain isolation model defined via IdentityContext v1 and Identity → Authorization Enforcement v1; end-to-end data-layer enforcement remains pending.
 - [ ] Jurisdiction/data-residency policy model defined where required.
 - [ ] Credential lifecycle and rotation model defined.
 - [ ] Service-to-service identity model defined.
@@ -162,7 +162,7 @@
 - [x] Unsafe vault/device operations fail closed.
 - [x] Sensitive Messenger/WhatsApp logging removed.
 - [x] Misleading cryptographic claims removed.
-- [ ] Canonical identity model.
+- [x] Canonical identity model defined by IdentityContext v1.
 - [ ] Authentication flow audit.
 - [ ] Authorization end-to-end audit.
 - [ ] Session/token lifecycle audit.
