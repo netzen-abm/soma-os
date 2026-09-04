@@ -14,8 +14,6 @@
 - `DEFERRED` — intentionally postponed with a reason.
 - `NOT APPLICABLE` — explicitly ruled out.
 
----
-
 ## 0. Governance and execution rules
 
 - [x] Main is the canonical integration baseline.
@@ -244,6 +242,7 @@
 - [ ] WhatsApp adapter integration plan.
 - [ ] Messenger adapter integration plan.
 - [ ] No surface-specific duplication of shared policy logic.
+- [x] Web/runtime language architecture defined: Rust canonical domain runtime; WASM/Dioxus client path; Python/Django research/AI/application path; TypeScript/JavaScript browser/platform integration.
 
 ## 14. Observability and operations
 
@@ -334,8 +333,6 @@
 - [ ] Support/incident process active.
 - [ ] Final go/no-go decision recorded.
 
----
-
 ## Product-ready definition
 
 SOMA is **Product Ready** only when the complete system can execute its primary user journey in a clean production-like environment while the shared capability, policy, evidence, privacy, security, observability, recovery, and deployment gates above are verified.
@@ -386,3 +383,5 @@ The final gate is an integrated system-level demonstration.
 10. **Main is canonical:** after verified integration, `main` is the source of truth.
 11. **Documentation is part of the product:** architecture and important execution decisions are recorded in-repository.
 12. **Future decentralization is plug-and-play:** Web3, Nostr, DID/VC and content-addressed storage must remain adapters, not hard dependencies of the core.
+13. **One canonical domain:** implementation languages and frameworks are replaceable; canonical contracts and domain invariants are not.
+14. **Canonical domain runtime:** Rust is the canonical/reference runtime for security-sensitive and domain-critical behavior; other runtimes must conform through explicit contracts.
