@@ -84,7 +84,7 @@ jobs:
 
       - name: Run IdentityContext contract tests
         working-directory: services/shared
-        run: python -m unittest -v identity_context_test.py
+        run: python identity_context_test.py
 
   cryptographic-testing:
     name: Cryptographic and integrity tests
