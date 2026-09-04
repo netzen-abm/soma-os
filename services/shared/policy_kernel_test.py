@@ -6,7 +6,14 @@ from policy_kernel import Decision, PolicyKernel, PolicyRequest
 
 REGISTRY = Path(__file__).with_name("capability_registry.json")
 GRANTS = {
-    ("agent-1", "agent", "evidence.research", "research-source", "read"): True,
+    (
+        "agent-1",
+        "agent",
+        "evidence.research",
+        "research-source",
+        "source-1",
+        "read",
+    ): True,
 }
 
 
@@ -23,9 +30,15 @@ class PolicyKernelTests(unittest.TestCase):
             context={},
         )
 
-    def test_registered_capability_uses_scoped_identity_grant(self):
+    def test_registered_capability_uses_resource_instance_grant(self):
         result = self.kernel.evaluate(self.request)
         self.assertEqual(result.decision, Decision.ALLOW)
+
+    def test_different_resource_id_fails_closed(self):
+        request = self._with_request(resource_id="source-2")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.DENY)
+        self.assertEqual(result.reason_code, "authorization_required")
 
     def test_different_identity_fails_closed(self):
         request = self._with_request(principal_id="agent-2")
@@ -75,6 +88,11 @@ class PolicyKernelTests(unittest.TestCase):
         result = self.kernel.evaluate(request)
         self.assertEqual(result.decision, Decision.DENY)
         self.assertEqual(result.reason_code, "invalid_request")
+
+    def test_context_cannot_change_resource_scope(self):
+        request = self._with_context(resource_id="source-2")
+        result = self.kernel.evaluate(request)
+        self.assertEqual(result.decision, Decision.ALLOW)
 
     def test_human_review_precedes_grant(self):
         request = self._with_context(human_review="required")

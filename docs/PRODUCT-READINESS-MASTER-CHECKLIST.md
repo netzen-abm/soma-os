@@ -62,10 +62,11 @@
 ## 3. Policy and authorization infrastructure
 
 - [ ] Hardened principal-scoped authorization contract merged to main.
-- [ ] Principal ID and principal type isolation tested.
-- [ ] Resource type isolation tested.
-- [ ] Unknown capability fails closed.
-- [ ] Malformed policy/capability declaration fails closed.
+- [x] Principal ID and principal type isolation tested.
+- [x] Resource type isolation tested.
+- [ ] Resource instance isolation merged to main.
+- [x] Unknown capability fails closed.
+- [x] Malformed policy/capability declaration fails closed.
 - [ ] Consent semantics defined.
 - [ ] Human-review/approval semantics defined.
 - [ ] Tenant/data-domain isolation model defined where required.

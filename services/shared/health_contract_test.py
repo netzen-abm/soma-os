@@ -12,11 +12,7 @@ SCHEMAS = {
 
 
 def validate(schema, instance):
-    """Targeted draft-2020-12 contract validation using only stdlib primitives.
-
-    This intentionally validates the repository's safety-critical contract rules,
-    rather than pretending to be a complete JSON Schema implementation.
-    """
+    """Targeted draft-2020-12 contract validation using only stdlib primitives."""
     errors = []
     if not isinstance(instance, dict):
         return ["instance must be an object"]
@@ -57,10 +53,7 @@ def validate(schema, instance):
 class HealthContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.schemas = {
-            name: json.loads(path.read_text(encoding="utf-8"))
-            for name, path in SCHEMAS.items()
-        }
+        cls.schemas = {name: json.loads(path.read_text(encoding="utf-8")) for name, path in SCHEMAS.items()}
 
     def assert_valid(self, schema_name, instance):
         self.assertEqual(validate(self.schemas[schema_name], instance), [])
@@ -116,8 +109,7 @@ class HealthContractTests(unittest.TestCase):
         self.assert_invalid("health_state", {"id":"hs-obs-002","subject_ref":"person-001","entity_type":"observation","schema_version":"1.0.0","status":"active","recorded_time":"2026-09-03T12:00:00Z","concept":"sleep_duration","provenance":{"origin":"user","method":"self_report"},"classification":"personal_health"})
 
     def test_negative_unknown_root_property(self):
-        instance = {"id":"hs-obs-003","subject_ref":"person-001","entity_type":"observation","schema_version":"1.0.0","status":"active","recorded_time":"2026-09-03T12:00:00Z","concept":"sleep_duration","provenance":{"origin":"user","method":"self_report"},"classification":"personal_health","uncertainty":"reported","unexpected_field":True}
-        self.assert_invalid("health_state", instance)
+        self.assert_invalid("health_state", {"id":"hs-obs-003","subject_ref":"person-001","entity_type":"observation","schema_version":"1.0.0","status":"active","recorded_time":"2026-09-03T12:00:00Z","concept":"sleep_duration","provenance":{"origin":"user","method":"self_report"},"classification":"personal_health","uncertainty":"reported","unexpected_field":True})
 
     def test_positive_interpretation_instance(self):
         self.assert_valid("health_state", {"id":"hs-int-001","subject_ref":"person-001","entity_type":"interpretation","schema_version":"1.0.0","status":"active","recorded_time":"2026-09-03T12:05:00Z","provenance":{"origin":"system","method":"rule_based"},"classification":"derived_health","uncertainty":"inferred","relationships":[{"type":"DERIVED_FROM","target_ref":"hs-obs-001"}]})
@@ -126,13 +118,13 @@ class HealthContractTests(unittest.TestCase):
         self.assert_invalid("health_state", {"id":"hs-int-002","subject_ref":"person-001","entity_type":"interpretation","schema_version":"1.0.0","status":"active","recorded_time":"2026-09-03T12:05:00Z","provenance":{"origin":"system","method":"rule_based"},"classification":"derived_health","uncertainty":"inferred"})
 
     def test_positive_evidence_claim_instance(self):
-        self.assert_valid("evidence", {"id":"ev-claim-001","entity_type":"claim","schema_version":"1.0.0","status":"EVIDENCE_ASSESSED","statement":"Example research claim","claim_type":"association","evidence_level":"E3_SUPPORTED","uncertainty":"reported","provenance":{"source_ref":"source-001","method":"literature_review"}})
+        self.assert_valid("evidence", {"id":"ev-claim-001","entity_type":"claim","schema_version":"1.0.0","status":"EVIDENCE_ASSESSED","statement":"Example research claim","claim_type":"association","evidence_level":"E3_SUPPORTED","uncertainty":["reported"],"provenance":{"source_ref":"source-001","method":"literature_review"}})
 
     def test_negative_evidence_claim_missing_evidence_level(self):
-        self.assert_invalid("evidence", {"id":"ev-claim-002","entity_type":"claim","schema_version":"1.0.0","status":"UNREVIEWED","statement":"Example research claim","claim_type":"association","uncertainty":"reported","provenance":{"source_ref":"source-001","method":"literature_review"}})
+        self.assert_invalid("evidence", {"id":"ev-claim-002","entity_type":"claim","schema_version":"1.0.0","status":"UNREVIEWED","statement":"Example research claim","claim_type":"association","uncertainty":["reported"],"provenance":{"source_ref":"source-001","method":"literature_review"}})
 
     def test_evidence_strength_and_safety_can_coexist(self):
-        self.assert_valid("evidence", {"id":"ev-claim-003","entity_type":"claim","schema_version":"1.0.0","status":"SAFETY_REVIEWED","statement":"Example claim requiring safety qualification","claim_type":"intervention_effect","evidence_level":"E3_SUPPORTED","safety_classification":"CONTRAINDICATED","uncertainty":"reported","provenance":{"source_ref":"source-002","method":"evidence_assessment"}})
+        self.assert_valid("evidence", {"id":"ev-claim-003","entity_type":"claim","schema_version":"1.0.0","status":"SAFETY_REVIEWED","statement":"Example claim requiring safety qualification","claim_type":"intervention_effect","evidence_level":"E3_SUPPORTED","safety_classification":"CONTRAINDICATED","uncertainty":["reported"],"provenance":{"source_ref":"source-002","method":"evidence_assessment"}})
 
     def test_positive_directional_link_instance(self):
         self.assert_valid("link", {"id":"link-001","schema_version":"1.0.0","health_state_ref":"hs-int-001","evidence_ref":"ev-claim-001","relationship":"EVIDENCE_INFORMS_INTERPRETATION","provenance":{"method":"policy_governed_reference"}})
