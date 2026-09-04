@@ -8,6 +8,20 @@ from policy_kernel import Decision, PolicyDecision, PolicyKernel, PolicyRequest
 
 
 ENFORCEMENT_VERSION = "1.0.0"
+_IDENTITY_CONTEXT_KEYS = {
+    "context_id",
+    "schema_version",
+    "principal_id",
+    "principal_type",
+    "authentication_status",
+    "authentication_provenance",
+    "tenant_scope",
+    "data_domain_scope",
+    "jurisdiction_scope",
+    "assurance_level",
+    "issued_at",
+    "expires_at",
+}
 
 
 @dataclass(frozen=True)
@@ -60,6 +74,11 @@ def enforce_authorized_operation(
 
 
 def _valid_identity_context(context: Mapping[str, object], *, now: datetime | None = None) -> bool:
+    if not isinstance(context, Mapping):
+        return False
+    if set(context.keys()) - _IDENTITY_CONTEXT_KEYS:
+        return False
+
     required = (
         "context_id",
         "schema_version",
@@ -95,14 +114,22 @@ def _valid_identity_context(context: Mapping[str, object], *, now: datetime | No
         return False
 
     provenance = context.get("authentication_provenance")
-    if not isinstance(provenance, Mapping):
+    if not isinstance(provenance, Mapping) or set(provenance.keys()) != {"issuer", "method", "verified_at", "verifier_id"}:
         return False
     if not all(isinstance(provenance.get(k), str) and provenance[k].strip() for k in ("issuer", "method", "verified_at", "verifier_id")):
+        return False
+    if not _valid_timestamp(provenance["verified_at"]):
         return False
 
     for field in ("tenant_scope", "data_domain_scope"):
         value = context.get(field)
         if not isinstance(value, Sequence) or isinstance(value, (str, bytes)) or not value:
+            return False
+        if any(not isinstance(item, str) or not item.strip() for item in value):
+            return False
+    if "jurisdiction_scope" in context:
+        value = context["jurisdiction_scope"]
+        if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
             return False
         if any(not isinstance(item, str) or not item.strip() for item in value):
             return False
@@ -114,13 +141,10 @@ def _valid_identity_context(context: Mapping[str, object], *, now: datetime | No
     if now is not None:
         if now.tzinfo is None:
             return False
-        if "expires_at" in context and _parse_timestamp(str(context["expires_at"])) <= now.astimezone(timezone.utc):
+        current = now.astimezone(timezone.utc)
+        if "expires_at" in context and _parse_timestamp(str(context["expires_at"])) <= current:
             return False
 
-    # Credentials, tokens and secrets must never cross this boundary.
-    forbidden = {"token", "access_token", "refresh_token", "credential", "secret", "password", "session_material"}
-    if forbidden.intersection(context.keys()):
-        return False
     return True
 
 
