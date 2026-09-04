@@ -3,9 +3,8 @@ use std::error::Error;
 
 /// Trusted persistence scope established only after the canonical authorization boundary.
 ///
-/// This type is deliberately provider-neutral at the authorization layer: it carries the
-/// tenant/data-domain binding required by the PostgreSQL adapter, but it does not evaluate
-/// policy or infer scope from caller metadata.
+/// This type carries the tenant/data-domain binding required by the PostgreSQL adapter,
+/// but it does not evaluate policy or infer scope from caller metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProtectedDbContext {
     pub tenant_id: String,
@@ -46,15 +45,23 @@ pub async fn begin_protected_transaction<'a>(
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    sqlx::query("SELECT set_config('soma.tenant_id', $1, true)")
+    if let Err(error) = sqlx::query("SELECT set_config('soma.tenant_id', $1, true)")
         .bind(&context.tenant_id)
         .execute(&mut *tx)
-        .await?;
+        .await
+    {
+        let _ = tx.rollback().await;
+        return Err(error);
+    }
 
-    sqlx::query("SELECT set_config('soma.data_domain', $1, true)")
+    if let Err(error) = sqlx::query("SELECT set_config('soma.data_domain', $1, true)")
         .bind(&context.data_domain)
         .execute(&mut *tx)
-        .await?;
+        .await
+    {
+        let _ = tx.rollback().await;
+        return Err(error);
+    }
 
     Ok(tx)
 }
