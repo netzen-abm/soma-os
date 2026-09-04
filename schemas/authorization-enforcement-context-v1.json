@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/authorization-enforcement-context-v1.json",
+  "title": "SOMA Authorization Enforcement Context v1",
+  "description": "Validated enforcement envelope composing verified IdentityContext scope with a Policy Kernel v0.3 authorization request. This contract does not grant authorization and does not replace the Policy Kernel.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "identity_context_id",
+    "principal_id",
+    "principal_type",
+    "capability_id",
+    "resource_type",
+    "resource_id",
+    "action",
+    "target_tenant",
+    "target_data_domain"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "request_id": {"type": "string", "minLength": 1},
+    "identity_context_id": {"type": "string", "minLength": 1},
+    "principal_id": {"type": "string", "minLength": 1},
+    "principal_type": {
+      "type": "string",
+      "enum": ["person", "agent", "service", "application", "device"]
+    },
+    "capability_id": {"type": "string", "minLength": 1},
+    "resource_type": {"type": "string", "minLength": 1},
+    "resource_id": {"type": "string", "minLength": 1},
+    "action": {"type": "string", "minLength": 1},
+    "target_tenant": {"type": "string", "minLength": 1},
+    "target_data_domain": {"type": "string", "minLength": 1}
+  }
+}
