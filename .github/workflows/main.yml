@@ -71,6 +71,9 @@ jobs:
       - name: Validate Health State and Evidence contracts
         run: python scripts/validate_health_contracts.py
 
+      - name: Validate IdentityContext JSON contract
+        run: python -m json.tool schemas/identity-context-v1.json > /dev/null
+
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
@@ -78,6 +81,10 @@ jobs:
       - name: Run Policy Kernel tests
         working-directory: services/shared
         run: python -m unittest -v policy_kernel_test.py
+
+      - name: Run IdentityContext contract tests
+        working-directory: services/shared
+        run: python identity_context_test.py
 
   cryptographic-testing:
     name: Cryptographic and integrity tests
