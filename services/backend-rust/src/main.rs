@@ -22,6 +22,7 @@ mod meta_outbound;
 mod mnemonic_validator;
 mod nostr_client;
 mod privacy_policy;
+mod protected_db_context;
 mod shared_infrastructure;
 mod vault_exporter;
 mod vault_importer;
