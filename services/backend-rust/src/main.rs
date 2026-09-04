@@ -28,6 +28,9 @@ mod vault_exporter;
 mod vault_importer;
 mod whatsapp_webhook;
 
+#[cfg(test)]
+mod db_postgres_integration_test;
+
 use ambali_timer::FermentationOrchestrator;
 use bot_menus::MultiChannelMenuController;
 use compliance_shield::SovereignComplianceShield;
