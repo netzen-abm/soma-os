@@ -1,7 +1,7 @@
 # Protected Data Access Enforcement v1 — Implementation Boundary
 
-**Status:** Implementation phase 1 — not production-complete
-**Issue:** #27
+**Status:** Implementation phase 1 — not production-complete  
+**Issue:** #27  
 **Design:** `docs/architecture/protected-data-access-enforcement-v1.md`
 
 ## Implemented in this phase
@@ -14,28 +14,32 @@
 - Fail-closed validation for missing/invalid authorization context and malformed targets.
 - Negative tests for tenant, domain, resource, action, caller metadata, identity and policy failures.
 - Database transition migration adds explicit `tenant_id` and `data_domain` fields without inventing legacy scope.
+- Rust protected persistence methods now require `ProtectedDbContext` and perform scoped writes/reads.
+- PostgreSQL transaction-local scope binding uses `set_config(..., true)` so pooled connections do not retain request scope after commit/rollback.
+- PostgreSQL integration harness verifies pool reuse, concurrent transaction isolation, scoped hash uniqueness, and exclusion of legacy NULL-scope rows.
+- Legacy global `anonymized_user_hash` uniqueness is replaced by tenant + data-domain + hash uniqueness during the transition period.
 
 ## Deliberately not completed yet
 
 This phase does **not** claim end-to-end protected persistence security. In particular:
 
-1. Rust `SomaDatabaseManager` still contains direct SQL access paths and has not yet been fully migrated behind the shared contract.
-2. PostgreSQL RLS is not enabled by the transition migration because existing rows lack trustworthy scope.
-3. Trusted transaction-local database context and connection-pool isolation are not yet wired.
-4. Legacy record inventory, classification, quarantine and validated backfill are not yet implemented.
-5. Authentication/session/token trust lifecycle is outside this phase.
-6. Service-to-service identity and background-job enforcement remain open.
-7. Export, backup, cache and administrative bypass paths require separate inventory and tests.
+1. The full provider-neutral adapter replacement for all persistence access is not yet complete; the existing `SomaDatabaseManager` remains the concrete PostgreSQL implementation boundary.
+2. PostgreSQL RLS is not enabled because existing rows lack trustworthy scope.
+3. Legacy record inventory, classification, quarantine and validated backfill are not yet implemented.
+4. Authentication/session/token trust lifecycle is outside this phase.
+5. Service-to-service identity and background-job enforcement remain open.
+6. Export, backup, cache and administrative bypass paths require separate inventory and tests.
+7. Database constraints requiring complete scope remain deferred until legacy disposition is established.
 
 ## Required next implementation gate
 
 Before enabling database-level enforcement:
 
-- migrate every protected caller to the shared access boundary;
-- establish a trusted, transaction-local DB security context after authorization;
-- implement RLS policies that fail closed when that context is absent or mismatched;
-- prove connection-pool context cannot leak across requests;
-- classify/quarantine legacy rows without inferred security scope;
-- add integration tests that attempt direct SQL/bypass access;
-- verify rollback and partial-failure behavior;
+- complete the repository-wide direct SQL/persistence bypass audit;
+- establish the legacy classification/quarantine process without inferred security scope;
+- establish a complete two-dimensional scope invariant;
+- implement constraints and RLS only after trustworthy scope exists;
+- add integration tests for direct SQL/bypass attempts and partial scope;
+- verify rollback, recovery and migration behavior;
+- complete authentication/session/service identity enforcement;
 - update the product-readiness checklist only for evidence-backed completions.
