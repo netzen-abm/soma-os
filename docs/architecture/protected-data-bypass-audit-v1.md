@@ -36,9 +36,9 @@ A transport, model, agent, tool, caller-supplied metadata, or alternate runtime 
 
 ## Current repository result
 
-At the baseline audited before this control was added, repository search identified the protected table SQL access in `services/backend-rust/src/db_layer.rs`, with schema creation in `database/migrations/0001_initialize_zk_logs.sql`. The repository-wide `sqlx::query` search likewise resolved to the canonical Rust persistence layer. fileciteturn104file0L2-L16 fileciteturn105file0L2-L16
+The baseline repository audit identified the protected table SQL access in `services/backend-rust/src/db_layer.rs`, with schema creation in `database/migrations/0001_initialize_zk_logs.sql`. Repository-wide searches also located the canonical Rust persistence layer as the application SQL access path.
 
-The baseline also showed `PgPool` ownership in `db_layer.rs`, while application startup constructs the pool and passes it to `SomaDatabaseManager`. fileciteturn106file0L2-L14 fileciteturn106file1L18-L30
+The baseline showed `PgPool` ownership in `db_layer.rs`, while application startup constructs the pool and passes it to `SomaDatabaseManager`.
 
 ## Limitations
 
