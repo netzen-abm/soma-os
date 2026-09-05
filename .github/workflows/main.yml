@@ -93,6 +93,10 @@ jobs:
         working-directory: services/shared
         run: python identity_authorization_enforcement_test.py
 
+      - name: Run Legacy Data Classification tests
+        working-directory: services/shared
+        run: python legacy_data_classification_test.py
+
   postgres-security-integration:
     name: PostgreSQL protected-data isolation tests
     needs: code-audit
