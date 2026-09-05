@@ -47,7 +47,8 @@ def main() -> int:
             matched = [name for name, pattern in PATTERNS.items() if pattern.search(line)]
             if not matched:
                 continue
-            if relative in ALLOWED_FILES or relative.parts[:3] == ("database", "migrations",):
+            is_migration = relative.parts[:2] == ("database", "migrations")
+            if relative in ALLOWED_FILES or is_migration:
                 continue
             findings.append(f"{relative}:{line_number}: {','.join(matched)}")
 
