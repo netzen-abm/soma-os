@@ -10,9 +10,7 @@ const MIGRATIONS: &[&str] = &[
 static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 async fn test_pool() -> Option<PgPool> {
-    let url = std::env::var("SOMA_TEST_DATABASE_URL")
-        .ok()
-        .filter(|value| !value.trim().is_empty())?;
+    let url = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|value| !value.trim().is_empty())?;
     Some(
         PgPoolOptions::new()
             .max_connections(4)
@@ -37,9 +35,7 @@ async fn prepare(pool: &PgPool) {
 
 #[tokio::test]
 async fn transaction_local_scope_survives_pool_reuse_without_leakage() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
+    let Some(pool) = test_pool().await else { return };
     prepare(&pool).await;
 
     let mut tx = pool.begin().await.unwrap();
@@ -67,9 +63,7 @@ async fn transaction_local_scope_survives_pool_reuse_without_leakage() {
 
 #[tokio::test]
 async fn concurrent_transactions_cannot_cross_contaminate_scope() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
+    let Some(pool) = test_pool().await else { return };
     prepare(&pool).await;
 
     let mut tx_a = pool.begin().await.unwrap();
@@ -106,42 +100,21 @@ async fn concurrent_transactions_cannot_cross_contaminate_scope() {
 
 #[tokio::test]
 async fn scoped_hash_uniqueness_allows_same_hash_across_scopes_and_rejects_same_scope_duplicate() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
+    let Some(pool) = test_pool().await else { return };
     prepare(&pool).await;
 
     let hash = "a".repeat(64);
     let insert = "INSERT INTO anonymized_user_vitals (tenant_id, data_domain, anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, $2, $3, 'pk', 1, '1.0', 'sig')";
-    sqlx::query(insert)
-        .bind("tenant-a")
-        .bind("domain-a")
-        .bind(&hash)
-        .execute(&pool)
-        .await
-        .unwrap();
-    sqlx::query(insert)
-        .bind("tenant-b")
-        .bind("domain-b")
-        .bind(&hash)
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(insert).bind("tenant-a").bind("domain-a").bind(&hash).execute(&pool).await.unwrap();
+    sqlx::query(insert).bind("tenant-b").bind("domain-b").bind(&hash).execute(&pool).await.unwrap();
 
-    let duplicate = sqlx::query(insert)
-        .bind("tenant-a")
-        .bind("domain-a")
-        .bind(&hash)
-        .execute(&pool)
-        .await;
+    let duplicate = sqlx::query(insert).bind("tenant-a").bind("domain-a").bind(&hash).execute(&pool).await;
     assert!(duplicate.is_err());
 }
 
 #[tokio::test]
 async fn legacy_null_scope_is_not_made_accessible_by_scoped_queries() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
+    let Some(pool) = test_pool().await else { return };
     prepare(&pool).await;
 
     let hash = "b".repeat(64);
