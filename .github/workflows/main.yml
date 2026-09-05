@@ -93,6 +93,49 @@ jobs:
         working-directory: services/shared
         run: python identity_authorization_enforcement_test.py
 
+      - name: Run Legacy Data Classification tests
+        working-directory: services/shared
+        run: python legacy_data_classification_test.py
+
+  postgres-security-integration:
+    name: PostgreSQL protected-data isolation tests
+    needs: code-audit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: somaos_test
+          POSTGRES_USER: somaos_test
+          POSTGRES_PASSWORD: somaos_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U somaos_test -d somaos_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      SOMA_TEST_DATABASE_URL: postgresql://somaos_test:somaos_test_password@localhost:5432/somaos_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: services/backend-rust -> target
+
+      - name: Run PostgreSQL protected-data integration tests
+        run: >-
+          cargo test
+          --manifest-path services/backend-rust/Cargo.toml
+          --all-targets
+          --verbose
+
   cryptographic-testing:
     name: Cryptographic and integrity tests
     needs: code-audit
