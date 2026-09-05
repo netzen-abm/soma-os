@@ -14,8 +14,6 @@
 - `DEFERRED` — intentionally postponed with a reason.
 - `NOT APPLICABLE` — explicitly ruled out.
 
----
-
 ## 0. Governance and execution rules
 
 - [x] Main is the canonical integration baseline.
@@ -24,11 +22,30 @@
 - [x] No force-merge policy established.
 - [x] Canonical GitHub CI path established.
 - [x] Historical feature/integration branches retired after verification.
+- [x] Safe automation governance baseline defined in `docs/architecture/automation-governance-v1.md`.
+- [x] Automation is classified by authority/risk before execution.
+- [x] Evidence-producing governance automation is preferred before autonomous mutation.
 - [ ] Establish independent-review requirement for security-critical changes.
 - [ ] Establish CODEOWNERS/security ownership for shared security infrastructure.
 - [ ] Establish release/versioning policy.
 - [ ] Establish production change/rollback procedure.
 - [ ] Establish incident-response procedure.
+
+## Automation governance requirements
+
+- [x] Automation must be identity-bound, capability-bound, policy-bound, and scope-bound.
+- [x] Ambiguous authorization, scope, provenance, or safety state must fail closed.
+- [x] Automation must not silently broaden identity, capability, tenant, data-domain, or approval scope.
+- [x] Recurring/long-running automation requires a documented disable/kill path.
+- [x] High-impact automation is not autonomous by default.
+- [x] Autonomous merge, authorization changes, protected-data mutation, and destructive migration are explicitly prohibited until separately approved contracts exist.
+- [ ] Canonical automation service-principal contract.
+- [ ] Automation invocation capability registrations.
+- [ ] Structured automation audit-event contract.
+- [ ] Automation execution state/retry/cancellation contract.
+- [ ] Human approval contract for high-impact automation.
+- [ ] Automation health/readiness model.
+- [ ] Automation-specific threat model and abuse cases.
 
 ## 1. Repository and source-of-truth integrity
 
@@ -334,8 +351,6 @@
 - [ ] Support/incident process active.
 - [ ] Final go/no-go decision recorded.
 
----
-
 ## Product-ready definition
 
 SOMA is **Product Ready** only when the complete system can execute its primary user journey in a clean production-like environment while the shared capability, policy, evidence, privacy, security, observability, recovery, and deployment gates above are verified.
@@ -386,3 +401,4 @@ The final gate is an integrated system-level demonstration.
 10. **Main is canonical:** after verified integration, `main` is the source of truth.
 11. **Documentation is part of the product:** architecture and important execution decisions are recorded in-repository.
 12. **Future decentralization is plug-and-play:** Web3, Nostr, DID/VC and content-addressed storage must remain adapters, not hard dependencies of the core.
+13. **Automation is bounded governance infrastructure:** automation may verify, observe, and perform explicitly authorized low-risk actions, but must not become an unreviewed policy authority.
