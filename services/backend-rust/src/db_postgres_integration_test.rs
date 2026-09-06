@@ -13,9 +13,7 @@ const MIGRATIONS: &[&str] = &[
 static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 async fn test_pool() -> Option<PgPool> {
-    let url = std::env::var("SOMA_TEST_DATABASE_URL")
-        .ok()
-        .filter(|value| !value.trim().is_empty())?;
+    let url = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|value| !value.trim().is_empty())?;
     Some(
         PgPoolOptions::new()
             .max_connections(4)
@@ -70,15 +68,9 @@ async fn untrusted_db_role_cannot_establish_trusted_context() {
         .bind("attacker-domain")
         .execute(&mut *connection)
         .await;
-    assert!(
-        direct_call.is_err(),
-        "untrusted DB role must not invoke the trusted context function"
-    );
+    assert!(direct_call.is_err(), "untrusted DB role must not invoke the trusted context function");
 
-    sqlx::query("RESET ROLE")
-        .execute(&mut *connection)
-        .await
-        .unwrap();
+    sqlx::query("RESET ROLE").execute(&mut *connection).await.unwrap();
 }
 
 #[tokio::test]
@@ -97,12 +89,11 @@ async fn trusted_context_entry_point_binds_transaction_local_scope() {
         .await
         .unwrap();
 
-    let row = sqlx::query(
-        "SELECT current_user, current_setting('soma.tenant_id'), current_setting('soma.data_domain')",
-    )
-    .fetch_one(&mut *tx)
-    .await
-    .unwrap();
+    let row =
+        sqlx::query("SELECT current_user, current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+            .fetch_one(&mut *tx)
+            .await
+            .unwrap();
     assert_eq!(row.get::<String, _>(0), "somaos_persistence");
     assert_eq!(row.get::<String, _>(1), "tenant-a");
     assert_eq!(row.get::<String, _>(2), "domain-a");
@@ -160,16 +151,14 @@ async fn concurrent_transactions_cannot_cross_contaminate_scope() {
         .await
         .unwrap();
 
-    let row_a =
-        sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
-            .fetch_one(&mut *tx_a)
-            .await
-            .unwrap();
-    let row_b =
-        sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
-            .fetch_one(&mut *tx_b)
-            .await
-            .unwrap();
+    let row_a = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+        .fetch_one(&mut *tx_a)
+        .await
+        .unwrap();
+    let row_b = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+        .fetch_one(&mut *tx_b)
+        .await
+        .unwrap();
     assert_eq!(row_a.get::<String, _>(0), "tenant-a");
     assert_eq!(row_a.get::<String, _>(1), "domain-a");
     assert_eq!(row_b.get::<String, _>(0), "tenant-b");
@@ -188,27 +177,10 @@ async fn scoped_hash_uniqueness_allows_same_hash_across_scopes_and_rejects_same_
 
     let hash = "a".repeat(64);
     let insert = "INSERT INTO anonymized_user_vitals (tenant_id, data_domain, anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, $2, $3, 'pk', 1, '1.0', 'sig')";
-    sqlx::query(insert)
-        .bind("tenant-a")
-        .bind("domain-a")
-        .bind(&hash)
-        .execute(&pool)
-        .await
-        .unwrap();
-    sqlx::query(insert)
-        .bind("tenant-b")
-        .bind("domain-b")
-        .bind(&hash)
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(insert).bind("tenant-a").bind("domain-a").bind(&hash).execute(&pool).await.unwrap();
+    sqlx::query(insert).bind("tenant-b").bind("domain-b").bind(&hash).execute(&pool).await.unwrap();
 
-    let duplicate = sqlx::query(insert)
-        .bind("tenant-a")
-        .bind("domain-a")
-        .bind(&hash)
-        .execute(&pool)
-        .await;
+    let duplicate = sqlx::query(insert).bind("tenant-a").bind("domain-a").bind(&hash).execute(&pool).await;
     assert!(duplicate.is_err());
 }
 
@@ -239,20 +211,8 @@ async fn rls_filters_reads_without_requiring_application_scope_predicates() {
 
     let hash = "c".repeat(64);
     let insert = "INSERT INTO anonymized_user_vitals (tenant_id, data_domain, anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, $2, $3, 'pk', 1, '1.0', 'sig')";
-    sqlx::query(insert)
-        .bind("tenant-rls-a")
-        .bind("domain-rls-a")
-        .bind(&hash)
-        .execute(&pool)
-        .await
-        .unwrap();
-    sqlx::query(insert)
-        .bind("tenant-rls-b")
-        .bind("domain-rls-b")
-        .bind(&hash)
-        .execute(&pool)
-        .await
-        .unwrap();
+    sqlx::query(insert).bind("tenant-rls-a").bind("domain-rls-a").bind(&hash).execute(&pool).await.unwrap();
+    sqlx::query(insert).bind("tenant-rls-b").bind("domain-rls-b").bind(&hash).execute(&pool).await.unwrap();
 
     let mut tx = pool.begin().await.unwrap();
     assume_persistence_role(&mut tx).await;
@@ -263,13 +223,11 @@ async fn rls_filters_reads_without_requiring_application_scope_predicates() {
         .await
         .unwrap();
 
-    let rows = sqlx::query(
-        "SELECT tenant_id, data_domain FROM anonymized_user_vitals WHERE anonymized_user_hash = $1",
-    )
-    .bind(&hash)
-    .fetch_all(&mut *tx)
-    .await
-    .unwrap();
+    let rows = sqlx::query("SELECT tenant_id, data_domain FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
+        .bind(&hash)
+        .fetch_all(&mut *tx)
+        .await
+        .unwrap();
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].get::<String, _>("tenant_id"), "tenant-rls-a");
     assert_eq!(rows[0].get::<String, _>("data_domain"), "domain-rls-a");
@@ -292,14 +250,12 @@ async fn rls_denies_missing_or_wrong_scope_and_blocks_cross_scope_mutation() {
 
     let mut no_scope = pool.begin().await.unwrap();
     assume_persistence_role(&mut no_scope).await;
-    let no_scope_count = sqlx::query(
-        "SELECT COUNT(*) AS count FROM anonymized_user_vitals WHERE anonymized_user_hash = $1",
-    )
-    .bind(&hash)
-    .fetch_one(&mut *no_scope)
-    .await
-    .unwrap()
-    .get::<i64, _>("count");
+    let no_scope_count = sqlx::query("SELECT COUNT(*) AS count FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
+        .bind(&hash)
+        .fetch_one(&mut *no_scope)
+        .await
+        .unwrap()
+        .get::<i64, _>("count");
     assert_eq!(no_scope_count, 0);
     no_scope.rollback().await.unwrap();
 
@@ -312,21 +268,18 @@ async fn rls_denies_missing_or_wrong_scope_and_blocks_cross_scope_mutation() {
         .await
         .unwrap();
 
-    let wrong_update = sqlx::query(
-        "UPDATE anonymized_user_vitals SET verified_vitality_score = 99 WHERE anonymized_user_hash = $1",
-    )
-    .bind(&hash)
-    .execute(&mut *wrong_scope)
-    .await
-    .unwrap();
+    let wrong_update = sqlx::query("UPDATE anonymized_user_vitals SET verified_vitality_score = 99 WHERE anonymized_user_hash = $1")
+        .bind(&hash)
+        .execute(&mut *wrong_scope)
+        .await
+        .unwrap();
     assert_eq!(wrong_update.rows_affected(), 0);
 
-    let wrong_delete =
-        sqlx::query("DELETE FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
-            .bind(&hash)
-            .execute(&mut *wrong_scope)
-            .await
-            .unwrap();
+    let wrong_delete = sqlx::query("DELETE FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
+        .bind(&hash)
+        .execute(&mut *wrong_scope)
+        .await
+        .unwrap();
     assert_eq!(wrong_delete.rows_affected(), 0);
     wrong_scope.rollback().await.unwrap();
 }
