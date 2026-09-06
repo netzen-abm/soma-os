@@ -380,3 +380,7 @@ This architecture is accepted when:
 **Implementation status:** Documentation only. This document does not by itself authorize changes to security or data-access semantics.
 
 **Next implementation dependency:** Continue Protected Data Access Enforcement v1, with the Rust PostgreSQL adapter and trusted transaction-local database context as the next engineering boundary.
+
+## 17. Integration note
+
+This architecture baseline is intentionally independent of the protected-data bypass audit and database enforcement implementation. Security enforcement changes must continue to land through their dedicated shared boundaries; this document governs runtime ownership and cross-runtime conformance rather than granting any runtime additional authority.
