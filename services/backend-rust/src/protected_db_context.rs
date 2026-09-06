@@ -1,6 +1,9 @@
 use sqlx::{postgres::Postgres, PgPool, Transaction};
 use std::error::Error;
 
+/// Canonical database service identity expected by the protected persistence adapter.
+pub const TRUSTED_PERSISTENCE_DB_ROLE: &str = "somaos_persistence";
+
 /// Trusted persistence scope established only after the canonical authorization boundary.
 ///
 /// This type carries the tenant/data-domain binding required by the PostgreSQL adapter,
@@ -31,25 +34,23 @@ impl ProtectedDbContext {
     }
 }
 
-/// Begin a PostgreSQL transaction and bind the protected scope for this transaction only.
+/// Begin a PostgreSQL transaction and establish protected scope through the
+/// dedicated persistence database identity boundary.
 ///
-/// `set_config(..., true)` is transaction-local. This is mandatory with pooled connections:
-/// scope must never leak from one request/transaction into a later borrower of the connection.
-/// This helper is a persistence boundary, not an authorization evaluator.
+/// `soma_set_protected_scope` is deliberately SECURITY INVOKER and executable only
+/// by `somaos_persistence`. Therefore the transaction-local GUCs are isolation state,
+/// not an authentication mechanism. An untrusted DB principal cannot invoke the
+/// canonical entry point merely by knowing its SQL name.
+///
+/// This helper remains a persistence boundary, not an authorization evaluator.
 pub async fn begin_protected_transaction<'a>(
     pool: &'a PgPool,
     context: &ProtectedDbContext,
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    if let Err(error) =
-        sqlx::query("SELECT set_config('soma.tenant_id', $1, true)").bind(&context.tenant_id).execute(&mut *tx).await
-    {
-        let _ = tx.rollback().await;
-        return Err(error);
-    }
-
-    if let Err(error) = sqlx::query("SELECT set_config('soma.data_domain', $1, true)")
+    if let Err(error) = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
+        .bind(&context.tenant_id)
         .bind(&context.data_domain)
         .execute(&mut *tx)
         .await
@@ -63,7 +64,12 @@ pub async fn begin_protected_transaction<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::ProtectedDbContext;
+    use super::{ProtectedDbContext, TRUSTED_PERSISTENCE_DB_ROLE};
+
+    #[test]
+    fn canonical_persistence_role_is_explicit() {
+        assert_eq!(TRUSTED_PERSISTENCE_DB_ROLE, "somaos_persistence");
+    }
 
     #[test]
     fn accepts_valid_scope() {
