@@ -21,12 +21,18 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'somaos_migrator') THEN
         CREATE ROLE somaos_migrator NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
     END IF;
+
+    -- Test-only untrusted principal used by PostgreSQL adversarial integration
+    -- tests. It has no login and receives no protected-data privileges.
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'somaos_untrusted_test') THEN
+        CREATE ROLE somaos_untrusted_test NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+    END IF;
 END
 $$;
 
--- The persistence role must never become an owner or gain DDL/admin authority.
 ALTER ROLE somaos_persistence NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
 ALTER ROLE somaos_migrator NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+ALTER ROLE somaos_untrusted_test NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
 
 -- Function is SECURITY INVOKER by design. It cannot manufacture authority for
 -- callers: only the dedicated persistence role receives EXECUTE privilege.
@@ -66,3 +72,7 @@ COMMENT ON FUNCTION public.soma_set_protected_scope(text, text) IS
 -- the persistence role as part of the credential cutover.
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE anonymized_user_vitals TO somaos_persistence;
 GRANT USAGE, SELECT ON SEQUENCE anonymized_user_vitals_log_id_seq TO somaos_persistence;
+
+-- Explicitly deny the context function to the adversarial test role. PUBLIC was
+-- already revoked, but the explicit REVOKE documents and verifies the invariant.
+REVOKE ALL ON FUNCTION public.soma_set_protected_scope(text, text) FROM somaos_untrusted_test;
