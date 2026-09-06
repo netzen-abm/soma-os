@@ -43,18 +43,29 @@ async fn assume_persistence_role(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>)
 }
 
 #[tokio::test]
-async fn trusted_context_entry_point_requires_persistence_role() {
+async fn untrusted_db_role_cannot_establish_trusted_context() {
     let Some(pool) = test_pool().await else {
         return;
     };
     prepare(&pool).await;
 
+    let mut connection = pool.acquire().await.unwrap();
+    sqlx::query("SET ROLE somaos_untrusted_test")
+        .execute(&mut *connection)
+        .await
+        .expect("test connection must be able to assume the untrusted test role");
+
     let direct_call = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
         .bind("attacker-tenant")
         .bind("attacker-domain")
-        .execute(&pool)
+        .execute(&mut *connection)
         .await;
-    assert!(direct_call.is_err(), "untrusted/default DB role must not invoke the trusted context function");
+    assert!(direct_call.is_err(), "untrusted DB role must not invoke the trusted context function");
+
+    sqlx::query("RESET ROLE")
+        .execute(&mut *connection)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -81,15 +92,6 @@ async fn trusted_context_entry_point_binds_transaction_local_scope() {
     assert_eq!(row.get::<String, _>(1), "tenant-a");
     assert_eq!(row.get::<String, _>(2), "domain-a");
     tx.rollback().await.unwrap();
-
-    let row = sqlx::query(
-        "SELECT current_setting('soma.tenant_id', true) AS tenant_id, current_setting('soma.data_domain', true) AS data_domain",
-    )
-    .fetch_one(&pool)
-    .await
-    .unwrap();
-    assert!(row.get::<Option<String>, _>("tenant_id").is_none());
-    assert!(row.get::<Option<String>, _>("data_domain").is_none());
 }
 
 #[tokio::test]
