@@ -5,6 +5,8 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../../../database/migrations/0001_initialize_zk_logs.sql"),
     include_str!("../../../database/migrations/0003_protected_data_scope_transition.sql"),
     include_str!("../../../database/migrations/0004_scoped_anonymized_hash.sql"),
+    include_str!("../../../database/migrations/0005_legacy_data_classification.sql"),
+    include_str!("../../../database/migrations/0006_trusted_db_service_identity.sql"),
 ];
 
 static PREPARED: OnceCell<()> = OnceCell::const_new();
@@ -33,6 +35,63 @@ async fn prepare(pool: &PgPool) {
         .await;
 }
 
+async fn assume_persistence_role(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>) {
+    sqlx::query("SET LOCAL ROLE somaos_persistence")
+        .execute(&mut **tx)
+        .await
+        .expect("PostgreSQL integration test connection must be able to SET ROLE somaos_persistence");
+}
+
+#[tokio::test]
+async fn trusted_context_entry_point_requires_persistence_role() {
+    let Some(pool) = test_pool().await else {
+        return;
+    };
+    prepare(&pool).await;
+
+    let direct_call = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
+        .bind("attacker-tenant")
+        .bind("attacker-domain")
+        .execute(&pool)
+        .await;
+    assert!(direct_call.is_err(), "untrusted/default DB role must not invoke the trusted context function");
+}
+
+#[tokio::test]
+async fn trusted_context_entry_point_binds_transaction_local_scope() {
+    let Some(pool) = test_pool().await else {
+        return;
+    };
+    prepare(&pool).await;
+
+    let mut tx = pool.begin().await.unwrap();
+    assume_persistence_role(&mut tx).await;
+    sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
+        .bind("tenant-a")
+        .bind("domain-a")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+
+    let row = sqlx::query("SELECT current_user, current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+    assert_eq!(row.get::<String, _>(0), "somaos_persistence");
+    assert_eq!(row.get::<String, _>(1), "tenant-a");
+    assert_eq!(row.get::<String, _>(2), "domain-a");
+    tx.rollback().await.unwrap();
+
+    let row = sqlx::query(
+        "SELECT current_setting('soma.tenant_id', true) AS tenant_id, current_setting('soma.data_domain', true) AS data_domain",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert!(row.get::<Option<String>, _>("tenant_id").is_none());
+    assert!(row.get::<Option<String>, _>("data_domain").is_none());
+}
+
 #[tokio::test]
 async fn transaction_local_scope_survives_pool_reuse_without_leakage() {
     let Some(pool) = test_pool().await else {
@@ -41,18 +100,13 @@ async fn transaction_local_scope_survives_pool_reuse_without_leakage() {
     prepare(&pool).await;
 
     let mut tx = pool.begin().await.unwrap();
-    sqlx::query("SELECT set_config('soma.tenant_id', $1, true), set_config('soma.data_domain', $2, true)")
+    assume_persistence_role(&mut tx).await;
+    sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
         .bind("tenant-a")
         .bind("domain-a")
         .execute(&mut *tx)
         .await
         .unwrap();
-    let row = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
-        .fetch_one(&mut *tx)
-        .await
-        .unwrap();
-    assert_eq!(row.get::<String, _>(0), "tenant-a");
-    assert_eq!(row.get::<String, _>(1), "domain-a");
     tx.commit().await.unwrap();
 
     let row = sqlx::query(
@@ -74,13 +128,15 @@ async fn concurrent_transactions_cannot_cross_contaminate_scope() {
 
     let mut tx_a = pool.begin().await.unwrap();
     let mut tx_b = pool.begin().await.unwrap();
-    sqlx::query("SELECT set_config('soma.tenant_id', $1, true), set_config('soma.data_domain', $2, true)")
+    assume_persistence_role(&mut tx_a).await;
+    assume_persistence_role(&mut tx_b).await;
+    sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
         .bind("tenant-a")
         .bind("domain-a")
         .execute(&mut *tx_a)
         .await
         .unwrap();
-    sqlx::query("SELECT set_config('soma.tenant_id', $1, true), set_config('soma.data_domain', $2, true)")
+    sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
         .bind("tenant-b")
         .bind("domain-b")
         .execute(&mut *tx_b)
