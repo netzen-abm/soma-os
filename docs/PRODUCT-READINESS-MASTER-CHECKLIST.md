@@ -71,8 +71,9 @@
 - [ ] Human-review/approval semantics defined.
 - [x] Tenant/data-domain isolation model defined via IdentityContext v1 and Identity → Authorization Enforcement v1; end-to-end data-layer enforcement remains pending.
 - [ ] Jurisdiction/data-residency policy model defined where required.
+- [x] Dedicated persistence database service identity and migration/admin role separation defined and implemented at the PostgreSQL boundary v1.
 - [ ] Credential lifecycle and rotation model defined.
-- [ ] Service-to-service identity model defined.
+- [ ] Service-to-service identity model defined beyond the persistence DB boundary.
 - [ ] Authorization decisions auditable without leaking sensitive data.
 
 ## 4. Agent platform
@@ -163,6 +164,7 @@
 - [x] Sensitive Messenger/WhatsApp logging removed.
 - [x] Misleading cryptographic claims removed.
 - [x] Canonical identity model defined by IdentityContext v1.
+- [x] Protected-data persistence path now requires an explicit dedicated DB service identity boundary; final production credential cutover remains pending.
 - [ ] Authentication flow audit.
 - [ ] Authorization end-to-end audit.
 - [ ] Session/token lifecycle audit.
@@ -199,6 +201,10 @@
 
 - [x] Evidence registry migration exists.
 - [x] Shared evidence registry architecture documented.
+- [x] Protected-data service identity migration and adversarial integration-test boundary implemented.
+- [ ] Production persistence credential cutover to `somaos_persistence`.
+- [ ] PostgreSQL RLS enforcement.
+- [ ] Final protected-row NOT NULL/constraint gate after legacy verification.
 - [ ] Migration execution tested on clean database.
 - [ ] Migration rollback/recovery strategy.
 - [ ] Database backup/restore verification.
@@ -355,21 +361,23 @@ The final gate is an integrated system-level demonstration.
         ↓
 4. Identity + authorization
         ↓
-5. Core runtime/data
+5. Protected data/service identity + RLS
         ↓
-6. Primary product journey
+6. Core runtime/data
         ↓
-7. Agent + MCP runtime infrastructure
+7. Primary product journey
         ↓
-8. Observability + operations
+8. Agent + MCP runtime infrastructure
         ↓
-9. Security/privacy/compliance audit
+9. Observability + operations
         ↓
-10. Deployment + recovery drill
+10. Security/privacy/compliance audit
         ↓
-11. End-to-end acceptance
+11. Deployment + recovery drill
         ↓
-12. Product release
+12. End-to-end acceptance
+        ↓
+13. Product release
 ```
 
 ## Architectural non-negotiables
