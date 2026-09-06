@@ -93,6 +93,21 @@ jobs:
         working-directory: services/shared
         run: python identity_authorization_enforcement_test.py
 
+  protected-data-bypass-audit:
+    name: Protected-data access bypass audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit protected-data access paths
+        run: python scripts/audit_protected_data_access.py
+
   postgres-security-integration:
     name: PostgreSQL protected-data isolation tests
     needs: code-audit
@@ -138,10 +153,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Cache Rust dependencies
         uses: swatinem/rust-cache@v2
