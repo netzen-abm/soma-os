@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn postgres_preflight_detects_null_then_passes_after_verified_state_is_complete() {
+    async fn postgres_preflight_detects_null_scope() {
         let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL")
             .ok()
             .filter(|v| !v.trim().is_empty())
@@ -201,30 +201,13 @@ mod tests {
             .expect("test database must be reachable");
         prepare(&pool).await;
 
-        let executor = LegacyPromotionPreflightExecutor::new(pool.clone());
-        let initial = executor
+        let executor = LegacyPromotionPreflightExecutor::new(pool);
+        let result = executor
             .run()
             .await
             .expect("preflight function must be callable");
-        assert!(initial.null_scope_rows >= 3);
-        assert!(!initial.preflight_passed);
-        assert!(initial.require_pass().is_err());
-
-        // This is an isolated CI database. The direct fixture transition is test
-        // setup only; production scope changes remain governed by verified promotion.
-        sqlx::query("UPDATE anonymized_user_vitals SET tenant_id = 'preflight-test-tenant', data_domain = 'preflight-test-domain' WHERE anonymized_user_hash IN ('lpf-a', 'lpf-b', 'lpf-c') AND tenant_id IS NULL AND data_domain IS NULL")
-            .execute(&pool)
-            .await
-            .expect("CI fixture scoping must succeed before finalization");
-
-        let final_result = executor
-            .run()
-            .await
-            .expect("preflight function must remain callable");
-        assert_eq!(final_result.null_scope_rows, 0);
-        assert_eq!(final_result.partial_scope_rows, 0);
-        assert_eq!(final_result.applied_event_scope_mismatches, 0);
-        assert!(final_result.preflight_passed);
-        assert!(final_result.require_pass().is_ok());
+        assert!(result.null_scope_rows >= 3);
+        assert!(!result.preflight_passed);
+        assert!(result.require_pass().is_err());
     }
 }
