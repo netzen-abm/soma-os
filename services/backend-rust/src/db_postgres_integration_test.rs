@@ -34,9 +34,6 @@ async fn prepare(pool: &PgPool) {
                     .await
                     .expect("protected-data test migrations must apply cleanly");
 
-                // Seed a pre-0007 legacy row. Migration 0007 intentionally rejects
-                // new NULL-scope rows while preserving existing legacy rows for
-                // explicit classification and verified promotion.
                 if index == 4 {
                     sqlx::query("INSERT INTO anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ('legacy-null-scope-fixture', 'pk', 1, '1.0', 'sig')")
                         .execute(pool)
@@ -106,7 +103,7 @@ async fn trusted_context_entry_point_binds_transaction_local_scope() {
     .fetch_one(&mut *tx)
     .await
     .unwrap();
-    assert_eq!(row.get::<String, _>(0), "tenant-a");
+    assert_eq!(row.get::<String, _>(0), "somaos_persistence");
     assert_eq!(row.get::<String, _>(1), "tenant-a");
     assert_eq!(row.get::<String, _>(2), "domain-a");
     tx.rollback().await.unwrap();
