@@ -18,6 +18,7 @@ ALLOWED_FILES = {
     pathlib.Path("services/backend-rust/src/db_layer.rs"),
     pathlib.Path("services/backend-rust/src/protected_db_context.rs"),
     pathlib.Path("services/backend-rust/src/db_postgres_integration_test.rs"),
+    pathlib.Path("scripts/audit_protected_data_access.py"),
 }
 PATTERNS = {
     "sqlx_query": re.compile(r"\bsqlx::query(?:_as)?\s*\("),
