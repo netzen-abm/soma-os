@@ -42,7 +42,9 @@ pub async fn begin_protected_transaction<'a>(
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    if let Err(error) = sqlx::query("SELECT set_config('soma.tenant_id', $1, true)").bind(&context.tenant_id).execute(&mut *tx).await {
+    if let Err(error) =
+        sqlx::query("SELECT set_config('soma.tenant_id', $1, true)").bind(&context.tenant_id).execute(&mut *tx).await
+    {
         let _ = tx.rollback().await;
         return Err(error);
     }
