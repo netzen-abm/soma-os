@@ -1,0 +1,169 @@
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+use std::error::Error;
+
+/// Read-only verification result used immediately before the final NOT NULL gate.
+/// The adapter intentionally does not accept caller-supplied scope or filtering.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LegacyPromotionPreflight {
+    pub total_rows: i64,
+    pub null_scope_rows: i64,
+    pub partial_scope_rows: i64,
+    pub fully_scoped_rows: i64,
+    pub scoped_without_applied_event: i64,
+    pub applied_event_scope_mismatches: i64,
+    pub eligible_unpromoted_rows: i64,
+    pub ambiguous_eligible_rows: i64,
+    pub preflight_passed: bool,
+}
+
+impl LegacyPromotionPreflight {
+    /// The final gate is intentionally stricter than a simple zero-NULL check.
+    /// Any partial scope or event/scope inconsistency blocks finalization.
+    pub fn require_pass(&self) -> Result<(), Box<dyn Error>> {
+        if self.preflight_passed
+            && self.null_scope_rows == 0
+            && self.partial_scope_rows == 0
+            && self.applied_event_scope_mismatches == 0
+        {
+            return Ok(());
+        }
+        Err(format!(
+            "legacy promotion preflight failed: null_scope_rows={}, partial_scope_rows={}, applied_event_scope_mismatches={}, eligible_unpromoted_rows={}, ambiguous_eligible_rows={}",
+            self.null_scope_rows,
+            self.partial_scope_rows,
+            self.applied_event_scope_mismatches,
+            self.eligible_unpromoted_rows,
+            self.ambiguous_eligible_rows,
+        )
+        .into())
+    }
+}
+
+/// Provider-neutral PostgreSQL adapter for the read-only preflight contract.
+/// Authorization for invoking this operation is expected to have completed at
+/// the canonical identity/Policy Kernel boundary.
+pub struct LegacyPromotionPreflightExecutor {
+    pool: PgPool,
+}
+
+impl LegacyPromotionPreflightExecutor {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+
+    pub async fn run(&self) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
+        let row = sqlx::query(
+            "SELECT total_rows, null_scope_rows, partial_scope_rows, fully_scoped_rows, scoped_without_applied_event, applied_event_scope_mismatches, eligible_unpromoted_rows, ambiguous_eligible_rows, preflight_passed FROM public.soma_legacy_promotion_preflight()",
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(LegacyPromotionPreflight {
+            total_rows: row.get("total_rows"),
+            null_scope_rows: row.get("null_scope_rows"),
+            partial_scope_rows: row.get("partial_scope_rows"),
+            fully_scoped_rows: row.get("fully_scoped_rows"),
+            scoped_without_applied_event: row.get("scoped_without_applied_event"),
+            applied_event_scope_mismatches: row.get("applied_event_scope_mismatches"),
+            eligible_unpromoted_rows: row.get("eligible_unpromoted_rows"),
+            ambiguous_eligible_rows: row.get("ambiguous_eligible_rows"),
+            preflight_passed: row.get("preflight_passed"),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn passes_only_for_clean_zero_null_state() {
+        let result = LegacyPromotionPreflight {
+            total_rows: 10,
+            null_scope_rows: 0,
+            partial_scope_rows: 0,
+            fully_scoped_rows: 10,
+            scoped_without_applied_event: 0,
+            applied_event_scope_mismatches: 0,
+            eligible_unpromoted_rows: 0,
+            ambiguous_eligible_rows: 0,
+            preflight_passed: true,
+        };
+        assert!(result.require_pass().is_ok());
+    }
+
+    #[test]
+    fn rejects_any_null_scope() {
+        let result = LegacyPromotionPreflight {
+            total_rows: 10,
+            null_scope_rows: 1,
+            partial_scope_rows: 0,
+            fully_scoped_rows: 9,
+            scoped_without_applied_event: 0,
+            applied_event_scope_mismatches: 0,
+            eligible_unpromoted_rows: 1,
+            ambiguous_eligible_rows: 0,
+            preflight_passed: false,
+        };
+        assert!(result.require_pass().is_err());
+    }
+
+    #[test]
+    fn rejects_partial_scope_even_without_null_pair() {
+        let result = LegacyPromotionPreflight {
+            total_rows: 10,
+            null_scope_rows: 0,
+            partial_scope_rows: 1,
+            fully_scoped_rows: 9,
+            scoped_without_applied_event: 1,
+            applied_event_scope_mismatches: 0,
+            eligible_unpromoted_rows: 0,
+            ambiguous_eligible_rows: 0,
+            preflight_passed: false,
+        };
+        assert!(result.require_pass().is_err());
+    }
+
+    #[test]
+    fn rejects_event_scope_mismatch() {
+        let result = LegacyPromotionPreflight {
+            total_rows: 10,
+            null_scope_rows: 0,
+            partial_scope_rows: 0,
+            fully_scoped_rows: 10,
+            scoped_without_applied_event: 0,
+            applied_event_scope_mismatches: 1,
+            eligible_unpromoted_rows: 0,
+            ambiguous_eligible_rows: 0,
+            preflight_passed: false,
+        };
+        assert!(result.require_pass().is_err());
+    }
+
+    #[test]
+    fn request_is_read_only_and_has_no_scope_parameters() {
+        let source = include_str!("legacy_promotion_preflight.rs");
+        assert!(source.contains("soma_legacy_promotion_preflight()"));
+        assert!(!source.contains("tenant_id: String"));
+        assert!(!source.contains("data_domain: String"));
+        assert!(!source.contains("UPDATE public.anonymized_user_vitals"));
+    }
+
+    #[tokio::test]
+    async fn postgres_preflight_is_read_only_and_obeys_executor_boundary() {
+        let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL")
+            .ok()
+            .filter(|v| !v.trim().is_empty())
+        else {
+            return;
+        };
+        let pool = PgPoolOptions::new()
+            .max_connections(2)
+            .connect(&url)
+            .await
+            .expect("test database must be reachable");
+        let executor = LegacyPromotionPreflightExecutor::new(pool);
+        let result = executor.run().await.expect("preflight function must be callable by persistence role");
+        assert_eq!(result.total_rows, result.null_scope_rows + result.fully_scoped_rows + result.partial_scope_rows);
+    }
+}
