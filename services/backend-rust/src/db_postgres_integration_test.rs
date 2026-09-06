@@ -250,12 +250,13 @@ async fn rls_denies_missing_or_wrong_scope_and_blocks_cross_scope_mutation() {
 
     let mut no_scope = pool.begin().await.unwrap();
     assume_persistence_role(&mut no_scope).await;
-    let no_scope_count = sqlx::query("SELECT COUNT(*) AS count FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
-        .bind(&hash)
-        .fetch_one(&mut *no_scope)
-        .await
-        .unwrap()
-        .get::<i64, _>("count");
+    let no_scope_count =
+        sqlx::query("SELECT COUNT(*) AS count FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
+            .bind(&hash)
+            .fetch_one(&mut *no_scope)
+            .await
+            .unwrap()
+            .get::<i64, _>("count");
     assert_eq!(no_scope_count, 0);
     no_scope.rollback().await.unwrap();
 
@@ -268,11 +269,12 @@ async fn rls_denies_missing_or_wrong_scope_and_blocks_cross_scope_mutation() {
         .await
         .unwrap();
 
-    let wrong_update = sqlx::query("UPDATE anonymized_user_vitals SET verified_vitality_score = 99 WHERE anonymized_user_hash = $1")
-        .bind(&hash)
-        .execute(&mut *wrong_scope)
-        .await
-        .unwrap();
+    let wrong_update =
+        sqlx::query("UPDATE anonymized_user_vitals SET verified_vitality_score = 99 WHERE anonymized_user_hash = $1")
+            .bind(&hash)
+            .execute(&mut *wrong_scope)
+            .await
+            .unwrap();
     assert_eq!(wrong_update.rows_affected(), 0);
 
     let wrong_delete = sqlx::query("DELETE FROM anonymized_user_vitals WHERE anonymized_user_hash = $1")
