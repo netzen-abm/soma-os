@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+use sqlx::{PgPool, Row};
 
 /// Read-only verification result used immediately before the final NOT NULL gate.
 /// The adapter intentionally does not accept caller-supplied scope or filtering.
@@ -49,9 +49,7 @@ pub struct LegacyPromotionPreflightExecutor {
 
 impl LegacyPromotionPreflightExecutor {
     pub fn new(pool: PgPool) -> Self {
-        Self {
-            pool,
-        }
+        Self { pool }
     }
 
     pub async fn run(&self) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
@@ -78,6 +76,7 @@ impl LegacyPromotionPreflightExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sqlx::postgres::PgPoolOptions;
     use tokio::sync::OnceCell;
 
     const MIGRATIONS: &[&str] = &[
@@ -191,15 +190,24 @@ mod tests {
 
     #[tokio::test]
     async fn postgres_preflight_detects_null_scope() {
-        let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty()) else {
+        let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL")
+            .ok()
+            .filter(|v| !v.trim().is_empty())
+        else {
             return;
         };
-        let pool =
-            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
+        let pool = PgPoolOptions::new()
+            .max_connections(4)
+            .connect(&url)
+            .await
+            .expect("test database must be reachable");
         prepare(&pool).await;
 
         let executor = LegacyPromotionPreflightExecutor::new(pool);
-        let result = executor.run().await.expect("preflight function must be callable");
+        let result = executor
+            .run()
+            .await
+            .expect("preflight function must be callable");
         assert!(result.null_scope_rows >= 3);
         assert!(!result.preflight_passed);
         assert!(result.require_pass().is_err());
