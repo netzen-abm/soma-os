@@ -12,10 +12,7 @@ pub struct ProtectedDbContext {
 }
 
 impl ProtectedDbContext {
-    pub fn new(
-        tenant_id: impl Into<String>,
-        data_domain: impl Into<String>,
-    ) -> Result<Self, Box<dyn Error>> {
+    pub fn new(tenant_id: impl Into<String>, data_domain: impl Into<String>) -> Result<Self, Box<dyn Error>> {
         let tenant_id = tenant_id.into();
         let data_domain = data_domain.into();
 
@@ -23,9 +20,7 @@ impl ProtectedDbContext {
             return Err("protected database scope must be non-empty".into());
         }
 
-        if tenant_id.chars().any(char::is_control)
-            || data_domain.chars().any(char::is_control)
-        {
+        if tenant_id.chars().any(char::is_control) || data_domain.chars().any(char::is_control) {
             return Err("protected database scope contains control characters".into());
         }
 
