@@ -36,6 +36,24 @@ CREATE INDEX IF NOT EXISTS idx_legacy_promotion_event_log_id
 COMMENT ON TABLE anonymized_user_vitals_legacy_promotion_event IS
     'Append-only audit ledger for explicit, provenance-bound legacy-data promotion events.';
 
+-- Promotion history is append-only. State transitions are represented by new
+-- events rather than UPDATE/DELETE of prior evidence.
+CREATE OR REPLACE FUNCTION reject_legacy_promotion_event_mutation()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RAISE EXCEPTION 'legacy promotion event history is append-only';
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_legacy_promotion_event_immutable
+    ON anonymized_user_vitals_legacy_promotion_event;
+
+CREATE TRIGGER trg_legacy_promotion_event_immutable
+BEFORE UPDATE OR DELETE ON anonymized_user_vitals_legacy_promotion_event
+FOR EACH ROW EXECUTE FUNCTION reject_legacy_promotion_event_mutation();
+
 -- No legacy row is mutated here. Promotion application must occur in a protected
 -- transaction through the canonical authorization and trusted DB identity boundary.
 -- Final NOT NULL remains a later migration after a verified zero-NULL preflight.
