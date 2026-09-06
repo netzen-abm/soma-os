@@ -386,3 +386,5 @@ The final gate is an integrated system-level demonstration.
 10. **Main is canonical:** after verified integration, `main` is the source of truth.
 11. **Documentation is part of the product:** architecture and important execution decisions are recorded in-repository.
 12. **Future decentralization is plug-and-play:** Web3, Nostr, DID/VC and content-addressed storage must remain adapters, not hard dependencies of the core.
+13. **One canonical domain:** implementation languages and frameworks are replaceable; canonical contracts and domain invariants are not.
+14. **Canonical domain runtime:** Rust is the canonical/reference runtime for security-sensitive and domain-critical behavior; other runtimes must conform through explicit contracts.
