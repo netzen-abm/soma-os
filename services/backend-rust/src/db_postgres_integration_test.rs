@@ -62,10 +62,7 @@ async fn untrusted_db_role_cannot_establish_trusted_context() {
         .await;
     assert!(direct_call.is_err(), "untrusted DB role must not invoke the trusted context function");
 
-    sqlx::query("RESET ROLE")
-        .execute(&mut *connection)
-        .await
-        .unwrap();
+    sqlx::query("RESET ROLE").execute(&mut *connection).await.unwrap();
 }
 
 #[tokio::test]
@@ -84,10 +81,11 @@ async fn trusted_context_entry_point_binds_transaction_local_scope() {
         .await
         .unwrap();
 
-    let row = sqlx::query("SELECT current_user, current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
-        .fetch_one(&mut *tx)
-        .await
-        .unwrap();
+    let row =
+        sqlx::query("SELECT current_user, current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+            .fetch_one(&mut *tx)
+            .await
+            .unwrap();
     assert_eq!(row.get::<String, _>(0), "somaos_persistence");
     assert_eq!(row.get::<String, _>(1), "tenant-a");
     assert_eq!(row.get::<String, _>(2), "domain-a");
