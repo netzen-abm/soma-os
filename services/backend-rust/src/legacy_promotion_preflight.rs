@@ -1,5 +1,6 @@
-use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 use std::error::Error;
+
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 
 /// Read-only verification result used immediately before the final NOT NULL gate.
 /// The adapter intentionally does not accept caller-supplied scope or filtering.
