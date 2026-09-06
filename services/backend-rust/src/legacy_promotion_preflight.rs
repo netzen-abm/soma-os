@@ -49,7 +49,9 @@ pub struct LegacyPromotionPreflightExecutor {
 
 impl LegacyPromotionPreflightExecutor {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+        }
     }
 
     pub async fn run(&self) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
