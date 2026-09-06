@@ -31,7 +31,7 @@ Migration `0009_legacy_promotion_executor.sql` creates:
 - `soma_apply_legacy_promotion(...)`: `SECURITY DEFINER`, fixed `search_path = pg_catalog`, explicitly schema-qualified table references.
 - `EXECUTE` granted only to `somaos_persistence`; `PUBLIC` receives no execute privilege.
 
-PostgreSQL documents that `SECURITY DEFINER` executes with the function owner's privileges and that a secure `search_path` plus restricted `EXECUTE` privileges are required to avoid privilege escalation. citeturn2view0
+PostgreSQL documents that `SECURITY DEFINER` executes with the function owner's privileges and that a secure `search_path` plus restricted `EXECUTE` privileges are required to avoid privilege escalation.
 
 The executor owner is deliberately not a login role and is not a general migration/admin identity. It has no application credential.
 
@@ -57,7 +57,7 @@ No scope is inferred from hash, transport, model output, agent metadata, resourc
 
 ## Concurrency and idempotency
 
-The legacy row is acquired with `SELECT ... FOR UPDATE` before the active-event check. This serializes concurrent promotion attempts for the same record. PostgreSQL `FOR UPDATE` waits for an existing row lock and returns the updated version after the concurrent transaction commits, which allows the second attempt to observe an already-applied promotion and return the existing event when the request is identical. citeturn6search2turn6search9
+The legacy row is acquired with `SELECT ... FOR UPDATE` before the active-event check. This serializes concurrent promotion attempts for the same record. PostgreSQL `FOR UPDATE` waits for an existing row lock and returns the updated version after the concurrent transaction commits, which allows the second attempt to observe an already-applied promotion and return the existing event when the request is identical.
 
 ## Rollback semantics
 
@@ -76,7 +76,7 @@ If the transaction rolls back, both the scope update and event insertion roll ba
 
 ## Why ordinary RLS access is not used for legacy rows
 
-The protected RLS policy intentionally excludes NULL-scoped legacy records. PostgreSQL evaluates RLS policies for normal table access and supports role-specific policies; `FORCE ROW LEVEL SECURITY` also prevents the table owner from silently bypassing the policy. citeturn1view0turn3search0
+The protected RLS policy intentionally excludes NULL-scoped legacy records. PostgreSQL evaluates RLS policies for normal table access and supports role-specific policies; `FORCE ROW LEVEL SECURITY` also prevents the table owner from silently bypassing the policy.
 
 Therefore promotion is not implemented by weakening the protected persistence policy or by granting ordinary persistence access to NULL-scoped records. Instead, a dedicated, non-login function-owner privilege boundary performs only the explicitly verified promotion operation.
 
