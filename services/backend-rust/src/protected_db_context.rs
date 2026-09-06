@@ -15,10 +15,7 @@ pub struct ProtectedDbContext {
 }
 
 impl ProtectedDbContext {
-    pub fn new(
-        tenant_id: impl Into<String>,
-        data_domain: impl Into<String>,
-    ) -> Result<Self, Box<dyn Error>> {
+    pub fn new(tenant_id: impl Into<String>, data_domain: impl Into<String>) -> Result<Self, Box<dyn Error>> {
         let tenant_id = tenant_id.into();
         let data_domain = data_domain.into();
 
