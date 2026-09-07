@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool, Postgres, Row, Transaction};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LegacyPromotionPreflight {
@@ -46,9 +46,7 @@ impl LegacyPromotionPreflightExecutor {
     /// Only the trusted persistence pool is accepted. Scope is intentionally
     /// absent because preflight is a global, read-only verification gate.
     pub fn new(pool: PgPool) -> Self {
-        Self {
-            pool,
-        }
+        Self { pool }
     }
 
     /// Runs the canonical database preflight without accepting caller-supplied
@@ -60,7 +58,28 @@ impl LegacyPromotionPreflightExecutor {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(LegacyPromotionPreflight {
+        Ok(Self::from_row(row))
+    }
+
+    /// Runs the same canonical preflight on an existing transaction.
+    ///
+    /// This is useful for atomic verification of a transaction-local database
+    /// state; it does not accept caller-supplied scope or mutation metadata.
+    pub async fn run_in_transaction<'a>(
+        &self,
+        tx: &mut Transaction<'a, Postgres>,
+    ) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
+        let row = sqlx::query(
+            "SELECT total_rows, null_scope_rows, partial_scope_rows, fully_scoped_rows, scoped_without_applied_event, applied_event_scope_mismatches, eligible_unpromoted_rows, ambiguous_eligible_rows, preflight_passed FROM public.soma_legacy_promotion_preflight()",
+        )
+        .fetch_one(&mut **tx)
+        .await?;
+
+        Ok(Self::from_row(row))
+    }
+
+    fn from_row(row: sqlx::postgres::PgRow) -> LegacyPromotionPreflight {
+        LegacyPromotionPreflight {
             total_rows: row.get("total_rows"),
             null_scope_rows: row.get("null_scope_rows"),
             partial_scope_rows: row.get("partial_scope_rows"),
@@ -70,7 +89,7 @@ impl LegacyPromotionPreflightExecutor {
             eligible_unpromoted_rows: row.get("eligible_unpromoted_rows"),
             ambiguous_eligible_rows: row.get("ambiguous_eligible_rows"),
             preflight_passed: row.get("preflight_passed"),
-        })
+        }
     }
 }
 
@@ -78,48 +97,6 @@ impl LegacyPromotionPreflightExecutor {
 mod tests {
     use super::*;
     use sqlx::postgres::PgPoolOptions;
-    use tokio::sync::OnceCell;
-
-    const BEFORE_PROTECTED_CONSTRAINTS: &[&str] = &[
-        include_str!("../../../database/migrations/0001_initialize_zk_logs.sql"),
-        include_str!("../../../database/migrations/0003_protected_data_scope_transition.sql"),
-        include_str!("../../../database/migrations/0004_scoped_anonymized_hash.sql"),
-        include_str!("../../../database/migrations/0005_legacy_data_classification.sql"),
-    ];
-    const AFTER_FIXTURE: &[&str] = &[
-        include_str!("../../../database/migrations/0006_trusted_db_service_identity.sql"),
-        include_str!("../../../database/migrations/0007_protected_data_rls_constraints.sql"),
-        include_str!("../../../database/migrations/0008_legacy_data_promotion_events.sql"),
-        include_str!("../../../database/migrations/0009_legacy_promotion_executor.sql"),
-        include_str!("../../../database/migrations/0010_legacy_promotion_preflight.sql"),
-    ];
-    static PREPARED: OnceCell<()> = OnceCell::const_new();
-
-    async fn prepare(pool: &PgPool) {
-        PREPARED
-            .get_or_init(|| async {
-                for migration in BEFORE_PROTECTED_CONSTRAINTS {
-                    sqlx::raw_sql(migration)
-                        .execute(pool)
-                        .await
-                        .expect("preflight migrations must apply cleanly");
-                }
-                sqlx::query(
-                    "INSERT INTO anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, 'pk', 7, '1.0', 'sig')",
-                )
-                .bind("lpf-a")
-                .execute(pool)
-                .await
-                .expect("legacy NULL-scope fixture must be seedable before protected constraints");
-                for migration in AFTER_FIXTURE {
-                    sqlx::raw_sql(migration)
-                        .execute(pool)
-                        .await
-                        .expect("protected migrations must apply cleanly");
-                }
-            })
-            .await;
-    }
 
     #[test]
     fn accepts_only_clean_zero_null_state() {
@@ -196,19 +173,44 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn postgres_preflight_detects_null_scope() {
+    async fn postgres_preflight_detects_null_scope_transactionally() {
         let url = match std::env::var("SOMA_TEST_DATABASE_URL") {
             Ok(value) if !value.trim().is_empty() => value,
             _ => return,
         };
-        let pool =
-            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
-        prepare(&pool).await;
-        let executor = LegacyPromotionPreflightExecutor::new(pool);
-        let result = executor.run().await.expect("preflight function must be callable");
-        assert_eq!(result.null_scope_rows, 1);
+        let pool = PgPoolOptions::new()
+            .max_connections(4)
+            .connect(&url)
+            .await
+            .expect("test database must be reachable");
+        let mut tx = pool
+            .begin()
+            .await
+            .expect("test transaction must begin");
+
+        sqlx::query("ALTER TABLE public.anonymized_user_vitals DROP CONSTRAINT IF EXISTS anonymized_user_vitals_protected_scope_required")
+            .execute(&mut *tx)
+            .await
+            .expect("test must be able to create a transactional legacy NULL-scope fixture");
+        sqlx::query(
+            "INSERT INTO public.anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ('lpf-a', 'pk', 7, '1.0', 'sig')",
+        )
+        .execute(&mut *tx)
+        .await
+        .expect("legacy NULL-scope fixture must be seedable inside the test transaction");
+
+        let executor = LegacyPromotionPreflightExecutor::new(pool.clone());
+        let result = executor
+            .run_in_transaction(&mut tx)
+            .await
+            .expect("preflight function must be callable inside the fixture transaction");
+        assert!(result.null_scope_rows >= 1);
         assert_eq!(result.partial_scope_rows, 0);
         assert!(!result.preflight_passed);
         assert!(result.require_pass().is_err());
+
+        tx.rollback()
+            .await
+            .expect("fixture transaction must roll back cleanly");
     }
 }
