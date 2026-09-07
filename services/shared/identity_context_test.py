@@ -9,6 +9,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from identity_authorization_enforcement import _valid_identity_context
+
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = ROOT / "schemas" / "identity-context-v1.json"
 
@@ -52,12 +54,7 @@ def _assert_shape(context):
 
 
 def _is_verified_for_protected_use(context):
-    return (
-        context["authentication_status"] == "VERIFIED"
-        and bool(context.get("authentication_provenance"))
-        and bool(context.get("tenant_scope"))
-        and bool(context.get("data_domain_scope"))
-    )
+    return _valid_identity_context(context) and context["authentication_status"] == "VERIFIED"
 
 
 def _scope_allows(context, tenant_id, data_domain):
@@ -76,6 +73,7 @@ def test_schema_baseline():
 def test_authenticated_account_context_is_valid():
     context = _valid_context()
     _assert_shape(context)
+    assert _valid_identity_context(context)
     assert context["identity_mode"] == "authenticated_account"
     assert context["assurance_level"] == "HIGH"
 
@@ -83,6 +81,7 @@ def test_authenticated_account_context_is_valid():
 def test_anonymous_local_context_is_valid_without_real_world_identity_claim():
     context = _valid_context("anonymous_local")
     _assert_shape(context)
+    assert _valid_identity_context(context)
     assert context["principal_type"] == "person"
     assert context["identity_mode"] == "anonymous_local"
     assert context["authentication_status"] == "VERIFIED"
@@ -101,14 +100,14 @@ def test_anonymous_local_cannot_claim_substantial_or_high_assurance():
     for assurance in ("SUBSTANTIAL", "HIGH"):
         context = _valid_context("anonymous_local")
         context["assurance_level"] = assurance
-        assert not (context["identity_mode"] == "anonymous_local" and assurance != "LOW")
+        assert not _valid_identity_context(context)
 
 
 def test_anonymous_local_is_person_identity_only():
     for principal_type in ("agent", "service", "application", "device"):
         context = _valid_context("anonymous_local")
         context["principal_type"] = principal_type
-        assert not (context["identity_mode"] == "anonymous_local" and context["principal_type"] != "person")
+        assert not _valid_identity_context(context)
 
 
 def test_unverified_context_fails_closed():
@@ -146,7 +145,7 @@ def test_scope_cannot_be_inferred_from_resource_type():
 def test_explicit_principal_identity_is_required():
     context = _valid_context()
     context["principal_id"] = ""
-    assert not context["principal_id"]
+    assert not _valid_identity_context(context)
 
 
 def test_expired_and_revoked_contexts_fail_closed():
