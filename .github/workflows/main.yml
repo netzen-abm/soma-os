@@ -147,6 +147,9 @@ jobs:
           --all-targets
           --verbose
 
+      - name: Verify final protected-data NOT NULL gate
+        run: bash scripts/verify_final_protected_data_gate.sh
+
   cryptographic-testing:
     name: Cryptographic and integrity tests
     needs: code-audit
