@@ -43,15 +43,16 @@ pub struct LegacyPromotionPreflightExecutor {
 impl LegacyPromotionPreflightExecutor {
     /// Constructs the provider-neutral preflight adapter.
     ///
-    /// The caller supplies only the trusted persistence pool. Tenant/data-domain
-    /// scope is intentionally absent from this API because the database-side
-    /// preflight is a global, read-only gate over the protected table.
+    /// Only the trusted persistence pool is accepted. Scope is intentionally
+    /// absent because preflight is a global, read-only verification gate.
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+        }
     }
 
-    /// Runs the canonical database preflight function without accepting caller
-    /// supplied scope or other metadata that could influence its result.
+    /// Runs the canonical database preflight without accepting caller-supplied
+    /// scope or metadata that could influence the result.
     pub async fn run(&self) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
         let row = sqlx::query(
             "SELECT total_rows, null_scope_rows, partial_scope_rows, fully_scoped_rows, scoped_without_applied_event, applied_event_scope_mismatches, eligible_unpromoted_rows, ambiguous_eligible_rows, preflight_passed FROM public.soma_legacy_promotion_preflight()",
@@ -153,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_partial_scope_even_without_null_pair() {
+    fn rejects_partial_scope() {
         let result = LegacyPromotionPreflight {
             total_rows: 10,
             null_scope_rows: 0,
@@ -196,11 +197,9 @@ mod tests {
 
     #[tokio::test]
     async fn postgres_preflight_detects_null_scope() {
-        let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL")
-            .ok()
-            .filter(|v| !v.trim().is_empty())
-        else {
-            return;
+        let url = match std::env::var("SOMA_TEST_DATABASE_URL") {
+            Ok(value) if !value.trim().is_empty() => value,
+            _ => return,
         };
         let pool = PgPoolOptions::new()
             .max_connections(4)
