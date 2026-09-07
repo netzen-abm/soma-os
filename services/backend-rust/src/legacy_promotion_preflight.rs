@@ -46,7 +46,9 @@ impl LegacyPromotionPreflightExecutor {
     /// Only the trusted persistence pool is accepted. Scope is intentionally
     /// absent because preflight is a global, read-only verification gate.
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+        }
     }
 
     /// Runs the canonical database preflight without accepting caller-supplied
@@ -178,15 +180,9 @@ mod tests {
             Ok(value) if !value.trim().is_empty() => value,
             _ => return,
         };
-        let pool = PgPoolOptions::new()
-            .max_connections(4)
-            .connect(&url)
-            .await
-            .expect("test database must be reachable");
-        let mut tx = pool
-            .begin()
-            .await
-            .expect("test transaction must begin");
+        let pool =
+            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
+        let mut tx = pool.begin().await.expect("test transaction must begin");
 
         sqlx::query("ALTER TABLE public.anonymized_user_vitals DROP CONSTRAINT IF EXISTS anonymized_user_vitals_protected_scope_required")
             .execute(&mut *tx)
@@ -209,8 +205,6 @@ mod tests {
         assert!(!result.preflight_passed);
         assert!(result.require_pass().is_err());
 
-        tx.rollback()
-            .await
-            .expect("fixture transaction must roll back cleanly");
+        tx.rollback().await.expect("fixture transaction must roll back cleanly");
     }
 }
