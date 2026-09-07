@@ -37,6 +37,11 @@ impl ProtectedDbContext {
 /// Begin a PostgreSQL transaction and establish protected scope through the
 /// dedicated persistence database identity boundary.
 ///
+/// Production deployments must connect with a LOGIN role that is explicitly
+/// granted membership in `somaos_persistence`, then this adapter switches into
+/// that NOLOGIN role for the transaction. The trusted SQL entry point remains
+/// SECURITY INVOKER and therefore observes `current_user = somaos_persistence`.
+///
 /// `soma_set_protected_scope` is deliberately SECURITY INVOKER and executable only
 /// by `somaos_persistence`. Therefore the transaction-local GUCs are isolation state,
 /// not an authentication mechanism. An untrusted DB principal cannot invoke the
@@ -48,6 +53,11 @@ pub async fn begin_protected_transaction<'a>(
     context: &ProtectedDbContext,
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
+
+    if let Err(error) = sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut *tx).await {
+        let _ = tx.rollback().await;
+        return Err(error);
+    }
 
     if let Err(error) = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
         .bind(&context.tenant_id)
