@@ -103,13 +103,13 @@ mod tests {
                         .execute(pool)
                         .await
                         .expect("preflight migrations must apply cleanly");
-                    if index == 4 {
+                    if index == 3 {
                         for hash in ["lpf-a", "lpf-b", "lpf-c"] {
                             sqlx::query("INSERT INTO anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, 'pk', 7, '1.0', 'sig')")
                                 .bind(hash)
                                 .execute(pool)
                                 .await
-                                .expect("legacy fixture must be seeded before RLS");
+                                .expect("legacy fixture must be seeded before protected-scope constraints");
                         }
                     }
                 }
@@ -184,10 +184,11 @@ mod tests {
     #[test]
     fn request_is_read_only_and_has_no_scope_parameters() {
         let source = include_str!("legacy_promotion_preflight.rs");
-        assert!(source.contains("soma_legacy_promotion_preflight()"));
-        assert!(!source.contains("tenant_id: String"));
-        assert!(!source.contains("data_domain: String"));
-        assert!(!source.contains("UPDATE public.anonymized_user_vitals"));
+        let production_source = source.split("#[cfg(test)]").next().unwrap_or(source);
+        assert!(production_source.contains("soma_legacy_promotion_preflight()"));
+        assert!(!production_source.contains("tenant_id: String"));
+        assert!(!production_source.contains("data_domain: String"));
+        assert!(!production_source.contains("UPDATE public.anonymized_user_vitals"));
     }
 
     #[tokio::test]
@@ -195,8 +196,7 @@ mod tests {
         let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty()) else {
             return;
         };
-        let pool =
-            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
+        let pool = PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
         prepare(&pool).await;
 
         let executor = LegacyPromotionPreflightExecutor::new(pool);
