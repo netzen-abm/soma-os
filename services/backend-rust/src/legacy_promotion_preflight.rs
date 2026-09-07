@@ -196,7 +196,8 @@ mod tests {
         let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty()) else {
             return;
         };
-        let pool = PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
+        let pool =
+            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
         prepare(&pool).await;
 
         let executor = LegacyPromotionPreflightExecutor::new(pool);
