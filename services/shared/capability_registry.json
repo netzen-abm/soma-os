@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.3.0",
   "capabilities": [
     {
       "id": "evidence.research",
@@ -7,6 +7,7 @@
       "status": "implemented",
       "maturity": "validated",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
       "policy": ["privacy", "safety", "provenance"],
       "adapters": ["research-providers"],
       "surfaces": ["web", "future-client-surfaces"]
@@ -17,6 +18,7 @@
       "status": "implemented",
       "maturity": "validated",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "SUBSTANTIAL", "requires_durable_identity": true},
       "policy": ["provenance", "safety", "publication-gate"],
       "adapters": [],
       "surfaces": ["research-tools"]
@@ -27,6 +29,7 @@
       "status": "architecture",
       "maturity": "development",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["privacy", "safety", "authorization", "provenance"],
       "adapters": ["agent-runtime", "openclaw"],
       "surfaces": ["web", "mobile", "future-client-surfaces"]
@@ -37,6 +40,7 @@
       "status": "adapter-boundary",
       "maturity": "development",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["authorization", "privacy", "safety", "provenance"],
       "adapters": ["mcp-client", "mcp-server"],
       "surfaces": ["web", "mobile", "future-client-surfaces"]
@@ -47,6 +51,7 @@
       "status": "adapter-boundary",
       "maturity": "development",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["authorization", "privacy", "auditability"],
       "adapters": ["nostr"],
       "surfaces": ["future-client-surfaces"]
@@ -57,6 +62,7 @@
       "status": "adapter-boundary",
       "maturity": "planned",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["authorization", "privacy", "user-choice"],
       "adapters": ["web3-wallet", "blockchain"],
       "surfaces": ["future-client-surfaces"]
@@ -67,6 +73,7 @@
       "status": "adapter-boundary",
       "maturity": "planned",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["consent", "privacy", "authorization"],
       "adapters": ["did", "verifiable-credentials"],
       "surfaces": ["future-client-surfaces"]
@@ -77,6 +84,7 @@
       "status": "adapter-boundary",
       "maturity": "planned",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["privacy", "provenance", "retention"],
       "adapters": ["ipfs", "future-content-addressed-provider"],
       "surfaces": ["future-client-surfaces"]
@@ -87,6 +95,7 @@
       "status": "optional",
       "maturity": "development",
       "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": true},
       "policy": ["privacy", "safety", "provenance", "user-choice"],
       "adapters": ["ai-provider"],
       "surfaces": ["web", "future-client-surfaces"]
