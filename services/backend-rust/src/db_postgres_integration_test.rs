@@ -8,6 +8,9 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../../../database/migrations/0005_legacy_data_classification.sql"),
     include_str!("../../../database/migrations/0006_trusted_db_service_identity.sql"),
     include_str!("../../../database/migrations/0007_protected_data_rls_constraints.sql"),
+    include_str!("../../../database/migrations/0008_legacy_data_promotion_events.sql"),
+    include_str!("../../../database/migrations/0009_legacy_promotion_executor.sql"),
+    include_str!("../../../database/migrations/0010_legacy_promotion_preflight.sql"),
 ];
 
 static PREPARED: OnceCell<()> = OnceCell::const_new();
