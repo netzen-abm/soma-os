@@ -1,0 +1,48 @@
+{
+  "id": "marma-example-talahridaya-blood-pressure",
+  "entity_type": "claim",
+  "schema_version": "1.0.0",
+  "status": "EVIDENCE_ASSESSED",
+  "statement": "Talahridaya Marma stimulation may be associated with reduced blood pressure in an individual case report.",
+  "claim_type": "clinical_efficacy",
+  "source_class": "peer_reviewed",
+  "title": "Blood pressure normalizing effect of Talahridaya marma therapy: A case report",
+  "publisher": "Journal of Ayurveda and Integrative Medicine",
+  "publication_date": "2021-01-01",
+  "persistent_identifier": "PMCID:PMC8377184",
+  "evidence_level": "E2_PRELIMINARY",
+  "safety_classification": "INSUFFICIENT_SAFETY_EVIDENCE",
+  "assessment": {
+    "study_design": "case_report",
+    "population": "one young hypertensive male",
+    "replication": "not established",
+    "interpretation_boundary": "Association in one case; cannot establish general treatment efficacy or causality."
+  },
+  "safety": {
+    "clinical_boundary": "Do not represent as a substitute for hypertension evaluation or treatment."
+  },
+  "applicability": {
+    "generalizability": "very_limited"
+  },
+  "limitations": [
+    "Single-patient case report",
+    "No randomized comparator",
+    "Limited generalizability",
+    "Larger studies are required"
+  ],
+  "uncertainty": [
+    "Causality cannot be established from this design",
+    "Magnitude and reproducibility of effect are uncertain"
+  ],
+  "provenance": {
+    "source_ref": "PMCID:PMC8377184",
+    "method": "literature_review_and_source_classification",
+    "span": "publication-level claim; exact source span must be captured before production use",
+    "transformation_history": [
+      "Traditional claim reviewed",
+      "Source classified as peer-reviewed case report",
+      "Evidence level bounded to preliminary",
+      "Clinical recommendation authority withheld"
+    ]
+  }
+}
