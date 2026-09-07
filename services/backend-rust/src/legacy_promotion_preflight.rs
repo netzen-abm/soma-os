@@ -41,12 +41,17 @@ pub struct LegacyPromotionPreflightExecutor {
 }
 
 impl LegacyPromotionPreflightExecutor {
+    /// Constructs the provider-neutral preflight adapter.
+    ///
+    /// The caller supplies only the trusted persistence pool. Tenant/data-domain
+    /// scope is intentionally absent from this API because the database-side
+    /// preflight is a global, read-only gate over the protected table.
     pub fn new(pool: PgPool) -> Self {
-        Self {
-            pool,
-        }
+        Self { pool }
     }
 
+    /// Runs the canonical database preflight function without accepting caller
+    /// supplied scope or other metadata that could influence its result.
     pub async fn run(&self) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
         let row = sqlx::query(
             "SELECT total_rows, null_scope_rows, partial_scope_rows, fully_scoped_rows, scoped_without_applied_event, applied_event_scope_mismatches, eligible_unpromoted_rows, ambiguous_eligible_rows, preflight_passed FROM public.soma_legacy_promotion_preflight()",
