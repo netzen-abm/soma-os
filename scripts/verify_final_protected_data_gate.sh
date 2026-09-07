@@ -5,6 +5,17 @@ set -euo pipefail
 
 psql_cmd=(psql "$SOMA_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -X)
 
+# The PostgreSQL integration-test job intentionally exercises the same service
+# database before this script runs. Start from a fresh public schema so this
+# verification is a genuine migration-chain test, not an accidental continuation
+# of the earlier integration-test state. This script is test-only and never runs
+# against a production database.
+"${psql_cmd[@]}" <<'SQL'
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO public;
+SQL
+
 for migration in \
   database/migrations/0001_initialize_zk_logs.sql \
   database/migrations/0003_protected_data_scope_transition.sql \
