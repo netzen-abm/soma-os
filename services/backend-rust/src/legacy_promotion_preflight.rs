@@ -2,8 +2,6 @@ use std::error::Error;
 
 use sqlx::{PgPool, Row};
 
-/// Read-only verification result used immediately before the final NOT NULL gate.
-/// The adapter intentionally does not accept caller-supplied scope or filtering.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LegacyPromotionPreflight {
     pub total_rows: i64,
@@ -18,8 +16,6 @@ pub struct LegacyPromotionPreflight {
 }
 
 impl LegacyPromotionPreflight {
-    /// The final gate is intentionally stricter than a simple zero-NULL check.
-    /// Any partial scope or event/scope inconsistency blocks finalization.
     pub fn require_pass(&self) -> Result<(), Box<dyn Error>> {
         if self.preflight_passed
             && self.null_scope_rows == 0
@@ -40,9 +36,6 @@ impl LegacyPromotionPreflight {
     }
 }
 
-/// Provider-neutral PostgreSQL adapter for the read-only preflight contract.
-/// Authorization for invoking this operation is expected to have completed at
-/// the canonical identity/Policy Kernel boundary.
 pub struct LegacyPromotionPreflightExecutor {
     pool: PgPool,
 }
@@ -79,35 +72,49 @@ mod tests {
     use sqlx::postgres::PgPoolOptions;
     use tokio::sync::OnceCell;
 
-    const MIGRATIONS: &[&str] = &[
+    const BEFORE_PROTECTED_CONSTRAINTS: &[&str] = &[
         include_str!("../../../database/migrations/0001_initialize_zk_logs.sql"),
         include_str!("../../../database/migrations/0003_protected_data_scope_transition.sql"),
         include_str!("../../../database/migrations/0004_scoped_anonymized_hash.sql"),
         include_str!("../../../database/migrations/0005_legacy_data_classification.sql"),
+    ];
+    const AFTER_FIXTURE: &[&str] = &[
         include_str!("../../../database/migrations/0006_trusted_db_service_identity.sql"),
         include_str!("../../../database/migrations/0007_protected_data_rls_constraints.sql"),
         include_str!("../../../database/migrations/0008_legacy_data_promotion_events.sql"),
         include_str!("../../../database/migrations/0009_legacy_promotion_executor.sql"),
         include_str!("../../../database/migrations/0010_legacy_promotion_preflight.sql"),
     ];
-
     static PREPARED: OnceCell<()> = OnceCell::const_new();
 
     async fn prepare(pool: &PgPool) {
         PREPARED
             .get_or_init(|| async {
-                for migration in MIGRATIONS {
+                for migration in BEFORE_PROTECTED_CONSTRAINTS {
                     sqlx::raw_sql(migration)
                         .execute(pool)
                         .await
                         .expect("preflight migrations must apply cleanly");
+                }
+                sqlx::query(
+                    "INSERT INTO anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, 'pk', 7, '1.0', 'sig')",
+                )
+                .bind("lpf-a")
+                .execute(pool)
+                .await
+                .expect("legacy NULL-scope fixture must be seedable before protected constraints");
+                for migration in AFTER_FIXTURE {
+                    sqlx::raw_sql(migration)
+                        .execute(pool)
+                        .await
+                        .expect("protected migrations must apply cleanly");
                 }
             })
             .await;
     }
 
     #[test]
-    fn passes_only_for_clean_zero_null_state() {
+    fn accepts_only_clean_zero_null_state() {
         let result = LegacyPromotionPreflight {
             total_rows: 10,
             null_scope_rows: 0,
@@ -181,7 +188,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn postgres_preflight_reports_clean_state() {
+    async fn postgres_preflight_detects_null_scope() {
         let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL")
             .ok()
             .filter(|v| !v.trim().is_empty())
@@ -194,16 +201,14 @@ mod tests {
             .await
             .expect("test database must be reachable");
         prepare(&pool).await;
-
         let executor = LegacyPromotionPreflightExecutor::new(pool);
         let result = executor
             .run()
             .await
             .expect("preflight function must be callable");
-        assert_eq!(result.null_scope_rows, 0);
+        assert_eq!(result.null_scope_rows, 1);
         assert_eq!(result.partial_scope_rows, 0);
-        assert_eq!(result.applied_event_scope_mismatches, 0);
-        assert!(result.preflight_passed);
-        assert!(result.require_pass().is_ok());
+        assert!(!result.preflight_passed);
+        assert!(result.require_pass().is_err());
     }
 }
