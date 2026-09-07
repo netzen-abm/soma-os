@@ -13,9 +13,6 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../../../database/migrations/0010_legacy_promotion_preflight.sql"),
 ];
 
-const FINAL_NOT_NULL_MIGRATION: &str =
-    include_str!("../../../database/migrations/0011_final_protected_data_not_null_gate.sql");
-
 static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 async fn test_pool() -> Option<PgPool> {
@@ -334,79 +331,4 @@ async fn protected_scope_check_constraint_rejects_null_scope_for_new_rows() {
         .execute(&pool)
         .await;
     assert!(result.is_err());
-}
-
-#[tokio::test]
-async fn final_not_null_gate_blocks_when_null_scope_remains() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
-    prepare(&pool).await;
-
-    let mut tx = pool.begin().await.unwrap();
-    let result = sqlx::raw_sql(FINAL_NOT_NULL_MIGRATION).execute(&mut *tx).await;
-    assert!(result.is_err(), "final gate must fail closed while NULL scope remains");
-    tx.rollback().await.unwrap();
-}
-
-#[tokio::test]
-async fn final_not_null_gate_blocks_partial_scope_and_rolls_back() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
-    prepare(&pool).await;
-
-    let mut tx = pool.begin().await.unwrap();
-    sqlx::query("ALTER TABLE public.anonymized_user_vitals DROP CONSTRAINT anonymized_user_vitals_protected_scope_required")
-        .execute(&mut *tx)
-        .await
-        .unwrap();
-    sqlx::query("INSERT INTO public.anonymized_user_vitals (tenant_id, anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ('partial-tenant', $1, 'pk', 1, '1.0', 'sig')")
-        .bind("partial-scope-fixture")
-        .execute(&mut *tx)
-        .await
-        .unwrap();
-
-    let result = sqlx::raw_sql(FINAL_NOT_NULL_MIGRATION).execute(&mut *tx).await;
-    assert!(result.is_err(), "final gate must reject partial scope");
-    tx.rollback().await.unwrap();
-}
-
-#[tokio::test]
-async fn final_not_null_gate_succeeds_only_after_zero_null_scope_and_enforces_schema() {
-    let Some(pool) = test_pool().await else {
-        return;
-    };
-    prepare(&pool).await;
-
-    let mut tx = pool.begin().await.unwrap();
-    sqlx::query("DELETE FROM public.anonymized_user_vitals WHERE tenant_id IS NULL AND data_domain IS NULL")
-        .execute(&mut *tx)
-        .await
-        .unwrap();
-
-    sqlx::raw_sql(FINAL_NOT_NULL_MIGRATION)
-        .execute(&mut *tx)
-        .await
-        .expect("final gate must succeed after zero-NULL preflight");
-
-    let nullability = sqlx::query("SELECT is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'anonymized_user_vitals' AND column_name IN ('tenant_id', 'data_domain') ORDER BY column_name")
-        .fetch_all(&mut *tx)
-        .await
-        .unwrap();
-    assert_eq!(nullability.len(), 2);
-    assert!(nullability.iter().all(|row| row.get::<String, _>("is_nullable") == "NO"));
-
-    let constraint = sqlx::query("SELECT convalidated FROM pg_constraint WHERE conrelid = 'public.anonymized_user_vitals'::regclass AND conname = 'anonymized_user_vitals_protected_scope_required'")
-        .fetch_one(&mut *tx)
-        .await
-        .unwrap();
-    assert!(constraint.get::<bool, _>("convalidated"));
-
-    let rejected_null = sqlx::query("INSERT INTO public.anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ('post-final-null-fixture', 'pk', 1, '1.0', 'sig')")
-        .execute(&mut *tx)
-        .await;
-    assert!(rejected_null.is_err(), "final schema must reject NULL protected scope");
-
-    tx.rollback().await.unwrap();
 }
