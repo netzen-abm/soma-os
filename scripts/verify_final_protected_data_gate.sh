@@ -7,17 +7,22 @@ psql_cmd=(psql "$SOMA_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -X)
 
 # The PostgreSQL integration-test job intentionally exercises the same service
 # database before this script runs. Start from a fresh public schema so this
-# verification is a genuine migration-chain test, not an accidental continuation
-# of the earlier integration-test state. This script is test-only and never runs
-# against a production database.
+# verification is a genuine replay of the repository migration sequence, not
+# an accidental continuation of the earlier integration-test state. This
+# script is test-only and the CI workflow points SOMA_TEST_DATABASE_URL at the
+# dedicated ephemeral somaos_test service database.
 "${psql_cmd[@]}" <<'SQL'
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO public;
 SQL
 
+# Replay every repository migration in numeric order. The final-gate assertion
+# depends on the protected-data transition, but including 0002 ensures this
+# harness does not silently test a partial migration history.
 for migration in \
   database/migrations/0001_initialize_zk_logs.sql \
+  database/migrations/0002_initialize_evidence_registry.sql \
   database/migrations/0003_protected_data_scope_transition.sql \
   database/migrations/0004_scoped_anonymized_hash.sql \
   database/migrations/0005_legacy_data_classification.sql \
