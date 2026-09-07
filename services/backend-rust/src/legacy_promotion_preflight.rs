@@ -201,17 +201,11 @@ mod tests {
             Ok(value) if !value.trim().is_empty() => value,
             _ => return,
         };
-        let pool = PgPoolOptions::new()
-            .max_connections(4)
-            .connect(&url)
-            .await
-            .expect("test database must be reachable");
+        let pool =
+            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
         prepare(&pool).await;
         let executor = LegacyPromotionPreflightExecutor::new(pool);
-        let result = executor
-            .run()
-            .await
-            .expect("preflight function must be callable");
+        let result = executor.run().await.expect("preflight function must be callable");
         assert_eq!(result.null_scope_rows, 1);
         assert_eq!(result.partial_scope_rows, 0);
         assert!(!result.preflight_passed);
