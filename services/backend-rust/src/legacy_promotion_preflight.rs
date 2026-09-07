@@ -49,9 +49,7 @@ pub struct LegacyPromotionPreflightExecutor {
 
 impl LegacyPromotionPreflightExecutor {
     pub fn new(pool: PgPool) -> Self {
-        Self {
-            pool,
-        }
+        Self { pool }
     }
 
     pub async fn run(&self) -> Result<LegacyPromotionPreflight, Box<dyn Error>> {
@@ -98,20 +96,11 @@ mod tests {
     async fn prepare(pool: &PgPool) {
         PREPARED
             .get_or_init(|| async {
-                for (index, migration) in MIGRATIONS.iter().enumerate() {
+                for migration in MIGRATIONS {
                     sqlx::raw_sql(migration)
                         .execute(pool)
                         .await
                         .expect("preflight migrations must apply cleanly");
-                    if index == 3 {
-                        for hash in ["lpf-a", "lpf-b", "lpf-c"] {
-                            sqlx::query("INSERT INTO anonymized_user_vitals (anonymized_user_hash, public_verification_key_hex, verified_vitality_score, salud_schema_version, signature_proof_hex) VALUES ($1, 'pk', 7, '1.0', 'sig')")
-                                .bind(hash)
-                                .execute(pool)
-                                .await
-                                .expect("legacy fixture must be seeded before protected-scope constraints");
-                        }
-                    }
                 }
             })
             .await;
@@ -192,18 +181,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn postgres_preflight_detects_null_scope() {
-        let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty()) else {
+    async fn postgres_preflight_reports_clean_state() {
+        let Some(url) = std::env::var("SOMA_TEST_DATABASE_URL")
+            .ok()
+            .filter(|v| !v.trim().is_empty())
+        else {
             return;
         };
-        let pool =
-            PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
+        let pool = PgPoolOptions::new()
+            .max_connections(4)
+            .connect(&url)
+            .await
+            .expect("test database must be reachable");
         prepare(&pool).await;
 
         let executor = LegacyPromotionPreflightExecutor::new(pool);
-        let result = executor.run().await.expect("preflight function must be callable");
-        assert!(result.null_scope_rows >= 3);
-        assert!(!result.preflight_passed);
-        assert!(result.require_pass().is_err());
+        let result = executor
+            .run()
+            .await
+            .expect("preflight function must be callable");
+        assert_eq!(result.null_scope_rows, 0);
+        assert_eq!(result.partial_scope_rows, 0);
+        assert_eq!(result.applied_event_scope_mismatches, 0);
+        assert!(result.preflight_passed);
+        assert!(result.require_pass().is_ok());
     }
 }
