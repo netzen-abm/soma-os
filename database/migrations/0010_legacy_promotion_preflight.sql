@@ -19,6 +19,13 @@ ALTER ROLE somaos_legacy_preflight_owner
     NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT
     NOREPLICATION BYPASSRLS;
 
+-- The SECURITY DEFINER owner needs read-only access to the three tables it
+-- aggregates. The privilege is intentionally limited to SELECT and is not
+-- granted to the ordinary persistence role through this owner boundary.
+GRANT SELECT ON TABLE public.anonymized_user_vitals TO somaos_legacy_preflight_owner;
+GRANT SELECT ON TABLE public.anonymized_user_vitals_legacy_classification TO somaos_legacy_preflight_owner;
+GRANT SELECT ON TABLE public.anonymized_user_vitals_legacy_promotion_event TO somaos_legacy_preflight_owner;
+
 CREATE OR REPLACE FUNCTION public.soma_legacy_promotion_preflight()
 RETURNS TABLE (
     total_rows BIGINT,
