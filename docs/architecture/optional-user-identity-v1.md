@@ -36,6 +36,17 @@ Examples of strong reasons include:
 
 A login MUST NOT be requested merely for analytics, advertising, convenience to SOMA, model training, or because an implementation happens to be easier with accounts.
 
+## Verification semantics
+
+`authentication_status=VERIFIED` means that the security context represented by the `IdentityContext` was verified by the declared provenance. It does **not** mean that the person has been identified in the real world.
+
+Therefore both of these are valid security states:
+
+- `identity_mode=anonymous_local` + `authentication_status=VERIFIED`: verified possession/integrity of a local pseudonymous security context, with `assurance_level=LOW`.
+- `identity_mode=authenticated_account` + `authentication_status=VERIFIED`: verified account-backed authentication, with an assurance level determined by the actual authentication and identity-assurance mechanism.
+
+Anonymous local identity MUST NOT claim `SUBSTANTIAL` or `HIGH` assurance. It MUST NOT be represented as proof of a real-world identity. Account-backed identity also does not itself grant capability authority; the Policy Kernel still decides authorization.
+
 ## Escalation rule
 
 Before requiring login, the product capability MUST answer:
@@ -70,7 +81,7 @@ IdentityContext
   -> Evidence / Audit
 ```
 
-The Policy Kernel and capability registry determine which capabilities are available to each identity mode.
+The Policy Kernel and capability registry determine which capabilities are available to each identity mode. A capability that requires durable identity or higher assurance MUST express that requirement as policy/capability metadata and be enforced at the authorization boundary; the identity mode itself is not an authorization grant.
 
 The database persistence role is a service identity and is unrelated to whether an end user has a SOMA login.
 
