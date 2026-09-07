@@ -7,20 +7,12 @@ from typing import Mapping, Sequence
 from policy_kernel import Decision, PolicyDecision, PolicyKernel, PolicyRequest
 
 
-ENFORCEMENT_VERSION = "1.0.0"
+ENFORCEMENT_VERSION = "1.1.0"
 _IDENTITY_CONTEXT_KEYS = {
-    "context_id",
-    "schema_version",
-    "principal_id",
-    "principal_type",
-    "authentication_status",
-    "authentication_provenance",
-    "tenant_scope",
-    "data_domain_scope",
-    "jurisdiction_scope",
-    "assurance_level",
-    "issued_at",
-    "expires_at",
+    "context_id", "schema_version", "principal_id", "principal_type",
+    "identity_mode", "authentication_status", "authentication_provenance",
+    "tenant_scope", "data_domain_scope", "jurisdiction_scope", "assurance_level",
+    "issued_at", "expires_at",
 }
 
 
@@ -42,11 +34,12 @@ def enforce_authorized_operation(
     caller_metadata: Mapping[str, object] | None = None,
     now: datetime | None = None,
 ) -> EnforcementDecision:
-    """Compose verified identity/scope checks with Policy Kernel v0.3.
+    """Enforce verified security context plus exact Policy Kernel authorization.
 
-    This is an enforcement boundary, not a second authorization engine. Trusted
-    identity/scope fields come only from the supplied IdentityContext and explicit
-    target binding. Caller/model/MCP metadata cannot broaden that context.
+    ``VERIFIED`` validates the security context, not real-world identity. An
+    ``anonymous_local`` principal may therefore be verified for its local
+    security context without becoming an authenticated account. Identity mode
+    never grants authorization; capability policy remains authoritative.
     """
     if not _valid_identity_context(identity_context, now=now):
         return _deny("invalid_identity_context")
@@ -74,41 +67,28 @@ def enforce_authorized_operation(
 
 
 def _valid_identity_context(context: Mapping[str, object], *, now: datetime | None = None) -> bool:
-    if not isinstance(context, Mapping):
+    if not isinstance(context, Mapping) or set(context.keys()) - _IDENTITY_CONTEXT_KEYS:
         return False
-    if set(context.keys()) - _IDENTITY_CONTEXT_KEYS:
-        return False
-
     required = (
-        "context_id",
-        "schema_version",
-        "principal_id",
-        "principal_type",
-        "authentication_status",
-        "authentication_provenance",
-        "tenant_scope",
-        "data_domain_scope",
-        "assurance_level",
-        "issued_at",
+        "context_id", "schema_version", "principal_id", "principal_type", "identity_mode",
+        "authentication_status", "authentication_provenance", "tenant_scope",
+        "data_domain_scope", "assurance_level", "issued_at",
     )
     if any(key not in context for key in required):
         return False
     scalar_fields = (
-        "context_id",
-        "schema_version",
-        "principal_id",
-        "principal_type",
-        "authentication_status",
-        "assurance_level",
-        "issued_at",
+        "context_id", "schema_version", "principal_id", "principal_type", "identity_mode",
+        "authentication_status", "assurance_level", "issued_at",
     )
     if not all(isinstance(context.get(key), str) and context[key].strip() for key in scalar_fields):
         return False
-    if context.get("schema_version") != "1.0.0":
+    if context.get("schema_version") != "1.1.0":
         return False
     if context.get("authentication_status") != "VERIFIED":
         return False
     if context.get("principal_type") not in {"person", "agent", "service", "application", "device"}:
+        return False
+    if context.get("identity_mode") not in {"anonymous_local", "authenticated_account"}:
         return False
     if context.get("assurance_level") not in {"LOW", "SUBSTANTIAL", "HIGH"}:
         return False
@@ -119,6 +99,13 @@ def _valid_identity_context(context: Mapping[str, object], *, now: datetime | No
     if not all(isinstance(provenance.get(k), str) and provenance[k].strip() for k in ("issuer", "method", "verified_at", "verifier_id")):
         return False
     if not _valid_timestamp(provenance["verified_at"]):
+        return False
+
+    if context["identity_mode"] == "anonymous_local" and context["principal_type"] != "person":
+        return False
+    if context["identity_mode"] == "anonymous_local" and context["assurance_level"] != "LOW":
+        return False
+    if context["identity_mode"] == "authenticated_account" and context["principal_type"] != "person":
         return False
 
     for field in ("tenant_scope", "data_domain_scope"):
@@ -159,19 +146,14 @@ def _target_is_in_scope(context: Mapping[str, object], tenant: str, data_domain:
 def _valid_policy_dimensions(request: PolicyRequest) -> bool:
     return all(
         isinstance(value, str) and value.strip()
-        for value in (
-            request.principal_id,
-            request.principal_type,
-            request.capability_id,
-            request.resource_type,
-            request.resource_id,
-            request.action,
-        )
+        for value in (request.principal_id, request.principal_type, request.capability_id,
+                      request.resource_type, request.resource_id, request.action)
     )
 
 
 def _attempts_to_broaden(metadata: Mapping[str, object], context: Mapping[str, object]) -> bool:
-    for field in ("principal_id", "principal_type", "tenant_scope", "data_domain_scope", "authentication_status", "assurance_level"):
+    for field in ("principal_id", "principal_type", "tenant_scope", "data_domain_scope",
+                  "authentication_status", "identity_mode", "assurance_level"):
         if field not in metadata:
             continue
         if field in {"tenant_scope", "data_domain_scope"}:

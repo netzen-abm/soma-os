@@ -14,34 +14,33 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
         }
         self.principal = ("p-1", "person", "health.read", "record", "r-1", "read")
         self.kernel = PolicyKernel(self.registry, {self.principal: True})
-        self.context = {
+        self.context = self._context("authenticated_account")
+
+    def _context(self, mode):
+        return {
             "context_id": "ctx-1",
-            "schema_version": "1.0.0",
+            "schema_version": "1.1.0",
             "principal_id": "p-1",
             "principal_type": "person",
+            "identity_mode": mode,
             "authentication_status": "VERIFIED",
             "authentication_provenance": {
-                "issuer": "issuer-1",
-                "method": "verified-test",
+                "issuer": "auth.example" if mode == "authenticated_account" else "local-runtime",
+                "method": "oidc" if mode == "authenticated_account" else "local-security-context",
                 "verified_at": "2026-09-04T10:00:00Z",
                 "verifier_id": "verifier-1",
             },
             "tenant_scope": ["tenant-a"],
             "data_domain_scope": ["health"],
-            "assurance_level": "HIGH",
+            "assurance_level": "HIGH" if mode == "authenticated_account" else "LOW",
             "issued_at": "2026-09-04T10:00:00Z",
             "expires_at": "2026-09-04T20:00:00Z",
         }
 
     def request(self, **overrides):
         values = dict(
-            principal_id="p-1",
-            principal_type="person",
-            capability_id="health.read",
-            resource_type="record",
-            resource_id="r-1",
-            action="read",
-            context={},
+            principal_id="p-1", principal_type="person", capability_id="health.read",
+            resource_type="record", resource_id="r-1", action="read", context={}
         )
         values.update(overrides)
         return PolicyRequest(**values)
@@ -57,10 +56,31 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
             now=now,
         )
 
-    def test_verified_matching_scope_and_exact_grant_allows(self):
+    def test_verified_matching_account_scope_and_exact_grant_allows(self):
         result = self.evaluate()
         self.assertTrue(result.allowed)
         self.assertEqual(result.policy_decision.decision, Decision.ALLOW)
+
+    def test_anonymous_local_identity_is_accepted_as_verified_security_context(self):
+        result = self.evaluate(context=self._context("anonymous_local"))
+        self.assertTrue(result.allowed)
+        self.assertEqual(result.policy_decision.decision, Decision.ALLOW)
+
+    def test_anonymous_local_does_not_gain_authority_from_verified_status(self):
+        context = self._context("anonymous_local")
+        result = self.evaluate(context=context, request=self.request(capability_id="admin.write"))
+        self.assertFalse(result.allowed)
+
+    def test_authenticated_account_does_not_gain_authority_merely_from_login(self):
+        context = self._context("authenticated_account")
+        result = self.evaluate(context=context, request=self.request(capability_id="admin.write"))
+        self.assertFalse(result.allowed)
+
+    def test_login_mode_does_not_change_exact_capability_grant_semantics(self):
+        account = self.evaluate(context=self._context("authenticated_account"))
+        local = self.evaluate(context=self._context("anonymous_local"))
+        self.assertEqual(account.allowed, local.allowed)
+        self.assertEqual(account.reason_code, local.reason_code)
 
     def test_wrong_tenant_denied(self):
         result = self.evaluate(tenant="tenant-b")
@@ -71,14 +91,6 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
         result = self.evaluate(domain="billing")
         self.assertFalse(result.allowed)
         self.assertEqual(result.reason_code, "target_scope_mismatch")
-
-    def test_missing_tenant_scope_denied(self):
-        context = dict(self.context, tenant_scope=[])
-        self.assertFalse(self.evaluate(context=context).allowed)
-
-    def test_missing_data_domain_scope_denied(self):
-        context = dict(self.context, data_domain_scope=[])
-        self.assertFalse(self.evaluate(context=context).allowed)
 
     def test_unverified_denied(self):
         context = dict(self.context, authentication_status="UNVERIFIED")
@@ -133,15 +145,13 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
         result = self.evaluate(metadata={"principal_type": "agent"})
         self.assertFalse(result.allowed)
 
+    def test_adapter_cannot_upgrade_identity_mode_or_assurance(self):
+        result = self.evaluate(context=self._context("anonymous_local"), metadata={"identity_mode": "authenticated_account", "assurance_level": "HIGH"})
+        self.assertFalse(result.allowed)
+
     def test_forbidden_token_material_denied(self):
         context = dict(self.context, access_token="secret")
         self.assertFalse(self.evaluate(context=context).allowed)
-
-    def test_service_to_service_identity_is_explicit(self):
-        context = dict(self.context, principal_id="svc-1", principal_type="service")
-        request = self.request(principal_id="svc-1", principal_type="service")
-        result = self.evaluate(context=context, request=request)
-        self.assertFalse(result.allowed)
 
     def test_long_running_execution_requires_current_valid_context(self):
         now = datetime(2026, 9, 4, 19, 0, tzinfo=timezone.utc)

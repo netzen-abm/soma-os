@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://soma-os.org/schemas/identity-context-v1.json",
   "title": "SOMA IdentityContext v1",
-  "description": "Canonical verified identity and isolation context. This contract carries security facts; it does not grant authorization.",
+  "description": "Canonical verified security and isolation context. authentication_status=VERIFIED means the security context was verified; it does not by itself mean real-world identity was verified. This contract carries security facts; it does not grant authorization.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,6 +10,7 @@
     "schema_version",
     "principal_id",
     "principal_type",
+    "identity_mode",
     "authentication_status",
     "authentication_provenance",
     "tenant_scope",
@@ -19,11 +20,15 @@
   ],
   "properties": {
     "context_id": {"type": "string", "minLength": 1},
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "principal_id": {"type": "string", "minLength": 1},
     "principal_type": {
       "type": "string",
       "enum": ["person", "agent", "service", "application", "device"]
+    },
+    "identity_mode": {
+      "type": "string",
+      "enum": ["anonymous_local", "authenticated_account"]
     },
     "authentication_status": {
       "type": "string",
