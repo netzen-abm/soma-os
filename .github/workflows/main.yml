@@ -71,6 +71,12 @@ jobs:
       - name: Validate Health State and Evidence contracts
         run: python scripts/validate_health_contracts.py
 
+      - name: Validate Personal Health Record JSON contracts
+        run: >-
+          python -m json.tool schemas/personal-health-profile-v1.json > /dev/null
+          && python -m json.tool schemas/emergency-health-profile-v1.json > /dev/null
+          && python -m json.tool schemas/health-sharing-grant-v1.json > /dev/null
+
       - name: Validate IdentityContext JSON contract
         run: python -m json.tool schemas/identity-context-v1.json > /dev/null
 
@@ -84,6 +90,10 @@ jobs:
       - name: Run Cross-Paradigm Evidence benchmark tests
         working-directory: services/shared
         run: python -m unittest -v cross_paradigm_evidence_test.py
+
+      - name: Run Personal Health Record contract tests
+        working-directory: services/shared
+        run: python -m unittest -v personal_health_record_contract_test.py
 
       - name: Run Policy Kernel tests
         working-directory: services/shared

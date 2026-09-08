@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/emergency-health-profile-v1.json",
+  "title": "SOMA Emergency Health Profile v1",
+  "description": "Minimum-necessary, user-approved emergency disclosure profile. This is not a full health record and must not be treated as verified clinical truth unless its individual fields have independent provenance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "subject_ref", "schema_version", "classification", "disclosure_policy", "provenance"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "classification": {"const": "sensitive_personal_health"},
+    "disclosure_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "user_approved", "minimum_necessary"],
+      "properties": {
+        "purpose": {"const": "emergency"},
+        "user_approved": {"const": true},
+        "minimum_necessary": {"const": true},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "recipient_ref": {"type": "string", "minLength": 1}
+      }
+    },
+    "fields": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferred_name": {"type": "string", "minLength": 1},
+        "emergency_contacts": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "critical_allergies": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "critical_conditions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "essential_medications": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "high_consequence_medication_flags": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "implanted_devices": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "blood_group": {"type": "string", "minLength": 1},
+        "clinician_contacts": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "preferred_facility": {"type": "string", "minLength": 1},
+        "emergency_notes": {"type": "string", "minLength": 1}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "method"],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "record_freshness_at": {"type": "string", "format": "date-time"},
+        "field_source_refs": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

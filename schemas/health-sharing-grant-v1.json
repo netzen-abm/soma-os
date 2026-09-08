@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/health-sharing-grant-v1.json",
+  "title": "SOMA Health Sharing Grant v1",
+  "description": "Purpose- and scope-bound authorization contract for sharing selected personal health information with a clinician, trusted person or other explicitly authorized recipient.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "subject_ref", "recipient_ref", "purpose", "scope", "status", "consent", "provenance"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "recipient_ref": {"type": "string", "minLength": 1},
+    "recipient_type": {"type": "string", "enum": ["clinician", "care_team", "trusted_person", "family_member", "emergency_contact", "research_recipient", "other"]},
+    "purpose": {"type": "string", "enum": ["clinical_review", "care_coordination", "emergency", "research", "personal_support", "other"]},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_refs", "minimum_necessary"],
+      "properties": {
+        "record_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+        "data_categories": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "minimum_necessary": {"type": "boolean"},
+        "allow_export": {"type": "boolean", "default": false},
+        "allow_resharing": {"type": "boolean", "default": false}
+      }
+    },
+    "status": {"type": "string", "enum": ["active", "expired", "revoked", "superseded"]},
+    "starts_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["user_approved", "policy_version"],
+      "properties": {
+        "user_approved": {"const": true},
+        "policy_version": {"type": "string", "minLength": 1},
+        "approved_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "method"],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "created_at": {"type": "string", "format": "date-time"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"purpose": {"const": "emergency"}}, "required": ["purpose"]},
+      "then": {"properties": {"scope": {"properties": {"minimum_necessary": {"const": true}}}}}
+    }
+  ]
+}
