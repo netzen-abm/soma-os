@@ -2,17 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://soma-os.org/schema/health-evidence-graph-v1.json",
   "title": "SOMA Health Evidence Graph Entity v1",
-  "description": "Canonical evidence entity contract preserving claims, sources, assessment, safety, applicability, uncertainty and provenance.",
+  "description": "Canonical evidence entity contract preserving claims, sources, assessment, safety, applicability, uncertainty, provenance and paradigm-aware research context.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "entity_type", "schema_version", "status", "provenance"],
   "properties": {
     "id": {"type": "string", "minLength": 1},
     "entity_type": {"type": "string", "enum": ["claim", "source", "study", "population", "intervention", "outcome", "evidence_assessment", "safety_assessment", "applicability"]},
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "status": {"type": "string", "enum": ["UNREVIEWED", "SOURCE_FOUND", "SOURCE_VERIFIED", "EVIDENCE_ASSESSED", "SAFETY_REVIEWED", "PUBLISHED", "WITHDRAWN"]},
     "statement": {"type": "string", "minLength": 1},
-    "claim_type": {"type": "string", "minLength": 1},
+    "claim_type": {"type": "string", "enum": ["phenomenological", "empirical_relationship", "causal", "ontological_theoretical"]},
     "source_class": {"type": "string", "enum": ["peer_reviewed", "trial_registry", "official", "institutional", "expert_educational", "commercial", "social_self_published"]},
     "title": {"type": "string", "minLength": 1},
     "publisher": {"type": "string", "minLength": 1},
@@ -20,6 +20,36 @@
     "retrieved_at": {"type": "string", "format": "date-time"},
     "url": {"type": "string", "format": "uri"},
     "persistent_identifier": {"type": "string", "minLength": 1},
+    "knowledge_system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system_id", "system_class"],
+      "properties": {
+        "system_id": {"type": "string", "minLength": 1},
+        "system_class": {"type": "string", "enum": ["biomedical", "traditional", "complementary", "integrative", "emerging", "other"]},
+        "epistemology": {"type": "string", "minLength": 1},
+        "diagnostic_model": {"type": "string", "minLength": 1},
+        "intervention_model": {"type": "string", "minLength": 1},
+        "outcome_model": {"type": "string", "minLength": 1}
+      }
+    },
+    "research_method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method_id"],
+      "properties": {
+        "method_id": {"type": "string", "minLength": 1},
+        "design": {"type": "string", "minLength": 1},
+        "evidence_framework": {"type": "string", "minLength": 1},
+        "prospective": {"type": "boolean"},
+        "controlled": {"type": "boolean"},
+        "randomized": {"type": "boolean"},
+        "blinded": {"type": "boolean"},
+        "sample_size": {"type": "integer", "minimum": 0},
+        "attrition_count": {"type": "integer", "minimum": 0},
+        "negative_outcomes_reported": {"type": "boolean"}
+      }
+    },
     "evidence_level": {"type": "string", "enum": ["E0_UNKNOWN", "E1_PLAUSIBLE", "E2_PRELIMINARY", "E3_SUPPORTED", "E4_WELL_SUPPORTED"]},
     "safety_classification": {"type": "string", "enum": ["LOW_CONCERN", "CONTEXT_DEPENDENT", "CLINICALLY_SIGNIFICANT_CAUTION", "CONTRAINDICATED", "INSUFFICIENT_SAFETY_EVIDENCE"]},
     "assessment": {"type": "object", "additionalProperties": true},
