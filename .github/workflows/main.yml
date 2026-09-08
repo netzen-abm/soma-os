@@ -26,7 +26,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
@@ -80,6 +80,10 @@ jobs:
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
+
+      - name: Run Cross-Paradigm Evidence benchmark tests
+        working-directory: services/shared
+        run: python -m unittest -v cross_paradigm_evidence_test.py
 
       - name: Run Policy Kernel tests
         working-directory: services/shared
@@ -136,7 +140,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
@@ -162,7 +166,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
-        uses: swatinem/rust-cache@v2
+        uses: swatin/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
 
