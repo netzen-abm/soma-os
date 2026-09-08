@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/health-context-framework-v1.json",
+  "title": "SOMA Health Context Framework v1",
+  "description": "Provider-neutral contract for governed context-specific health experiences over the canonical SOMA health domain. Contexts are not separate canonical health records.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "subject_ref",
+    "schema_version",
+    "context_type",
+    "status",
+    "record_refs",
+    "provenance"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "context_type": {
+      "type": "string",
+      "enum": [
+        "general_health",
+        "athlete_performance",
+        "service_veteran",
+        "rehabilitation_recovery"
+      ]
+    },
+    "status": {"type": "string", "enum": ["active", "paused", "archived"]},
+    "goals": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "record_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "health_state_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "observation_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "intervention_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "outcome_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "document_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "medication_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "prescription_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "context_metadata": {
+      "type": "object",
+      "description": "Non-canonical context metadata. Domain-specific schemas may extend this contract only through separately governed versioned schemas.",
+      "additionalProperties": true
+    },
+    "sharing_policy_ref": {"type": "string", "minLength": 1},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "method"],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "transformation_history": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}
