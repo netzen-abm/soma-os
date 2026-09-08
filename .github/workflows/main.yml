@@ -81,6 +81,10 @@ jobs:
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
 
+      - name: Run Cross-Paradigm Evidence benchmark tests
+        working-directory: services/shared
+        run: python -m unittest -v cross_paradigm_evidence_test.py
+
       - name: Run Policy Kernel tests
         working-directory: services/shared
         run: python -m unittest -v policy_kernel_test.py
