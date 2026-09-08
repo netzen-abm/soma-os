@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/personal-health-profile-v1.json",
+  "title": "SOMA Personal Health Profile v1",
+  "description": "User-controlled local-first index/view contract for a personal health record. It references canonical SOMA health entities rather than replacing the canonical health domain model.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "subject_ref", "schema_version", "classification", "record_refs", "provenance"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "classification": {"const": "sensitive_personal_health"},
+    "record_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "health_state_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "medication_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "prescription_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "document_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "observation_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "goal_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "emergency_profile_ref": {"type": "string", "minLength": 1},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "method"],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "transformation_history": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}
