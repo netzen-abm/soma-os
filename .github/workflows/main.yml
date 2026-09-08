@@ -77,6 +77,9 @@ jobs:
           && python -m json.tool schemas/emergency-health-profile-v1.json > /dev/null
           && python -m json.tool schemas/health-sharing-grant-v1.json > /dev/null
 
+      - name: Validate Health Context Framework JSON contract
+        run: python -m json.tool schemas/health-context-framework-v1.json > /dev/null
+
       - name: Validate IdentityContext JSON contract
         run: python -m json.tool schemas/identity-context-v1.json > /dev/null
 
@@ -94,6 +97,10 @@ jobs:
       - name: Run Personal Health Record contract tests
         working-directory: services/shared
         run: python -m unittest -v personal_health_record_contract_test.py
+
+      - name: Run Health Context Framework contract tests
+        working-directory: services/shared
+        run: python -m unittest -v health_context_framework_contract_test.py
 
       - name: Run Policy Kernel tests
         working-directory: services/shared
