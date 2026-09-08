@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate canonical SOMA Health State / Evidence Graph v1 JSON Schema contracts and representative instances."""
+"""Validate canonical SOMA Health State / Evidence Graph JSON Schema contracts."""
 
 from __future__ import annotations
 
@@ -36,19 +36,36 @@ def validate_health_state_contract(schema: dict) -> None:
     entity_types = set(schema["properties"]["entity_type"]["enum"])
     if "observation" not in entity_types or "interpretation" not in entity_types:
         raise ValueError("health-state-v1: observation/interpretation boundary missing")
-    if schema["properties"]["schema_version"].get("const") != "1.0.0":
+    if schema["properties"]["schema_version"].get("const") != "1.1.0":
         raise ValueError("health-state-v1: unexpected schema version")
+    context = schema["properties"].get("knowledge_context")
+    if not context:
+        raise ValueError("health-state-v1: knowledge_context extension missing")
+    if not {"system_id", "system_class"}.issubset(set(context["required"])):
+        raise ValueError("health-state-v1: knowledge_context identity requirements missing")
 
 
 def validate_evidence_contract(schema: dict) -> None:
-    if schema["properties"]["schema_version"].get("const") != "1.0.0":
+    if schema["properties"]["schema_version"].get("const") != "1.1.0":
         raise ValueError("health-evidence-graph-v1: unexpected schema version")
     evidence_levels = set(schema["properties"]["evidence_level"]["enum"])
     safety_levels = set(schema["properties"]["safety_classification"]["enum"])
-    if not evidence_levels or not safety_levels:
-        raise ValueError("health-evidence-graph-v1: evidence and safety dimensions must remain explicit")
+    claim_types = set(schema["properties"]["claim_type"]["enum"])
+    if not evidence_levels or not safety_levels or not claim_types:
+        raise ValueError("health-evidence-graph-v1: evidence, safety and claim dimensions must remain explicit")
     if not {"E3_SUPPORTED", "E4_WELL_SUPPORTED"}.issubset(evidence_levels):
         raise ValueError("health-evidence-graph-v1: canonical evidence levels missing")
+    if not {"phenomenological", "empirical_relationship", "causal", "ontological_theoretical"}.issubset(claim_types):
+        raise ValueError("health-evidence-graph-v1: cross-paradigm claim vocabulary incomplete")
+    for field in ("knowledge_system", "research_method", "evidence_assessment"):
+        if field not in schema["properties"]:
+            raise ValueError(f"health-evidence-graph-v1: {field} extension missing")
+    method_required = set(schema["properties"]["research_method"]["required"])
+    if "method_id" not in method_required:
+        raise ValueError("health-evidence-graph-v1: research method identity missing")
+    assessment_required = set(schema["properties"]["evidence_assessment"]["required"])
+    if not {"causal_inference", "uncertainty"}.issubset(assessment_required):
+        raise ValueError("health-evidence-graph-v1: multidimensional evidence assessment incomplete")
 
 
 def validate_link_contract(schema: dict) -> None:
@@ -75,6 +92,7 @@ def main() -> int:
     validate_evidence_contract(loaded["health-evidence-graph-v1.json"])
     validate_link_contract(loaded["health-state-evidence-link-v1.json"])
     print("validated semantic contract invariants: health-state / evidence / directional-link")
+    print("validated paradigm-aware evidence dimensions: knowledge-system / research-method / claim-type / safety / uncertainty / provenance")
     print(f"validated {len(SCHEMAS)} SOMA health contracts")
     return 0
 
