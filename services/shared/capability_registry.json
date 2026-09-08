@@ -13,6 +13,28 @@
       "surfaces": ["web", "future-client-surfaces"]
     },
     {
+      "id": "evidence.cross_paradigm",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["privacy", "safety", "provenance", "uncertainty", "research-integrity"],
+      "adapters": ["research-providers"],
+      "surfaces": ["web", "research-tools", "future-client-surfaces"]
+    },
+    {
+      "id": "research.contribution",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["consent", "privacy", "provenance", "research-integrity", "user-choice"],
+      "adapters": [],
+      "surfaces": ["web", "mobile", "research-tools", "future-client-surfaces"]
+    },
+    {
       "id": "evidence.migration",
       "version": "0.1.0",
       "status": "implemented",
