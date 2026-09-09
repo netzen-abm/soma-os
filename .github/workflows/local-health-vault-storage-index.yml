@@ -1,0 +1,38 @@
+name: SOMA Local Health Vault Storage Index Verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'schemas/local-health-vault-storage-index-v1.json'
+      - 'services/shared/local_health_vault_storage_index_contract_test.py'
+      - 'docs/architecture/local-health-vault-storage-index-v1.md'
+      - '.github/workflows/local-health-vault-storage-index.yml'
+  push:
+    branches: [main, development]
+    paths:
+      - 'schemas/local-health-vault-storage-index-v1.json'
+      - 'services/shared/local_health_vault_storage_index_contract_test.py'
+      - 'docs/architecture/local-health-vault-storage-index-v1.md'
+      - '.github/workflows/local-health-vault-storage-index.yml'
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve exact verification ref
+        id: ref
+        run: echo "ref=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout exact ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+          fetch-depth: 1
+
+      - name: Validate JSON schema syntax
+        run: python -m json.tool schemas/local-health-vault-storage-index-v1.json >/dev/null
+
+      - name: Run storage/index contract tests
+        working-directory: services/shared
+        run: python -m unittest -v local_health_vault_storage_index_contract_test.py
