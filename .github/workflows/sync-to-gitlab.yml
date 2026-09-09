@@ -22,6 +22,7 @@ jobs:
         env:
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
         run: |
+          set -euo pipefail
           test -n "$GITLAB_REPOSITORY" || {
             echo "GITLAB_REPOSITORY secret is not configured (expected owner/repository.git or owner/repository)."
             exit 1
@@ -30,18 +31,34 @@ jobs:
       - name: Push to GitLab mirror
         env:
           GITLAB_TOKEN_USER: ${{ secrets.GITLAB_TOKEN_USER }}
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_SOMA_TOKEN }}
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
         run: |
           set -euo pipefail
 
           test -n "$GITLAB_TOKEN_USER" || { echo "GITLAB_TOKEN_USER secret is not configured."; exit 1; }
-          test -n "$GITLAB_TOKEN" || { echo "GITLAB_TOKEN secret is not configured."; exit 1; }
+          test -n "$GITLAB_TOKEN" || { echo "GITLAB_SOMA_TOKEN secret is not configured."; exit 1; }
 
           repo="${GITLAB_REPOSITORY%.git}"
-          git remote add gitlab "https://${GITLAB_TOKEN_USER}:${GITLAB_TOKEN}@gitlab.com/${repo}.git"
+          git remote add gitlab "https://gitlab.com/${repo}.git"
 
-          # Mirror all branches and tags so GitLab follows GitHub mainline history.
-          # This is intentionally force-updating: GitHub main is the canonical source.
+          # Keep credentials out of the Git remote URL and .git/config.
+          askpass_script="$(mktemp)"
+          trap 'rm -f "$askpass_script"' EXIT
+          chmod 700 "$askpass_script"
+          cat > "$askpass_script" <<'EOF'
+#!/bin/sh
+case "$1" in
+  *Username*) printf '%s\n' "$GITLAB_TOKEN_USER" ;;
+  *Password*) printf '%s\n' "$GITLAB_TOKEN" ;;
+  *) printf '%s\n' "$GITLAB_TOKEN" ;;
+esac
+EOF
+
+          export GIT_ASKPASS="$askpass_script"
+          export GIT_TERMINAL_PROMPT=0
+
+          # GitHub main is the canonical source. Force-updating the destination
+          # keeps the GitLab mirror aligned with the canonical GitHub history.
           git push gitlab --all --force
           git push gitlab --tags --force
