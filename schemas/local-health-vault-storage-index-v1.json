@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/local-health-vault-storage-index-v1.json",
+  "title": "SOMA Local Health Vault Storage Index v1",
+  "description": "Provider-neutral encrypted local storage/index contract for the shared SOMA Local Health Vault. The index contains metadata and references only; protected health plaintext remains inside encrypted vault records.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "subject_ref", "entity_type", "schema_version", "classification", "key_ref", "provenance_ref", "record_state", "created_at", "updated_at"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "entity_type": {"type": "string", "minLength": 1},
+    "schema_version": {"type": "string", "minLength": 1},
+    "classification": {"const": "sensitive_personal_health"},
+    "content_type": {"type": "string", "minLength": 1},
+    "key_ref": {"type": "string", "minLength": 1},
+    "provenance_ref": {"type": "string", "minLength": 1},
+    "record_state": {"enum": ["ACTIVE", "TOMBSTONED"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "tombstoned_at": {"type": "string", "format": "date-time"}
+  }
+}
