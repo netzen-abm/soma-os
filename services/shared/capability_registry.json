@@ -35,6 +35,61 @@
       "surfaces": ["web", "mobile", "research-tools", "future-client-surfaces"]
     },
     {
+      "id": "media.health_discovery",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["privacy", "safety", "provenance", "user-choice", "content-access", "uncertainty", "research-integrity"],
+      "adapters": ["youtube", "vimeo", "peertube", "podcast-rss", "x", "facebook", "rumble", "odysee", "bitchute", "brighteon", "institutional-media", "research-media"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
+      "id": "media.health_stream",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["privacy", "safety", "provenance", "user-choice", "content-access"],
+      "adapters": ["source-native-player", "embed"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
+      "id": "media.health_transcript",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["privacy", "safety", "provenance", "user-choice", "content-access"],
+      "adapters": ["source-transcript", "permitted-transcription"],
+      "surfaces": ["web", "mobile", "future-client-surfaces"]
+    },
+    {
+      "id": "media.health_claim_extraction",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["privacy", "safety", "provenance", "uncertainty", "research-integrity"],
+      "adapters": ["ai-provider"],
+      "surfaces": ["web", "mobile", "research-tools", "future-client-surfaces"]
+    },
+    {
+      "id": "media.health_evidence_linking",
+      "version": "0.1.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": ["agent"],
+      "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": false},
+      "policy": ["privacy", "safety", "provenance", "uncertainty", "research-integrity"],
+      "adapters": ["evidence.research", "evidence.cross_paradigm"],
+      "surfaces": ["web", "mobile", "research-tools", "future-client-surfaces"]
+    },
+    {
       "id": "evidence.migration",
       "version": "0.1.0",
       "status": "implemented",
