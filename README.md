@@ -188,5 +188,6 @@ See `docs/SOMA-OS-PROJECT-MEMORY.md` for the consolidated project history and
 
 ## License
 
-License and contribution terms will be finalized as the repository
-stabilizes.
+SOMA-OS is licensed under the **Apache License 2.0**.
+
+See the [`LICENSE`](LICENSE) file for the complete license terms.
