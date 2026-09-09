@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/local-health-vault-key-lifecycle-v1.json",
+  "title": "SOMA Local Health Vault Key Lifecycle v1",
+  "description": "Provider-neutral metadata contract for vault encryption keys. Key material is never represented by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["key_ref", "schema_version", "key_domain", "state", "algorithm", "key_length_bits", "subject_scope", "protection_class", "created_at", "updated_at"],
+  "properties": {
+    "key_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "schema_version": {"const": "1.0.0"},
+    "key_domain": {"const": "local_health_vault"},
+    "state": {"enum": ["PROVISIONED", "ACTIVE", "RETIRING", "RETIRED", "SUSPENDED", "COMPROMISED"]},
+    "algorithm": {"const": "AES-256-GCM"},
+    "key_length_bits": {"const": 256},
+    "subject_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_ref", "data_domain"],
+      "properties": {
+        "subject_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+        "data_domain": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "protection_class": {"enum": ["HARDWARE_BACKED", "PLATFORM_KEYSTORE", "SOFTWARE_PROTECTED"]},
+    "parent_key_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "retire_at": {"type": "string", "format": "date-time"},
+    "compromise_reason": {"type": "string", "minLength": 1, "maxLength": 1024}
+  }
+}
