@@ -84,18 +84,9 @@ impl LocalHealthVaultCrypto {
         if key.len() != KEY_LEN {
             return Err(VaultError::InvalidKeyLength);
         }
-        if [
-            record_id,
-            subject_ref,
-            entity_type,
-            content_type,
-            key_ref,
-            provenance_ref,
-            created_at,
-            updated_at,
-        ]
-        .iter()
-        .any(|value| value.is_empty())
+        if [record_id, subject_ref, entity_type, content_type, key_ref, provenance_ref, created_at, updated_at]
+            .iter()
+            .any(|value| value.is_empty())
         {
             return Err(VaultError::InvalidMetadata);
         }
@@ -115,22 +106,16 @@ impl LocalHealthVaultCrypto {
         };
         let aad = serde_json::to_vec(&metadata).map_err(|_| VaultError::InvalidMetadata)?;
 
-        let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key)
-            .map_err(|_| VaultError::InvalidKeyLength)?;
+        let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| VaultError::InvalidKeyLength)?;
         let sealing_key = aead::LessSafeKey::new(unbound);
         let rng = SystemRandom::new();
         let mut nonce_bytes = [0u8; NONCE_LEN];
-        rng.fill(&mut nonce_bytes)
-            .map_err(|_| VaultError::NonceGenerationFailed)?;
+        rng.fill(&mut nonce_bytes).map_err(|_| VaultError::NonceGenerationFailed)?;
         let nonce = aead::Nonce::assume_unique_for_key(nonce_bytes);
 
         let mut ciphertext = plaintext.to_vec();
         sealing_key
-            .seal_in_place_append_tag(
-                nonce,
-                aead::Aad::from(aad.as_slice()),
-                &mut ciphertext,
-            )
+            .seal_in_place_append_tag(nonce, aead::Aad::from(aad.as_slice()), &mut ciphertext)
             .map_err(|_| VaultError::EncryptionFailed)?;
 
         Ok(LocalHealthVaultRecord {
@@ -154,10 +139,7 @@ impl LocalHealthVaultCrypto {
 
     /// Authenticate metadata and decrypt a record. Any metadata alteration is
     /// treated as tampering because the metadata is authenticated as AAD.
-    pub fn decrypt_record(
-        key: &[u8],
-        record: &LocalHealthVaultRecord,
-    ) -> Result<Vec<u8>, VaultError> {
+    pub fn decrypt_record(key: &[u8], record: &LocalHealthVaultRecord) -> Result<Vec<u8>, VaultError> {
         if key.len() != KEY_LEN
             || record.schema_version != SCHEMA_VERSION
             || record.classification != CLASSIFICATION
@@ -168,17 +150,12 @@ impl LocalHealthVaultCrypto {
             return Err(VaultError::InvalidEnvelope);
         }
 
-        let nonce_vec = BASE64
-            .decode(&record.nonce)
-            .map_err(|_| VaultError::InvalidEnvelope)?;
+        let nonce_vec = BASE64.decode(&record.nonce).map_err(|_| VaultError::InvalidEnvelope)?;
         if nonce_vec.len() != NONCE_LEN {
             return Err(VaultError::InvalidEnvelope);
         }
-        let nonce = aead::Nonce::try_assume_unique_for_key(&nonce_vec)
-            .map_err(|_| VaultError::InvalidEnvelope)?;
-        let mut ciphertext = BASE64
-            .decode(&record.ciphertext)
-            .map_err(|_| VaultError::InvalidEnvelope)?;
+        let nonce = aead::Nonce::try_assume_unique_for_key(&nonce_vec).map_err(|_| VaultError::InvalidEnvelope)?;
+        let mut ciphertext = BASE64.decode(&record.ciphertext).map_err(|_| VaultError::InvalidEnvelope)?;
         let metadata = AuthenticatedMetadata {
             record_id: &record.record_id,
             subject_ref: &record.subject_ref,
@@ -193,8 +170,7 @@ impl LocalHealthVaultCrypto {
             tombstone: record.tombstone,
         };
         let aad = serde_json::to_vec(&metadata).map_err(|_| VaultError::InvalidEnvelope)?;
-        let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key)
-            .map_err(|_| VaultError::InvalidKeyLength)?;
+        let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| VaultError::InvalidKeyLength)?;
         let opening_key = aead::LessSafeKey::new(unbound);
         let plaintext = opening_key
             .open_in_place(nonce, aead::Aad::from(aad.as_slice()), &mut ciphertext)
@@ -230,20 +206,14 @@ mod tests {
     fn round_trip_preserves_plaintext() {
         let record = sample();
         let plaintext = LocalHealthVaultCrypto::decrypt_record(&KEY, &record).unwrap();
-        assert_eq!(
-            plaintext,
-            br#"{"concept":"heart_rate","value":60,"unit":"bpm"}"#
-        );
+        assert_eq!(plaintext, br#"{"concept":"heart_rate","value":60,"unit":"bpm"}"#);
         assert!(!record.ciphertext.contains("heart_rate"));
     }
 
     #[test]
     fn wrong_key_fails_closed() {
         let record = sample();
-        assert_eq!(
-            LocalHealthVaultCrypto::decrypt_record(&WRONG_KEY, &record),
-            Err(VaultError::AuthenticationFailed)
-        );
+        assert_eq!(LocalHealthVaultCrypto::decrypt_record(&WRONG_KEY, &record), Err(VaultError::AuthenticationFailed));
     }
 
     #[test]
@@ -252,20 +222,14 @@ mod tests {
         let mut bytes = BASE64.decode(&record.ciphertext).unwrap();
         bytes[0] ^= 1;
         record.ciphertext = BASE64.encode(bytes);
-        assert_eq!(
-            LocalHealthVaultCrypto::decrypt_record(&KEY, &record),
-            Err(VaultError::AuthenticationFailed)
-        );
+        assert_eq!(LocalHealthVaultCrypto::decrypt_record(&KEY, &record), Err(VaultError::AuthenticationFailed));
     }
 
     #[test]
     fn metadata_tampering_fails() {
         let mut record = sample();
         record.subject_ref = "person-2".to_string();
-        assert_eq!(
-            LocalHealthVaultCrypto::decrypt_record(&KEY, &record),
-            Err(VaultError::AuthenticationFailed)
-        );
+        assert_eq!(LocalHealthVaultCrypto::decrypt_record(&KEY, &record), Err(VaultError::AuthenticationFailed));
     }
 
     #[test]
