@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/local-health-vault-record-v1.json",
+  "title": "SOMA Local Health Vault Record v1",
+  "description": "Provider-neutral encrypted-at-rest record envelope for the shared SOMA ecosystem. Plaintext health content is not part of the persisted envelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "subject_ref",
+    "entity_type",
+    "schema_version",
+    "classification",
+    "content_type",
+    "ciphertext",
+    "nonce",
+    "key_ref",
+    "encryption_algorithm",
+    "integrity_algorithm",
+    "provenance_ref",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "entity_type": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "classification": {"const": "sensitive_personal_health"},
+    "content_type": {"type": "string", "minLength": 1},
+    "ciphertext": {"type": "string", "contentEncoding": "base64", "minLength": 1},
+    "nonce": {"type": "string", "contentEncoding": "base64", "minLength": 1},
+    "key_ref": {"type": "string", "minLength": 1},
+    "encryption_algorithm": {"const": "AES-256-GCM"},
+    "integrity_algorithm": {"const": "AES-256-GCM-AEAD"},
+    "provenance_ref": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "tombstone": {"type": "boolean", "default": false}
+  }
+}

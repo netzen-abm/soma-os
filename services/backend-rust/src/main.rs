@@ -18,6 +18,7 @@ mod db_layer;
 mod device_sync;
 mod key_restoration;
 mod legacy_promotion_preflight;
+mod local_health_vault;
 mod messenger_webhook;
 mod meta_outbound;
 mod mnemonic_validator;
