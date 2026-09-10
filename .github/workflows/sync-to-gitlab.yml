@@ -9,9 +9,12 @@ on:
 permissions:
   contents: read
 
+env:
+  GITLAB_MIRROR_BRANCH: main
+
 jobs:
   sync:
-    name: Push main and tags to GitLab
+    name: Push and verify GitLab mirror
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -53,7 +56,7 @@ jobs:
           EOF
           chmod 600 "$HOME/.ssh/config"
 
-      - name: Push to GitLab mirror
+      - name: Push canonical main and tags to GitLab
         env:
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
         run: |
@@ -62,7 +65,34 @@ jobs:
           repo="${GITLAB_REPOSITORY%.git}"
           git remote add gitlab "git@gitlab.com:${repo}.git"
 
-          # GitHub main is the canonical source. Force-updating the destination
-          # keeps the GitLab mirror aligned with the canonical GitHub history.
-          git push gitlab --all --force
+          # GitHub main is the canonical source. Push the exact checked-out
+          # commit explicitly to the GitLab main branch; do not depend on
+          # checkout-created local branch refs.
+          git push gitlab "HEAD:refs/heads/${GITLAB_MIRROR_BRANCH}" --force
+
+          # Tags are mirrored as immutable names from the canonical repository.
           git push gitlab --tags --force
+
+      - name: Verify GitLab main matches GitHub canonical commit
+        env:
+          GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
+          GITHUB_CANONICAL_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          repo="${GITLAB_REPOSITORY%.git}"
+          gitlab_main_sha="$(git ls-remote "git@gitlab.com:${repo}.git" "refs/heads/${GITLAB_MIRROR_BRANCH}" | awk 'NR == 1 { print $1 }')"
+
+          test -n "$gitlab_main_sha" || {
+            echo "GitLab mirror verification failed: main ref was not returned."
+            exit 1
+          }
+
+          if [ "$gitlab_main_sha" != "$GITHUB_CANONICAL_SHA" ]; then
+            echo "GitLab mirror verification failed: SHA mismatch."
+            echo "GitHub canonical: $GITHUB_CANONICAL_SHA"
+            echo "GitLab main:     $gitlab_main_sha"
+            exit 1
+          fi
+
+          echo "GitLab main verified at $gitlab_main_sha"
