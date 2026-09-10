@@ -1,0 +1,25 @@
+name: Temporary Rust Format Artifact
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  format-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.98.1
+          components: rustfmt
+      - name: Format Rust workspace
+        run: cargo fmt --manifest-path services/backend-rust/Cargo.toml --all
+      - name: Upload formatted storage implementation
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-local-health-vault-storage
+          path: services/backend-rust/src/local_health_vault_storage.rs
