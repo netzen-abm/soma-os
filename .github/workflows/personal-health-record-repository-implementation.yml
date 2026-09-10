@@ -1,0 +1,43 @@
+name: SOMA Personal Health Record Repository Implementation
+
+on:
+  pull_request:
+    paths:
+      - "services/backend-rust/src/personal_health_record_repository.rs"
+      - "services/backend-rust/src/local_health_vault_storage.rs"
+      - "services/backend-rust/src/local_health_vault.rs"
+      - ".github/workflows/personal-health-record-repository-implementation.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "services/backend-rust/src/personal_health_record_repository.rs"
+      - "services/backend-rust/src/local_health_vault_storage.rs"
+      - "services/backend-rust/src/local_health_vault.rs"
+      - ".github/workflows/personal-health-record-repository-implementation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  repository:
+    name: Validate PHR repository implementation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/backend-rust
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+
+      - name: Rust format
+        run: cargo fmt --all -- --check
+
+      - name: Rust compile
+        run: cargo check --all-targets
+
+      - name: Rust repository tests
+        run: cargo test personal_health_record_repository --lib -- --nocapture
+
+      - name: Rust lint
+        run: cargo clippy --all-targets -- -D warnings
