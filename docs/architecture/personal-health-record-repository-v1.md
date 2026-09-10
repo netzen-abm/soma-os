@@ -31,7 +31,7 @@ The repository owns retrieval, indexing, querying, and lifecycle coordination. T
 
 `Health State` and other canonical health entities remain the domain model. The existing Personal Health Profile remains a user-controlled index/view that references canonical records. The repository must therefore store references and repository metadata rather than copying clinical payloads into an independent PHR model.
 
-The current Health State contract explicitly defines itself as a canonical longitudinal health-state entity and not as diagnosis or clinical truth. fileciteturn611file0L2-L2 The Personal Health Profile likewise describes itself as a local-first index/view that references canonical SOMA entities rather than replacing the canonical model. fileciteturn609file0L2-L2
+The Health State contract is a canonical longitudinal health-state entity, not a diagnosis or declaration of clinical truth. The Personal Health Profile is a local-first index/view that references canonical SOMA entities rather than replacing the canonical model.
 
 ## Required repository operations
 
