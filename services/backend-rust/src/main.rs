@@ -67,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = PgPoolOptions::new().max_connections(5).connect(&db_url).await?;
     let db_manager = SomaDatabaseManager::new(pool);
 
-    let outbound_runner = MetaOutboundRunner::new(&wa_token, &wa_phone_id, &fb_token);
+    let outbound_runner = MetaOutboundRunner::new(outbound_runner);
     let orchestrator = FermentationOrchestrator::new(outbound_runner);
     let menu_controller = MultiChannelMenuController::new(orchestrator);
 
@@ -79,25 +79,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Convert the stateless webhook router into a router whose missing state is AppState.
     let app = whatsapp_webhook::routes()
         .merge(messenger_webhook::routes())
-        .with_state(shared_state.clone())
-        .route("/health", get(|| async { StatusCode::OK }))
-        .route("/webhook/unified", post(unified_channel_handler));
+        .with_state(())
+        .route("/api/health", get(system_health_check))
+        .route("/api/v1/webhook/unified", post(process_unified_bot_webhook))
+        .with_state(shared_state);
 
-    let listener = TcpListener::bind("0.0.0.0:8080").await?;
+    let bind_address = env::var("SOMA_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let listener = TcpListener::bind(&bind_address).await?;
+
+    println!("SomaOS backend listening on {bind_address}");
     axum::serve(listener, app).await?;
     Ok(())
 }
 
-async fn unified_channel_handler(
-    State(state): State<Arc<AppState>>,
-    Json(message): Json<UnifiedChannelMessage>,
-) -> StatusCode {
-    let mut controller = state.menu_controller.lock().await;
-    controller.handle_message(&message.sender_id, &message.text_payload);
-    StatusCode::OK
+async fn system_health_check() -> (StatusCode, &'static str) {
+    (StatusCode::OK, "SomaOS Backend Operational")
 }
 
-#[allow(dead_code)]
-fn _keep_compliance_shield_linked() {
-    let _ = SovereignComplianceShield::new();
+async fn process_unified_bot_webhook(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<UnifiedChannelMessage>,
+) -> (StatusCode, String) {
+    let mut controller = state.menu_controller.lock().await;
+    let raw_response = controller.evaluate_channel_input(&payload.sender_id, &payload.text_payload).await;
+
+    let evaluation = SovereignComplianceShield::enforce_regulatory_compliance_checks(&raw_response);
+
+    if !evaluation.is_permissible_for_delivery {
+        eprintln!("Outbound message blocked by compliance shield: {:?}", evaluation.security_compliance_flags);
+        return (StatusCode::UNPROCESSABLE_ENTITY, "Response blocked by the SOMA-OS compliance policy.".to_string());
+    }
+
+    (StatusCode::OK, format!("{}{}", raw_response, evaluation.appended_regulatory_disclaimer))
 }
