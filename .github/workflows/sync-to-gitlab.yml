@@ -1,18 +1,17 @@
 name: Sync to GitLab
 
 # GitLab is a release/final-repository mirror, not a development mirror.
-# Only a pull request that is actually merged into canonical GitHub main can
-# trigger this workflow. Feature branches, draft work, open PRs, and direct
-# pushes to main are never mirrored by this workflow.
+# The workflow runs on changes to canonical GitHub main, but promotion is
+# fail-closed unless the exact commit was introduced by a merged PR to main.
+# Feature branches, draft/open PRs, and direct commits to main are never sent.
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   GITLAB_MIRROR_BRANCH: main
@@ -24,40 +23,38 @@ concurrency:
 jobs:
   sync:
     name: Push and verify final GitLab mirror
-    if: ${{ github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact merged main commit
+      - name: Checkout exact canonical main commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Validate promotion provenance
+      - name: Validate merged-PR promotion provenance
         env:
-          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          PR_MERGED: ${{ github.event.pull_request.merged }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
-          test "$BASE_REF" = "main" || {
-            echo "GitLab mirror promotion denied: PR base is not main."
+          prs="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+            --jq '[.[] | select(.base.ref == "main" and .merged_at != null)]')"
+
+          count="$(printf '%s' "$prs" | jq 'length')"
+          test "$count" -ge 1 || {
+            echo "GitLab mirror promotion denied: canonical commit is not associated with a merged PR into main."
+            echo "GitHub main commit: $GITHUB_SHA"
             exit 1
           }
 
-          test "$PR_MERGED" = "true" || {
-            echo "GitLab mirror promotion denied: PR was not merged."
-            exit 1
-          }
-
-          test -n "$MERGE_COMMIT_SHA" || {
-            echo "GitLab mirror promotion denied: merged commit SHA is missing."
-            exit 1
-          }
-
-          echo "Approved promotion source: merged PR #${{ github.event.pull_request.number }}"
-          echo "Canonical main commit: $MERGE_COMMIT_SHA"
+          echo "Approved GitLab promotion source: merged PR into main."
+          printf '%s\n' "$prs" | jq -r '.[] | "PR #\(.number): \(.title) — merged \(.merged_at)"'
+          echo "Canonical main commit: $GITHUB_SHA"
 
       - name: Validate GitLab repository configuration
         env:
@@ -96,25 +93,24 @@ jobs:
       - name: Push final main and tags to GitLab
         env:
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
-          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
           repo="${GITLAB_REPOSITORY%.git}"
           git remote add gitlab "git@gitlab.com:${repo}.git"
 
-          # GitHub main is canonical. Promote only the exact commit produced by
-          # the merged PR; never push feature/open/draft branch refs.
-          git push gitlab "${MERGE_COMMIT_SHA}:refs/heads/${GITLAB_MIRROR_BRANCH}" --force
+          # GitHub main is canonical. Promote only the exact, merged-PR commit.
+          # Never push feature/open/draft branch refs.
+          git push gitlab "${GITHUB_SHA}:refs/heads/${GITLAB_MIRROR_BRANCH}" --force
 
-          # Mirror tag creation, movement, and deletion from the canonical
-          # repository state. No branch refs other than main are sent.
+          # Mirror tag creation, movement, and deletion from the canonical repo.
           git push gitlab --prune --force 'refs/tags/*:refs/tags/*'
 
       - name: Verify GitLab main matches promoted canonical commit
         env:
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
-          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
@@ -126,10 +122,10 @@ jobs:
             exit 1
           }
 
-          if [ "$gitlab_main_sha" != "$MERGE_COMMIT_SHA" ]; then
+          if [ "$gitlab_main_sha" != "$GITHUB_SHA" ]; then
             echo "GitLab mirror verification failed: SHA mismatch."
-            echo "Promoted canonical: $MERGE_COMMIT_SHA"
-            echo "GitLab main:       $gitlab_main_sha"
+            echo "GitHub canonical: $GITHUB_SHA"
+            echo "GitLab main:     $gitlab_main_sha"
             exit 1
           fi
 
