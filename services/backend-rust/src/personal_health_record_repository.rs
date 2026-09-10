@@ -83,9 +83,7 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self {
-            vault,
-        }
+        Self { vault }
     }
 }
 
@@ -95,8 +93,6 @@ where
     A: VaultAuthorizer,
 {
     fn put_reference(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError> {
-        // Registration never copies the payload. The active authorized index reference is
-        // required first, then the vault verifies the underlying ciphertext integrity.
         let entries = self.list(context)?;
         if !entries.iter().any(|entry| entry.record_id == record_id) {
             return Err(RepositoryError::NotFound);
@@ -150,8 +146,6 @@ where
     }
 
     fn rebuild_index(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
-        // The Local Health Vault is authoritative. Rebuild is therefore a derived
-        // projection operation, not a new source of truth or a payload migration.
         self.list(context)
     }
 }
@@ -160,6 +154,7 @@ where
 mod tests {
     use super::*;
     use crate::local_health_vault::LocalHealthVaultCrypto;
+    use sha2::{Digest, Sha256};
     use std::{
         cell::Cell,
         collections::HashMap,
@@ -325,7 +320,9 @@ mod tests {
             .vault
             .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
             .unwrap();
-        let bundle_path = repository.vault.path_for("person-1", "person-1-record-1");
+        let subject_hash = hex::encode(Sha256::digest(context.subject_ref.as_bytes()));
+        let record_hash = hex::encode(Sha256::digest(b"person-1-record-1"));
+        let bundle_path = root.join(subject_hash).join(format!("{record_hash}.bundle"));
         let bytes = fs::read(bundle_path).unwrap();
         let persisted = String::from_utf8_lossy(&bytes);
         assert!(!persisted.contains("heart_rate"));
