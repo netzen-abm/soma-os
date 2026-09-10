@@ -95,8 +95,12 @@ where
     A: VaultAuthorizer,
 {
     fn put_reference(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError> {
-        // Registration never copies the payload. Verification proves that the reference
-        // resolves to an authorized, intact canonical vault record.
+        // Registration never copies the payload. The active authorized index reference is
+        // required first, then the vault verifies the underlying ciphertext integrity.
+        let entries = self.list(context)?;
+        if !entries.iter().any(|entry| entry.record_id == record_id) {
+            return Err(RepositoryError::NotFound);
+        }
         self.vault.verify(record_id, context).map_err(Into::into)
     }
 
@@ -105,7 +109,12 @@ where
     }
 
     fn list(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
-        self.vault.list(context).map_err(Into::into)
+        self.vault.list(context).map(|entries| {
+            entries
+                .into_iter()
+                .filter(|entry| entry.record_state == "ACTIVE")
+                .collect()
+        }).map_err(Into::into)
     }
 
     fn query(
@@ -272,6 +281,66 @@ mod tests {
         calls.set(0);
         assert_eq!(repository.put_reference("person-1-record-1", &other), Err(RepositoryError::AuthorizationDenied));
         assert_eq!(calls.get(), 0);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn tombstoned_records_are_not_visible_or_registrable() {
+        let root = root();
+        let (repository, _) = repository(&root);
+        let context = AuthorizationContext {
+            subject_ref: "person-1".into(),
+            scope: "self".into(),
+        };
+        repository
+            .vault
+            .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
+            .unwrap();
+        repository.tombstone("person-1-record-1", &context).unwrap();
+        assert!(repository.list(&context).unwrap().is_empty());
+        assert_eq!(
+            repository.put_reference("person-1-record-1", &context),
+            Err(RepositoryError::NotFound)
+        );
+        assert_eq!(
+            repository.get("person-1-record-1", &context),
+            Err(RepositoryError::Tombstoned)
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn missing_reference_fails_closed() {
+        let root = root();
+        let (repository, _) = repository(&root);
+        let context = AuthorizationContext {
+            subject_ref: "person-1".into(),
+            scope: "self".into(),
+        };
+        assert_eq!(
+            repository.put_reference("person-1-missing", &context),
+            Err(RepositoryError::NotFound)
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn encrypted_bundle_does_not_persist_plaintext_payload() {
+        let root = root();
+        let (repository, _) = repository(&root);
+        let context = AuthorizationContext {
+            subject_ref: "person-1".into(),
+            scope: "self".into(),
+        };
+        repository
+            .vault
+            .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
+            .unwrap();
+        let bundle_path = repository.vault.path_for("person-1", "person-1-record-1");
+        let bytes = fs::read(bundle_path).unwrap();
+        let persisted = String::from_utf8_lossy(&bytes);
+        assert!(!persisted.contains("heart_rate"));
+        assert!(!persisted.contains("\"value\":60"));
         fs::remove_dir_all(root).unwrap();
     }
 
