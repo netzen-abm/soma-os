@@ -1,9 +1,11 @@
 name: Temporary Rustfmt Artifact
 
 on:
-  push:
-    branches:
-      - security/implement-personal-health-record-repository-v1
+  pull_request:
+    paths:
+      - "services/backend-rust/src/personal_health_record_repository.rs"
+      - "services/backend-rust/src/main.rs"
+      - ".github/workflows/_temporary_rustfmt_artifact.yml"
 
 permissions:
   contents: read
