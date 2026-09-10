@@ -109,12 +109,10 @@ where
     }
 
     fn list(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
-        self.vault.list(context).map(|entries| {
-            entries
-                .into_iter()
-                .filter(|entry| entry.record_state == "ACTIVE")
-                .collect()
-        }).map_err(Into::into)
+        self.vault
+            .list(context)
+            .map(|entries| entries.into_iter().filter(|entry| entry.record_state == "ACTIVE").collect())
+            .map_err(Into::into)
     }
 
     fn query(
@@ -298,14 +296,8 @@ mod tests {
             .unwrap();
         repository.tombstone("person-1-record-1", &context).unwrap();
         assert!(repository.list(&context).unwrap().is_empty());
-        assert_eq!(
-            repository.put_reference("person-1-record-1", &context),
-            Err(RepositoryError::NotFound)
-        );
-        assert_eq!(
-            repository.get("person-1-record-1", &context),
-            Err(RepositoryError::Tombstoned)
-        );
+        assert_eq!(repository.put_reference("person-1-record-1", &context), Err(RepositoryError::NotFound));
+        assert!(matches!(repository.get("person-1-record-1", &context), Err(RepositoryError::Tombstoned)));
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -317,10 +309,7 @@ mod tests {
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
-        assert_eq!(
-            repository.put_reference("person-1-missing", &context),
-            Err(RepositoryError::NotFound)
-        );
+        assert_eq!(repository.put_reference("person-1-missing", &context), Err(RepositoryError::NotFound));
         fs::remove_dir_all(root).unwrap();
     }
 
