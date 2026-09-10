@@ -1,0 +1,49 @@
+name: SOMA Personal Health Record Repository Contract
+
+on:
+  pull_request:
+    paths:
+      - "schemas/personal-health-record-repository-v1.json"
+      - "schemas/personal-health-profile-v1.json"
+      - "schemas/health-state-v1.json"
+      - "services/shared/personal_health_record_repository_contract_test.py"
+      - "docs/architecture/personal-health-record-repository-v1.md"
+      - ".github/workflows/personal-health-record-repository.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "schemas/personal-health-record-repository-v1.json"
+      - "schemas/personal-health-profile-v1.json"
+      - "schemas/health-state-v1.json"
+      - "services/shared/personal_health_record_repository_contract_test.py"
+      - "docs/architecture/personal-health-record-repository-v1.md"
+      - ".github/workflows/personal-health-record-repository.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Validate PHR repository contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+
+      - name: Validate JSON schemas
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for path in [
+              Path("schemas/personal-health-record-repository-v1.json"),
+              Path("schemas/personal-health-profile-v1.json"),
+              Path("schemas/health-state-v1.json"),
+          ]:
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"valid JSON: {path}")
+          PY
+
+      - name: Run repository contract tests
+        run: python -m unittest services/shared/personal_health_record_repository_contract_test.py -v
