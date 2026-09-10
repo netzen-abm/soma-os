@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::local_health_vault::LocalHealthVaultRecord;
 use crate::local_health_vault_storage::{
-    AuthorizationContext, AuthorizedIndexEntry, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer,
+    AuthorizationContext, AuthorizedIndexEntry, LocalFileVaultStore, StorageError, VaultAuthorizer,
     VaultKeyProvider,
 };
 
@@ -83,9 +83,7 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self {
-            vault,
-        }
+        Self { vault }
     }
 }
 
@@ -156,6 +154,7 @@ where
 mod tests {
     use super::*;
     use crate::local_health_vault::LocalHealthVaultCrypto;
+    use crate::local_health_vault_storage::VaultAction;
     use sha2::{Digest, Sha256};
     use std::{
         cell::Cell,
