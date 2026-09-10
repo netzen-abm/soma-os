@@ -70,8 +70,8 @@ jobs:
           # checkout-created local branch refs.
           git push gitlab "HEAD:refs/heads/${GITLAB_MIRROR_BRANCH}" --force
 
-          # Tags are mirrored as immutable names from the canonical repository.
-          git push gitlab --tags --force
+          # Mirror tag creation, movement, and deletion from the canonical repo.
+          git push gitlab --prune --force 'refs/tags/*:refs/tags/*'
 
       - name: Verify GitLab main matches GitHub canonical commit
         env:
