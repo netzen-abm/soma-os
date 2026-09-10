@@ -45,12 +45,12 @@ jobs:
           ssh-keyscan -H gitlab.com >> "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
           cat > "$HOME/.ssh/config" <<'EOF'
-Host gitlab.com
-  HostName gitlab.com
-  User git
-  IdentityFile ~/.ssh/id_ed25519_gitlab_mirror
-  IdentitiesOnly yes
-EOF
+          Host gitlab.com
+            HostName gitlab.com
+            User git
+            IdentityFile ~/.ssh/id_ed25519_gitlab_mirror
+            IdentitiesOnly yes
+          EOF
           chmod 600 "$HOME/.ssh/config"
 
       - name: Push to GitLab mirror
