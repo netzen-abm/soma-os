@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/personal-health-record-repository-v1.json",
+  "title": "SOMA Personal Health Record Repository v1",
+  "description": "Provider-neutral repository contract for a local-first personal health record. The repository indexes canonical health entities stored in the governed Local Health Vault; it is not a second canonical health data model.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "subject_ref", "schema_version", "repository_kind", "vault_record_refs", "provenance"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "repository_kind": {"const": "local_vault_index"},
+    "vault_record_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "profile_ref": {"type": "string", "minLength": 1},
+    "emergency_profile_ref": {"type": "string", "minLength": 1},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "method"],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "transformation_history": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}
