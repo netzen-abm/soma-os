@@ -1,10 +1,15 @@
 name: Sync to GitLab
 
+# GitLab is a release/final-repository mirror, not a development mirror.
+# Only a pull request that is actually merged into canonical GitHub main can
+# trigger this workflow. Feature branches, draft work, open PRs, and direct
+# pushes to main are never mirrored by this workflow.
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,15 +17,47 @@ permissions:
 env:
   GITLAB_MIRROR_BRANCH: main
 
+concurrency:
+  group: gitlab-main-mirror
+  cancel-in-progress: false
+
 jobs:
   sync:
-    name: Push and verify GitLab mirror
+    name: Push and verify final GitLab mirror
+    if: ${{ github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout exact merged main commit
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
+
+      - name: Validate promotion provenance
+        env:
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          set -euo pipefail
+
+          test "$BASE_REF" = "main" || {
+            echo "GitLab mirror promotion denied: PR base is not main."
+            exit 1
+          }
+
+          test "$PR_MERGED" = "true" || {
+            echo "GitLab mirror promotion denied: PR was not merged."
+            exit 1
+          }
+
+          test -n "$MERGE_COMMIT_SHA" || {
+            echo "GitLab mirror promotion denied: merged commit SHA is missing."
+            exit 1
+          }
+
+          echo "Approved promotion source: merged PR #${{ github.event.pull_request.number }}"
+          echo "Canonical main commit: $MERGE_COMMIT_SHA"
 
       - name: Validate GitLab repository configuration
         env:
@@ -56,27 +93,28 @@ jobs:
           EOF
           chmod 600 "$HOME/.ssh/config"
 
-      - name: Push canonical main and tags to GitLab
+      - name: Push final main and tags to GitLab
         env:
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           set -euo pipefail
 
           repo="${GITLAB_REPOSITORY%.git}"
           git remote add gitlab "git@gitlab.com:${repo}.git"
 
-          # GitHub main is the canonical source. Push the exact checked-out
-          # commit explicitly to the GitLab main branch; do not depend on
-          # checkout-created local branch refs.
-          git push gitlab "HEAD:refs/heads/${GITLAB_MIRROR_BRANCH}" --force
+          # GitHub main is canonical. Promote only the exact commit produced by
+          # the merged PR; never push feature/open/draft branch refs.
+          git push gitlab "${MERGE_COMMIT_SHA}:refs/heads/${GITLAB_MIRROR_BRANCH}" --force
 
-          # Mirror tag creation, movement, and deletion from the canonical repo.
+          # Mirror tag creation, movement, and deletion from the canonical
+          # repository state. No branch refs other than main are sent.
           git push gitlab --prune --force 'refs/tags/*:refs/tags/*'
 
-      - name: Verify GitLab main matches GitHub canonical commit
+      - name: Verify GitLab main matches promoted canonical commit
         env:
           GITLAB_REPOSITORY: ${{ secrets.GITLAB_REPOSITORY }}
-          GITHUB_CANONICAL_SHA: ${{ github.sha }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           set -euo pipefail
 
@@ -88,10 +126,10 @@ jobs:
             exit 1
           }
 
-          if [ "$gitlab_main_sha" != "$GITHUB_CANONICAL_SHA" ]; then
+          if [ "$gitlab_main_sha" != "$MERGE_COMMIT_SHA" ]; then
             echo "GitLab mirror verification failed: SHA mismatch."
-            echo "GitHub canonical: $GITHUB_CANONICAL_SHA"
-            echo "GitLab main:     $gitlab_main_sha"
+            echo "Promoted canonical: $MERGE_COMMIT_SHA"
+            echo "GitLab main:       $gitlab_main_sha"
             exit 1
           fi
 
