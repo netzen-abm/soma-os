@@ -23,12 +23,7 @@ pub trait VaultKeyProvider {
 }
 
 pub trait VaultAuthorizer {
-    fn authorize(
-        &self,
-        context: &AuthorizationContext,
-        record_id: &str,
-        action: VaultAction,
-    ) -> bool;
+    fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,11 +121,7 @@ where
     K: VaultKeyProvider,
     A: VaultAuthorizer,
 {
-    pub fn new(
-        root: impl AsRef<Path>,
-        key_provider: K,
-        authorizer: A,
-    ) -> Result<Self, StorageError> {
+    pub fn new(root: impl AsRef<Path>, key_provider: K, authorizer: A) -> Result<Self, StorageError> {
         fs::create_dir_all(root.as_ref()).map_err(|_| StorageError::Io)?;
         Ok(Self {
             root: root.as_ref().to_path_buf(),
@@ -139,26 +130,16 @@ where
         })
     }
 
-    pub fn put(
-        &self,
-        record: LocalHealthVaultRecord,
-        context: &AuthorizationContext,
-    ) -> Result<(), StorageError> {
-        if !self
-            .authorizer
-            .authorize(context, &record.record_id, VaultAction::Write)
+    pub fn put(&self, record: LocalHealthVaultRecord, context: &AuthorizationContext) -> Result<(), StorageError> {
+        if !self.authorizer.authorize(context, &record.record_id, VaultAction::Write)
             || context.subject_ref != record.subject_ref
             || record.tombstone
         {
             return Err(StorageError::AuthorizationDenied);
         }
 
-        let key = self
-            .key_provider
-            .key_for(&record.key_ref)
-            .map_err(|_| StorageError::KeyResolutionFailed)?;
-        LocalHealthVaultCrypto::decrypt_record(&key, &record)
-            .map_err(|_| StorageError::RecordIntegrityFailure)?;
+        let key = self.key_provider.key_for(&record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
+        LocalHealthVaultCrypto::decrypt_record(&key, &record).map_err(|_| StorageError::RecordIntegrityFailure)?;
 
         let index = IndexPlaintext {
             record_id: record.record_id.clone(),
@@ -179,29 +160,16 @@ where
             index: encrypt_index(&key, &index)?,
         };
         let bytes = serde_json::to_vec(&bundle).map_err(|_| StorageError::Serialization)?;
-        atomic_write(
-            &self.path_for(&bundle.record.subject_ref, &bundle.record.record_id),
-            &bytes,
-        )
+        atomic_write(&self.path_for(&bundle.record.subject_ref, &bundle.record.record_id), &bytes)
     }
 
-    pub fn get(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<LocalHealthVaultRecord, StorageError> {
-        if !self
-            .authorizer
-            .authorize(context, record_id, VaultAction::Read)
-        {
+    pub fn get(&self, record_id: &str, context: &AuthorizationContext) -> Result<LocalHealthVaultRecord, StorageError> {
+        if !self.authorizer.authorize(context, record_id, VaultAction::Read) {
             return Err(StorageError::AuthorizationDenied);
         }
 
         let bundle = self.load(&context.subject_ref, record_id)?;
-        let key = self
-            .key_provider
-            .key_for(&bundle.record.key_ref)
-            .map_err(|_| StorageError::KeyResolutionFailed)?;
+        let key = self.key_provider.key_for(&bundle.record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
         let index = decrypt_index(&key, &bundle.index)?;
         validate_binding(&bundle, &index)?;
 
@@ -214,10 +182,7 @@ where
         Ok(bundle.record)
     }
 
-    pub fn list(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, StorageError> {
+    pub fn list(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, StorageError> {
         if !self.authorizer.authorize(context, "*", VaultAction::List) {
             return Err(StorageError::AuthorizationDenied);
         }
@@ -236,21 +201,15 @@ where
                 continue;
             }
 
-            let bundle: StoredBundle = serde_json::from_slice(
-                &fs::read(&path).map_err(|_| StorageError::Io)?,
-            )
-            .map_err(|_| StorageError::InvalidRecord)?;
-            let key = self
-                .key_provider
-                .key_for(&bundle.record.key_ref)
-                .map_err(|_| StorageError::KeyResolutionFailed)?;
+            let bundle: StoredBundle = serde_json::from_slice(&fs::read(&path).map_err(|_| StorageError::Io)?)
+                .map_err(|_| StorageError::InvalidRecord)?;
+            let key =
+                self.key_provider.key_for(&bundle.record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
             let index = decrypt_index(&key, &bundle.index)?;
             validate_binding(&bundle, &index)?;
 
             if index.subject_ref == context.subject_ref
-                && self
-                    .authorizer
-                    .authorize(context, &index.record_id, VaultAction::Read)
+                && self.authorizer.authorize(context, &index.record_id, VaultAction::Read)
             {
                 entries.push(index.into());
             }
@@ -259,23 +218,13 @@ where
         Ok(entries)
     }
 
-    pub fn tombstone(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), StorageError> {
-        if !self
-            .authorizer
-            .authorize(context, record_id, VaultAction::Tombstone)
-        {
+    pub fn tombstone(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), StorageError> {
+        if !self.authorizer.authorize(context, record_id, VaultAction::Tombstone) {
             return Err(StorageError::AuthorizationDenied);
         }
 
         let mut bundle = self.load(&context.subject_ref, record_id)?;
-        let key = self
-            .key_provider
-            .key_for(&bundle.record.key_ref)
-            .map_err(|_| StorageError::KeyResolutionFailed)?;
+        let key = self.key_provider.key_for(&bundle.record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
         let mut index = decrypt_index(&key, &bundle.index)?;
         validate_binding(&bundle, &index)?;
 
@@ -290,23 +239,13 @@ where
         atomic_write(&self.path_for(&context.subject_ref, record_id), &bytes)
     }
 
-    pub fn verify(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), StorageError> {
-        if !self
-            .authorizer
-            .authorize(context, record_id, VaultAction::Verify)
-        {
+    pub fn verify(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), StorageError> {
+        if !self.authorizer.authorize(context, record_id, VaultAction::Verify) {
             return Err(StorageError::AuthorizationDenied);
         }
 
         let bundle = self.load(&context.subject_ref, record_id)?;
-        let key = self
-            .key_provider
-            .key_for(&bundle.record.key_ref)
-            .map_err(|_| StorageError::KeyResolutionFailed)?;
+        let key = self.key_provider.key_for(&bundle.record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
         let index = decrypt_index(&key, &bundle.index)?;
         validate_binding(&bundle, &index)?;
 
@@ -335,8 +274,7 @@ where
 
     fn path_for(&self, subject_ref: &str, record_id: &str) -> PathBuf {
         let record_hash = hex::encode(Sha256::digest(record_id.as_bytes()));
-        self.subject_path(subject_ref)
-            .join(format!("{record_hash}.bundle"))
+        self.subject_path(subject_ref).join(format!("{record_hash}.bundle"))
     }
 }
 
@@ -352,26 +290,16 @@ fn validate_binding(bundle: &StoredBundle, index: &IndexPlaintext) -> Result<(),
     Ok(())
 }
 
-fn encrypt_index(
-    key: &[u8; KEY_LEN],
-    index: &IndexPlaintext,
-) -> Result<EncryptedIndex, StorageError> {
+fn encrypt_index(key: &[u8; KEY_LEN], index: &IndexPlaintext) -> Result<EncryptedIndex, StorageError> {
     let aad = format!("soma-index-v1:{}:{}", index.record_id, index.key_ref);
-    let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key)
-        .map_err(|_| StorageError::KeyResolutionFailed)?;
+    let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| StorageError::KeyResolutionFailed)?;
     let sealing = aead::LessSafeKey::new(unbound);
     let mut nonce_bytes = [0u8; NONCE_LEN];
-    SystemRandom::new()
-        .fill(&mut nonce_bytes)
-        .map_err(|_| StorageError::NonceGenerationFailed)?;
+    SystemRandom::new().fill(&mut nonce_bytes).map_err(|_| StorageError::NonceGenerationFailed)?;
     let nonce = aead::Nonce::assume_unique_for_key(nonce_bytes);
     let mut plaintext = serde_json::to_vec(index).map_err(|_| StorageError::Serialization)?;
     sealing
-        .seal_in_place_append_tag(
-            nonce,
-            aead::Aad::from(aad.as_bytes()),
-            &mut plaintext,
-        )
+        .seal_in_place_append_tag(nonce, aead::Aad::from(aad.as_bytes()), &mut plaintext)
         .map_err(|_| StorageError::Serialization)?;
 
     Ok(EncryptedIndex {
@@ -383,35 +311,25 @@ fn encrypt_index(
     })
 }
 
-fn decrypt_index(
-    key: &[u8; KEY_LEN],
-    encrypted: &EncryptedIndex,
-) -> Result<IndexPlaintext, StorageError> {
+fn decrypt_index(key: &[u8; KEY_LEN], encrypted: &EncryptedIndex) -> Result<IndexPlaintext, StorageError> {
     if encrypted.schema_version != INDEX_SCHEMA_VERSION {
         return Err(StorageError::InvalidRecord);
     }
 
-    let nonce_vec = BASE64
-        .decode(&encrypted.nonce)
-        .map_err(|_| StorageError::IndexIntegrityFailure)?;
+    let nonce_vec = BASE64.decode(&encrypted.nonce).map_err(|_| StorageError::IndexIntegrityFailure)?;
     if nonce_vec.len() != NONCE_LEN {
         return Err(StorageError::IndexIntegrityFailure);
     }
-    let nonce = aead::Nonce::try_assume_unique_for_key(&nonce_vec)
-        .map_err(|_| StorageError::IndexIntegrityFailure)?;
-    let mut ciphertext = BASE64
-        .decode(&encrypted.ciphertext)
-        .map_err(|_| StorageError::IndexIntegrityFailure)?;
+    let nonce = aead::Nonce::try_assume_unique_for_key(&nonce_vec).map_err(|_| StorageError::IndexIntegrityFailure)?;
+    let mut ciphertext = BASE64.decode(&encrypted.ciphertext).map_err(|_| StorageError::IndexIntegrityFailure)?;
     let aad = format!("soma-index-v1:{}:{}", encrypted.record_id, encrypted.key_ref);
     let opening = aead::LessSafeKey::new(
-        aead::UnboundKey::new(&aead::AES_256_GCM, key)
-            .map_err(|_| StorageError::KeyResolutionFailed)?,
+        aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| StorageError::KeyResolutionFailed)?,
     );
     let plaintext = opening
         .open_in_place(nonce, aead::Aad::from(aad.as_bytes()), &mut ciphertext)
         .map_err(|_| StorageError::IndexIntegrityFailure)?;
-    let index: IndexPlaintext = serde_json::from_slice(plaintext)
-        .map_err(|_| StorageError::IndexIntegrityFailure)?;
+    let index: IndexPlaintext = serde_json::from_slice(plaintext).map_err(|_| StorageError::IndexIntegrityFailure)?;
 
     if index.record_id != encrypted.record_id || index.key_ref != encrypted.key_ref {
         return Err(StorageError::IndexIntegrityFailure);
@@ -427,10 +345,7 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
     let tmp = path.with_extension(format!(
         "bundle.tmp-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| StorageError::Io)?
-            .as_nanos()
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| StorageError::Io)?.as_nanos()
     ));
     let mut file = fs::File::create(&tmp).map_err(|_| StorageError::Io)?;
     if file.write_all(bytes).is_err() || file.sync_all().is_err() {
@@ -481,10 +396,7 @@ mod tests {
     impl VaultKeyProvider for Keys {
         fn key_for(&self, key_ref: &str) -> Result<[u8; KEY_LEN], StorageError> {
             self.calls.set(self.calls.get() + 1);
-            self.values
-                .get(key_ref)
-                .copied()
-                .ok_or(StorageError::KeyResolutionFailed)
+            self.values.get(key_ref).copied().ok_or(StorageError::KeyResolutionFailed)
         }
     }
 
@@ -492,12 +404,7 @@ mod tests {
     struct SubjectAuthorizer;
 
     impl VaultAuthorizer for SubjectAuthorizer {
-        fn authorize(
-            &self,
-            context: &AuthorizationContext,
-            record_id: &str,
-            action: VaultAction,
-        ) -> bool {
+        fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
             match action {
                 VaultAction::List => true,
                 _ => record_id == "*" || record_id.starts_with(&context.subject_ref),
@@ -506,10 +413,7 @@ mod tests {
     }
 
     fn root() -> PathBuf {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
+        let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
         std::env::temp_dir().join(format!("soma-vault-storage-test-{nanos}"))
     }
 
@@ -531,9 +435,7 @@ mod tests {
         .unwrap()
     }
 
-    fn store(
-        root: &Path,
-    ) -> (LocalFileVaultStore<Keys, SubjectAuthorizer>, Rc<Cell<usize>>) {
+    fn store(root: &Path) -> (LocalFileVaultStore<Keys, SubjectAuthorizer>, Rc<Cell<usize>>) {
         let calls = Rc::new(Cell::new(0));
         let mut values = HashMap::new();
         values.insert("vault-key-v1".into(), [7u8; KEY_LEN]);
@@ -559,9 +461,7 @@ mod tests {
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
-        store
-            .put(record("person-1-record-1", "person-1"), &context)
-            .unwrap();
+        store.put(record("person-1-record-1", "person-1"), &context).unwrap();
         let got = store.get("person-1-record-1", &context).unwrap();
         assert!(!got.ciphertext.contains("heart_rate"));
         let entries = store.list(&context).unwrap();
@@ -582,14 +482,9 @@ mod tests {
             subject_ref: "person-2".into(),
             scope: "self".into(),
         };
-        store
-            .put(record("person-1-record-1", "person-1"), &owner)
-            .unwrap();
+        store.put(record("person-1-record-1", "person-1"), &owner).unwrap();
         calls.set(0);
-        assert_eq!(
-            store.get("person-1-record-1", &other),
-            Err(StorageError::AuthorizationDenied)
-        );
+        assert_eq!(store.get("person-1-record-1", &other), Err(StorageError::AuthorizationDenied));
         assert_eq!(calls.get(), 0);
         fs::remove_dir_all(root).unwrap();
     }
@@ -602,14 +497,9 @@ mod tests {
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
-        store
-            .put(record("person-1-record-1", "person-1"), &context)
-            .unwrap();
+        store.put(record("person-1-record-1", "person-1"), &context).unwrap();
         store.tombstone("person-1-record-1", &context).unwrap();
-        assert_eq!(
-            store.get("person-1-record-1", &context),
-            Err(StorageError::Tombstoned)
-        );
+        assert_eq!(store.get("person-1-record-1", &context), Err(StorageError::Tombstoned));
         let entries = store.list(&context).unwrap();
         assert_eq!(entries[0].record_state, "TOMBSTONED");
         fs::remove_dir_all(root).unwrap();
@@ -623,20 +513,14 @@ mod tests {
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
-        store
-            .put(record("person-1-record-1", "person-1"), &context)
-            .unwrap();
+        store.put(record("person-1-record-1", "person-1"), &context).unwrap();
         let path = store.path_for(&context.subject_ref, "person-1-record-1");
-        let mut bundle: StoredBundle =
-            serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        let mut bundle: StoredBundle = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
         let mut bytes = BASE64.decode(&bundle.record.ciphertext).unwrap();
         bytes[0] ^= 1;
         bundle.record.ciphertext = BASE64.encode(bytes);
         fs::write(&path, serde_json::to_vec(&bundle).unwrap()).unwrap();
-        assert_eq!(
-            store.verify("person-1-record-1", &context),
-            Err(StorageError::RecordIntegrityFailure)
-        );
+        assert_eq!(store.verify("person-1-record-1", &context), Err(StorageError::RecordIntegrityFailure));
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -648,18 +532,12 @@ mod tests {
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
-        store
-            .put(record("person-1-record-1", "person-1"), &context)
-            .unwrap();
+        store.put(record("person-1-record-1", "person-1"), &context).unwrap();
         let path = store.path_for(&context.subject_ref, "person-1-record-1");
-        let mut bundle: StoredBundle =
-            serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        let mut bundle: StoredBundle = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
         bundle.index.record_id = "person-1-record-2".into();
         fs::write(&path, serde_json::to_vec(&bundle).unwrap()).unwrap();
-        assert_eq!(
-            store.verify("person-1-record-1", &context),
-            Err(StorageError::IndexIntegrityFailure)
-        );
+        assert_eq!(store.verify("person-1-record-1", &context), Err(StorageError::IndexIntegrityFailure));
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -671,9 +549,7 @@ mod tests {
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
-        let tmp = store
-            .path_for(&context.subject_ref, "person-1-record-1")
-            .with_extension("bundle.tmp-interrupted");
+        let tmp = store.path_for(&context.subject_ref, "person-1-record-1").with_extension("bundle.tmp-interrupted");
         fs::create_dir_all(tmp.parent().unwrap()).unwrap();
         fs::write(tmp, b"partial").unwrap();
         assert!(store.list(&context).unwrap().is_empty());
