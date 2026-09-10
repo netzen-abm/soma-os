@@ -4,8 +4,8 @@ use thiserror::Error;
 
 use crate::local_health_vault::LocalHealthVaultRecord;
 use crate::local_health_vault_storage::{
-    AuthorizationContext, AuthorizedIndexEntry, LocalFileVaultStore, StorageError, VaultAction,
-    VaultAuthorizer, VaultKeyProvider,
+    AuthorizationContext, AuthorizedIndexEntry, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer,
+    VaultKeyProvider,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -35,9 +35,7 @@ impl From<StorageError> for RepositoryError {
             StorageError::AuthorizationDenied => Self::AuthorizationDenied,
             StorageError::NotFound => Self::NotFound,
             StorageError::Tombstoned => Self::Tombstoned,
-            StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => {
-                Self::IntegrityFailure
-            }
+            StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => Self::IntegrityFailure,
             StorageError::InvalidRecord
             | StorageError::KeyResolutionFailed
             | StorageError::Io
@@ -48,22 +46,11 @@ impl From<StorageError> for RepositoryError {
 }
 
 pub trait PersonalHealthRecordRepository {
-    fn put_reference(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), RepositoryError>;
+    fn put_reference(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError>;
 
-    fn get(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<LocalHealthVaultRecord, RepositoryError>;
+    fn get(&self, record_id: &str, context: &AuthorizationContext) -> Result<LocalHealthVaultRecord, RepositoryError>;
 
-    fn list(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
+    fn list(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
 
     fn query(
         &self,
@@ -71,27 +58,13 @@ pub trait PersonalHealthRecordRepository {
         query: &RepositoryQuery,
     ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
 
-    fn timeline(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
+    fn timeline(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
 
-    fn tombstone(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), RepositoryError>;
+    fn tombstone(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError>;
 
-    fn verify(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), RepositoryError>;
+    fn verify(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError>;
 
-    fn rebuild_index(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
+    fn rebuild_index(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError>;
 }
 
 /// Provider-neutral PHR repository facade over the governed Local Health Vault.
@@ -110,7 +83,9 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self { vault }
+        Self {
+            vault,
+        }
     }
 }
 
@@ -119,28 +94,17 @@ where
     K: VaultKeyProvider,
     A: VaultAuthorizer,
 {
-    fn put_reference(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), RepositoryError> {
+    fn put_reference(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError> {
         // Registration never copies the payload. Verification proves that the reference
         // resolves to an authorized, intact canonical vault record.
         self.vault.verify(record_id, context).map_err(Into::into)
     }
 
-    fn get(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<LocalHealthVaultRecord, RepositoryError> {
+    fn get(&self, record_id: &str, context: &AuthorizationContext) -> Result<LocalHealthVaultRecord, RepositoryError> {
         self.vault.get(record_id, context).map_err(Into::into)
     }
 
-    fn list(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
+    fn list(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
         self.vault.list(context).map_err(Into::into)
     }
 
@@ -154,23 +118,14 @@ where
                 .into_iter()
                 .filter(|entry| {
                     query.entity_type.as_ref().is_none_or(|value| entry.entity_type == *value)
-                        && query
-                            .classification
-                            .as_ref()
-                            .is_none_or(|value| entry.classification == *value)
-                        && query
-                            .content_type
-                            .as_ref()
-                            .is_none_or(|value| entry.content_type == *value)
+                        && query.classification.as_ref().is_none_or(|value| entry.classification == *value)
+                        && query.content_type.as_ref().is_none_or(|value| entry.content_type == *value)
                 })
                 .collect()
         })
     }
 
-    fn timeline(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
+    fn timeline(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
         let mut entries = self.list(context)?;
         entries.sort_by(|left, right| match left.created_at.cmp(&right.created_at) {
             Ordering::Equal => left.record_id.cmp(&right.record_id),
@@ -179,26 +134,15 @@ where
         Ok(entries)
     }
 
-    fn tombstone(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), RepositoryError> {
+    fn tombstone(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError> {
         self.vault.tombstone(record_id, context).map_err(Into::into)
     }
 
-    fn verify(
-        &self,
-        record_id: &str,
-        context: &AuthorizationContext,
-    ) -> Result<(), RepositoryError> {
+    fn verify(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError> {
         self.vault.verify(record_id, context).map_err(Into::into)
     }
 
-    fn rebuild_index(
-        &self,
-        context: &AuthorizationContext,
-    ) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
+    fn rebuild_index(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
         // The Local Health Vault is authoritative. Rebuild is therefore a derived
         // projection operation, not a new source of truth or a payload migration.
         self.list(context)
@@ -237,12 +181,7 @@ mod tests {
     struct SubjectAuthorizer;
 
     impl VaultAuthorizer for SubjectAuthorizer {
-        fn authorize(
-            &self,
-            context: &AuthorizationContext,
-            record_id: &str,
-            action: VaultAction,
-        ) -> bool {
+        fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
             match action {
                 VaultAction::List => true,
                 _ => record_id == "*" || record_id.starts_with(&context.subject_ref),
@@ -331,10 +270,7 @@ mod tests {
             .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &owner)
             .unwrap();
         calls.set(0);
-        assert_eq!(
-            repository.put_reference("person-1-record-1", &other),
-            Err(RepositoryError::AuthorizationDenied)
-        );
+        assert_eq!(repository.put_reference("person-1-record-1", &other), Err(RepositoryError::AuthorizationDenied));
         assert_eq!(calls.get(), 0);
         fs::remove_dir_all(root).unwrap();
     }
