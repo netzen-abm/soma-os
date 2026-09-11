@@ -1,6 +1,6 @@
 # SOMA-OS Documentation Authority Registry v1
 
-**Status:** governing documentation map
+**Status:** governing documentation map  
 **Date:** 2026-09-11
 
 ## Purpose
@@ -81,6 +81,20 @@ A lower-level document must not silently redefine a higher-level authority.
 - `docs/SOMA-OS-DECISION-LOG-2026-09-01-to-2026-09-08.md` — chronological decision history.
 - `docs/decisions/` — durable decision records.
 - `docs/archive/` — superseded historical material.
+
+## Documentation citation hygiene
+
+Repository documentation must use durable, independently resolvable references. Do not commit transient tool/chat citation artifacts such as `cite...`, `turn...` source identifiers, or other session-local references.
+
+For external evidence, prefer:
+
+- official source URLs;
+- DOI;
+- PMID/PMCID;
+- ISBN or other stable bibliographic identifiers;
+- repository-internal source IDs where applicable.
+
+Repository citations must remain understandable and verifiable outside the chat/session in which they were created.
 
 ## Overlap rules
 
