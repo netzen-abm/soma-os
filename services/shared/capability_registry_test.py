@@ -74,7 +74,7 @@ class CapabilityRegistryTests(unittest.TestCase):
     def test_registry_is_canonical_not_a_runtime_inventory(self):
         rust = (REPO_ROOT / "services" / "backend-rust" / "src" / "shared_infrastructure.rs").read_text(encoding="utf-8")
         self.assertNotIn("pub const CAPABILITIES", rust)
-        self.assertIn("include_str!(\"../../shared/capability_registry.json\")", rust)
+        self.assertIn("include_str!(\"../../../services/shared/capability_registry.json\")", rust)
 
     def test_decentralized_capabilities_are_adapters_not_core_dependencies(self):
         data = self.load_registry()
