@@ -23,6 +23,7 @@ mod local_health_vault;
 mod local_health_vault_storage;
 mod longitudinal_observation_repository;
 mod messenger_webhook;
+mod meta_outbound;
 mod mnemonic_validator;
 mod nostr_client;
 mod personal_health_record_repository;
