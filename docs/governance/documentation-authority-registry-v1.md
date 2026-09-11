@@ -37,8 +37,9 @@ A lower-level document must not silently redefine a higher-level authority.
 - `docs/architecture/protected-data-access-enforcement-v1.md` and its implementation specification — protected-data access boundary.
 - Policy Kernel documents — centralized authorization policy authority.
 - `docs/architecture/automation-governance-gate-v1.md` — automation governance boundary.
-- `docs/architecture/branch-lifecycle.md` — branch lifecycle rules.
-- `docs/architecture/code-maintainability-policy.md` — maintainability rules.
+- `docs/governance/branch-lifecycle.md` — branch lifecycle rules.
+- `docs/governance/code-maintainability-policy.md` — maintainability rules.
+- `docs/governance/cleanup-execution-plan.md` — repository cleanup, archive, deletion, CI, and merge-control process.
 
 ### Capability architecture
 
@@ -58,6 +59,7 @@ A lower-level document must not silently redefine a higher-level authority.
 - `docs/architecture/personal-health-record-repository-v1.md` — local vault/index/reference boundary.
 - `docs/architecture/longitudinal-evidence-driven-health-intelligence-v1.md` — future health-intelligence architecture baseline.
 - `docs/architecture/health-context-framework-v1.md` — health-context contract.
+- `docs/architecture/food-life-evidence-model.md` — Food–Life shared evidence/domain model; consumes canonical Health State and Evidence Graph semantics.
 
 ### Evidence and epistemics
 
@@ -66,7 +68,6 @@ A lower-level document must not silently redefine a higher-level authority.
 - `docs/architecture/behavioral-and-epistemic-evidence-layer-v1.md` — behavioral observation and epistemic metadata extension; it does not replace Health State or Evidence Graph.
 - `schemas/epistemic-evidence-passport-v1.json` — machine-readable evidence-passport metadata contract.
 - `schemas/behavioral-observation-v1.json` — machine-readable behavioral observation contract.
-- `docs/food-life-evidence-model.md` — Food–Life domain research model; it must consume canonical evidence/health semantics rather than create parallel authorities.
 
 ### Product and readiness
 
@@ -106,7 +107,8 @@ Examples:
 - native epistemic context vs cross-paradigm evidence assessment;
 - Health State semantics vs repository/storage boundary;
 - project memory vs chronological decision log;
-- product strategy vs technical architecture.
+- product strategy vs technical architecture;
+- architecture contracts vs governance/process controls.
 
 ### Consolidate when authority is actually duplicated
 
