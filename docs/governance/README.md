@@ -101,6 +101,15 @@ Verify post-merge
 Update documentation/readiness
 ```
 
+## Governance documents
+
+- `documentation-authority-registry-v1.md` — canonical documentation ownership and lookup rules.
+- `documentation-audit-2026-09-11.md` — current documentation authority/overlap audit.
+- `cleanup-execution-plan.md` — repository cleanup, archive-first, deletion, CI, and merge-control procedure.
+- `branch-lifecycle.md` — branch creation, verification, retirement, and cleanup.
+- `code-maintainability-policy.md` — engineering maintainability practices.
+- `SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md` — shared operating context for humans, developers, and AI agents.
+
 ## Repository hygiene
 
 Use descriptive, stable names. Avoid date suffixes for canonical contracts unless the date is itself semantically important. Version contracts explicitly. Keep historical documents in `docs/archive/` when superseded rather than deleting them immediately.
