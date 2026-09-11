@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,7 +16,7 @@ REGISTRY_PATH = ROOT / "schemas/capability-registry-v1.json"
 class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.registry = __import__("json").loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        cls.registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
         cls.grant = ("principal-001", "person", "health.timeline.read", "health_observation", "observation-001", "read")
         cls.kernel = PolicyKernel(cls.registry, {cls.grant: True})
         cls.boundary = AuthorizationPolicyDecisionBoundary(cls.kernel)
@@ -57,20 +58,20 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
         value.update(overrides)
         return PolicyRequest(**value)
 
-    def authorize(self, **kwargs):
+    def authorize(self, *, request=None, **kwargs):
         return self.boundary.authorize(
             request_id="req-001",
             identity_context=self.identity(),
             target_tenant="tenant-a",
             target_data_domain="health",
-            request=self.request(),
+            request=request or self.request(),
             now=self.now,
             **kwargs,
         )
 
     def test_valid_request_produces_canonical_allow(self):
         result = self.authorize()
-        self.assertTrue(result.decision is Decision.ALLOW)
+        self.assertIs(result.decision, Decision.ALLOW)
         self.assertEqual(result.policy_version, "0.4.0")
         self.assertEqual(result.reason_code, "authorized")
         self.assertEqual(result.enforcement_version, "1.1.0")
@@ -119,16 +120,16 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "policy_unknown_capability")
 
     def test_all_non_allow_decisions_are_preserved(self):
-        cases = {
-            "deny": ("deny", "policy_policy_denied", Decision.DENY),
-            "consent": ("consent", "policy_consent_required", Decision.REQUIRE_CONSENT),
-            "human_review": ("human_review", "policy_human_review_required", Decision.REQUIRE_HUMAN_REVIEW),
-            "degrade": ("degrade", "policy_degraded_execution_required", Decision.DEGRADE),
-        }
-        for context_key, (key, reason, expected) in cases.items():
-            result = self.authorize(request=self.request(context={key: "true", context_key: "required"} if context_key != "deny" else {"deny": "true"}))
-            self.assertIs(result.decision, expected, context_key)
-            self.assertEqual(result.reason_code, reason, context_key)
+        cases = (
+            ({"deny": "true"}, Decision.DENY, "policy_policy_denied"),
+            ({"consent": "required"}, Decision.REQUIRE_CONSENT, "policy_consent_required"),
+            ({"human_review": "required"}, Decision.REQUIRE_HUMAN_REVIEW, "policy_human_review_required"),
+            ({"degrade": "true"}, Decision.DEGRADE, "policy_degraded_execution_required"),
+        )
+        for context, expected, reason in cases:
+            result = self.authorize(request=self.request(context=context))
+            self.assertIs(result.decision, expected)
+            self.assertEqual(result.reason_code, reason)
 
     def test_sensitive_payload_cannot_be_added_to_canonical_result(self):
         result = self.authorize()
