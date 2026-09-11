@@ -98,14 +98,18 @@ fn canonical_registry() -> Registry {
 
 /// Return a typed projection of one capability from the canonical JSON registry.
 pub fn capability(id: &str) -> Option<CapabilityDescriptor> {
-    canonical_registry().capabilities.into_iter().find(|item| item.id == id).and_then(|item| {
-        Some(CapabilityDescriptor {
-            id: item.id,
-            version: item.version,
-            domain: CapabilityDomain::parse(&item.domain)?,
-            status: CapabilityStatus::parse(&item.status)?,
+    canonical_registry()
+        .capabilities
+        .into_iter()
+        .find(|item| item.id == id)
+        .and_then(|item| {
+            Some(CapabilityDescriptor {
+                id: item.id,
+                version: item.version,
+                domain: CapabilityDomain::parse(&item.domain)?,
+                status: CapabilityStatus::parse(&item.status)?,
+            })
         })
-    })
 }
 
 /// Validate that the embedded registry has a supported schema version and that
