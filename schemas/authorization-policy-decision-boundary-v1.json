@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schemas/authorization-policy-decision-boundary-v1.json",
+  "title": "SOMA Authorization + Policy Decision Boundary v1",
+  "description": "Canonical immutable authorization decision envelope produced by the shared SOMA Authorization + Policy Decision Boundary. It composes verified identity/scope enforcement with the canonical Policy Kernel and does not contain protected health payloads or credentials.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "principal_id",
+    "principal_type",
+    "capability_id",
+    "resource_type",
+    "resource_id",
+    "action",
+    "tenant_scope_binding",
+    "data_domain_scope_binding",
+    "decision",
+    "policy_version",
+    "reason_code",
+    "enforcement_version",
+    "decision_time"
+  ],
+  "properties": {
+    "request_id": {"type": "string", "minLength": 1},
+    "principal_id": {"type": "string", "minLength": 1},
+    "principal_type": {"type": "string", "minLength": 1},
+    "capability_id": {"type": "string", "minLength": 1},
+    "resource_type": {"type": "string", "minLength": 1},
+    "resource_id": {"type": "string", "minLength": 1},
+    "action": {"type": "string", "minLength": 1},
+    "tenant_scope_binding": {"type": "string", "minLength": 1},
+    "data_domain_scope_binding": {"type": "string", "minLength": 1},
+    "decision": {
+      "type": "string",
+      "enum": ["ALLOW", "DENY", "REQUIRE_CONSENT", "REQUIRE_HUMAN_REVIEW", "DEGRADE"]
+    },
+    "policy_version": {"type": "string", "minLength": 1},
+    "reason_code": {"type": "string", "minLength": 1},
+    "enforcement_version": {"type": "string", "minLength": 1},
+    "decision_time": {"type": "string", "format": "date-time"}
+  }
+}
