@@ -6,15 +6,17 @@ SOMA-OS is one ecosystem built on shared infrastructure. Documentation follows t
 
 ## Start here
 
-1. [`architecture/README.md`](architecture/README.md) — canonical architecture and contract map.
-2. [`governance/README.md`](governance/README.md) — repository, documentation, AI-agent, and developer operating rules.
-3. [`decisions/README.md`](decisions/README.md) — architectural decisions and durable choices.
-4. [`strategy/README.md`](strategy/README.md) — product and ecosystem direction.
-5. [`research/README.md`](research/README.md) — research-oriented material and research contributions.
-6. [`evidence-sources/README.md`](evidence-sources/README.md) — source assessments and evidence-specific material.
-7. [`product/README.md`](product/README.md) — product specifications and operational product contracts.
-8. [`ui-ux/README.md`](ui-ux/README.md) — interface and experience specifications.
-9. [`archive/README.md`](archive/README.md) — historical material retained for traceability.
+1. [`governance/documentation-authority-registry-v1.md`](governance/documentation-authority-registry-v1.md) — **first stop before creating or changing documentation**; maps authority and canonical ownership.
+2. [`architecture/README.md`](architecture/README.md) — canonical architecture and contract map.
+3. [`governance/README.md`](governance/README.md) — repository, documentation, AI-agent, and developer operating rules.
+4. [`governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md`](governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md) — shared operating context for humans, developers, and AI agents.
+5. [`decisions/README.md`](decisions/README.md) — architectural decisions and durable choices.
+6. [`strategy/README.md`](strategy/README.md) — product and ecosystem direction.
+7. [`research/README.md`](research/README.md) — research-oriented material and research contributions.
+8. [`evidence-sources/README.md`](evidence-sources/README.md) — source assessments and evidence-specific material.
+9. [`product/README.md`](product/README.md) — product specifications and operational product contracts.
+10. [`ui-ux/README.md`](ui-ux/README.md) — interface and experience specifications.
+11. [`archive/README.md`](archive/README.md) — historical material retained for traceability.
 
 ## Canonical documentation rules
 
