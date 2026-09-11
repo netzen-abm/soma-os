@@ -96,6 +96,9 @@ jobs:
       - name: Validate Authorization Enforcement Context JSON contract
         run: python -m json.tool schemas/authorization-enforcement-context-v1.json > /dev/null
 
+      - name: Validate Governed Capability Operation JSON contract
+        run: python -m json.tool schemas/governed-capability-operation-v1.json > /dev/null
+
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
@@ -123,6 +126,10 @@ jobs:
       - name: Run Identity Authorization Enforcement tests
         working-directory: services/shared
         run: python identity_authorization_enforcement_test.py
+
+      - name: Run Governed Capability Operation contract tests
+        working-directory: services/shared
+        run: python -m unittest -v governed_capability_operation_contract_test.py
 
   protected-data-bypass-audit:
     name: Protected-data access bypass audit
