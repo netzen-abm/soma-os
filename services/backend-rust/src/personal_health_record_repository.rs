@@ -83,7 +83,9 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self { vault }
+        Self {
+            vault,
+        }
     }
 }
 
