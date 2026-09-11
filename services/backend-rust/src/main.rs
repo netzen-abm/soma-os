@@ -24,6 +24,7 @@ mod messenger_webhook;
 mod meta_outbound;
 mod mnemonic_validator;
 mod nostr_client;
+mod personal_health_record_repository;
 mod privacy_policy;
 mod protected_db_context;
 mod shared_infrastructure;
