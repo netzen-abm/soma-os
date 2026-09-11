@@ -40,7 +40,7 @@ Each individual book must become a separate source record. The library page must
 
 ### Source C — Supplied Dr. Khadar Valli Siridhanya & Kashaya protocol material
 
-The supplied document is titled **Siridhanya & Kashayas for leading healthy life and curing diseases** and contains material attributed to Dr. Khadar Valli and Dr. Sarala, including millet descriptions, lifestyle practices, food restrictions, Kashaya recipes, condition-specific protocols and cancer protocols. fileciteturn171file11
+The supplied document is titled **Siridhanya & Kashayas for leading healthy life and curing diseases** and contains material attributed to Dr. Khadar Valli and Dr. Sarala, including millet descriptions, lifestyle practices, food restrictions, Kashaya recipes, condition-specific protocols and cancer protocols.
 
 SOMA classification:
 
@@ -50,7 +50,7 @@ SOMA classification:
 - `evidence_class_default`: `TRADITIONAL_REPORT` / `DESCRIPTIVE`
 - `clinical_validity`: `NOT_ESTABLISHED`
 
-The document contains explicit protocol claims linking specific millets/decoctions/oils to diseases and also contains cancer-specific protocols. These must be stored as **reported claims**, not as treatment recommendations. fileciteturn171file6
+The document contains explicit protocol claims linking specific millets/decoctions/oils to diseases and also contains cancer-specific protocols. These must be stored as **reported claims**, not as treatment recommendations.
 
 ## 2. Why these sources are valuable to SOMA
 
@@ -68,9 +68,9 @@ They contain structured knowledge that is useful for research and evidence mappi
 - claimed relationships between foods/plants and health conditions;
 - source attribution and historical context.
 
-For example, the supplied material describes five Siridhanya categories and gives preparation guidance for fermented millet porridge/Ambali. fileciteturn171file0
+For example, the supplied material describes five Siridhanya categories and gives preparation guidance for fermented millet porridge/Ambali.
 
-It also provides condition-to-protocol mappings, such as diabetes, thyroid, PCOD, cardiovascular conditions, kidney conditions and others. These mappings are precisely the type of claim relationship SOMA should preserve as a provenance-rich record rather than flattening into a recommendation engine. fileciteturn171file1
+It also provides condition-to-protocol mappings, such as diabetes, thyroid, PCOD, cardiovascular conditions, kidney conditions and others. These mappings are precisely the type of claim relationship SOMA should preserve as a provenance-rich record rather than flattening into a recommendation engine.
 
 ## 3. Critical evidence boundary
 
@@ -144,7 +144,7 @@ review_status: pending
 
 ## 5. Example: Siridhanya claim handling
 
-The supplied source states that specific millets have benefits for conditions including diabetes, anemia, constipation, neurological conditions and cancers. fileciteturn171file4
+The supplied source states that specific millets have benefits for conditions including diabetes, anemia, constipation, neurological conditions and cancers.
 
 SOMA should ingest this as multiple source claims, for example:
 
@@ -176,7 +176,7 @@ This allows the same food to have a rich evidence graph without treating one aut
 
 ## 6. Cancer claims require elevated safeguards
 
-The supplied document contains a section titled **Siridhanya and Kashaya for curing Cancer** and provides cancer-type-specific combinations of millets and herbal decoctions. fileciteturn171file6
+The supplied document contains a section titled **Siridhanya and Kashaya for curing Cancer** and provides cancer-type-specific combinations of millets and herbal decoctions.
 
 These records must be assigned an elevated review state:
 
@@ -225,7 +225,7 @@ This distinction is essential because a protocol can be accurately transcribed f
 
 ## 8. Ingredient normalization
 
-The Khadar material contains common names, regional names and botanical names. For example, it maps several Siridhanya millets across English, Hindi, Marathi, Tamil, Kannada and Telugu. fileciteturn171file11
+The Khadar material contains common names, regional names and botanical names. For example, it maps several Siridhanya millets across English, Hindi, Marathi, Tamil, Kannada and Telugu.
 
 SOMA should therefore normalize each ingredient through:
 
@@ -263,7 +263,7 @@ The same food or botanical material can differ by:
 
 Therefore SOMA should never treat an ingredient name alone as equivalent to a protocol intervention.
 
-The supplied Ambali description, for example, specifies soaking, cooking, fermentation and covering conditions. fileciteturn171file0
+The supplied Ambali description, for example, specifies soaking, cooking, fermentation and covering conditions.
 
 ## 10. Safety model
 
@@ -283,7 +283,7 @@ SOMA must separately assess:
 - duration;
 - replacement or discontinuation of conventional treatment.
 
-The source itself contains a warning not to stop regular medicines suddenly, but that source statement must still be treated as source content rather than as a substitute for independent clinical guidance. fileciteturn171file1
+The source itself contains a warning not to stop regular medicines suddenly, but that source statement must still be treated as source content rather than as a substitute for independent clinical guidance.
 
 ## 11. Biswaroop e-books: ingestion policy
 
@@ -304,7 +304,7 @@ For every selected book:
 11. assess safety;
 12. assign review status.
 
-The official library currently lists numerous books and dates, including recent publications and older works. citeturn0search0
+The official library currently lists numerous books and dates, including recent publications and older works. See the official [Biswaroop free e-book library](https://biswaroop.com/free_e_book/).
 
 ## 12. Source hierarchy
 
