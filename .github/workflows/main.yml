@@ -72,6 +72,9 @@ jobs:
       - name: Validate capability registry JSON
         run: python -m json.tool services/shared/capability_registry.json > /dev/null
 
+      - name: Validate capability registry schema
+        run: python -m json.tool schemas/capability-registry-v1.json > /dev/null
+
       - name: Validate architecture and evidence governance invariants
         run: python scripts/validate_architecture_governance_gate.py
 
@@ -98,6 +101,10 @@ jobs:
 
       - name: Validate Governed Capability Operation JSON contract
         run: python -m json.tool schemas/governed-capability-operation-v1.json > /dev/null
+
+      - name: Run Capability Registry contract tests
+        working-directory: services/shared
+        run: python -m unittest -v capability_registry_test.py
 
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
