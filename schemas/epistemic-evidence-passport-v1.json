@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/epistemic-evidence-passport-v1.json",
+  "title": "SOMA Epistemic Evidence Passport v1",
+  "description": "Shared SOMA metadata contract for evaluating health claims across knowledge systems while preserving evidence, uncertainty, applicability, safety, and provenance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema_version",
+    "claim_ref",
+    "knowledge_system",
+    "claim_type",
+    "evidence_design",
+    "epistemic_status",
+    "uncertainty",
+    "provenance_ref",
+    "safety_status"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "claim_ref": {"type": "string", "minLength": 1},
+    "knowledge_system": {"type": "string", "minLength": 1},
+    "claim_type": {
+      "type": "string",
+      "enum": ["descriptive", "associational", "predictive", "causal", "therapeutic", "diagnostic", "behavioral", "mechanistic", "safety", "historical"]
+    },
+    "population_ref": {"type": ["string", "null"]},
+    "intervention_or_exposure_ref": {"type": ["string", "null"]},
+    "comparator_ref": {"type": ["string", "null"]},
+    "outcome_ref": {"type": ["string", "null"]},
+    "evidence_design": {
+      "type": "string",
+      "enum": ["unknown", "case_report", "case_series", "cross_sectional", "observational_cohort", "case_control", "qualitative", "mechanistic", "experimental", "randomized_trial", "systematic_review", "meta_analysis", "guideline", "expert_consensus", "other"]
+    },
+    "observed_signal": {"type": ["string", "null"]},
+    "causal_confidence": {
+      "type": "string",
+      "enum": ["not_assessed", "none", "limited", "moderate", "strong"]
+    },
+    "bias_confounding": {"type": "array", "items": {"type": "string"}},
+    "replication_status": {
+      "type": "string",
+      "enum": ["unknown", "none_found", "single_source", "partial", "independent_replication", "contradictory"]
+    },
+    "contradiction_status": {
+      "type": "string",
+      "enum": ["not_assessed", "none_identified", "mixed", "substantial"]
+    },
+    "applicability": {"type": ["string", "null"]},
+    "mechanism_status": {
+      "type": "string",
+      "enum": ["not_required", "unknown", "proposed", "partially_supported", "supported", "contradicted"]
+    },
+    "epistemic_status": {
+      "type": "string",
+      "enum": ["unknown", "insufficient_evidence", "preliminary", "supported", "well_supported", "contested", "contradicted"]
+    },
+    "uncertainty": {
+      "type": "string",
+      "enum": ["known", "estimated", "reported", "inferred", "missing", "conflicting", "not_applicable"]
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["not_assessed", "insufficient_safety_evidence", "low_concern", "context_dependent", "clinically_significant_caution", "contraindicated"]
+    },
+    "research_priority": {
+      "type": "string",
+      "enum": ["none", "low", "medium", "high", "critical"]
+    },
+    "provenance_ref": {"type": "string", "minLength": 1}
+  }
+}
