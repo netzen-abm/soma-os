@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/behavioral-observation-v1.json",
+  "title": "SOMA Behavioral Observation v1",
+  "description": "Shared SOMA contract for user-reported or measured behavioral observations. It is not a diagnostic or therapeutic truth model.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "schema_version", "subject_ref", "observed_at", "source", "provenance_ref", "uncertainty"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "subject_ref": {"type": "string", "minLength": 1},
+    "observed_at": {"type": "string", "minLength": 1},
+    "context": {"type": ["string", "null"]},
+    "reported_thought": {"type": ["string", "null"]},
+    "reported_affect": {"type": ["string", "null"]},
+    "reported_intensity": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+    "response_or_behavior": {"type": ["string", "null"]},
+    "intervention_ref": {"type": ["string", "null"]},
+    "outcome_ref": {"type": ["string", "null"]},
+    "source": {"type": "string", "enum": ["user_report", "device", "care_record", "research", "other"]},
+    "provenance_ref": {"type": "string", "minLength": 1},
+    "uncertainty": {"type": "string", "enum": ["known", "estimated", "reported", "inferred", "missing", "conflicting", "not_applicable"]},
+    "classification": {"type": "string", "enum": ["personal_health", "sensitive_personal_health", "derived_health", "research_context"]}
+  }
+}
