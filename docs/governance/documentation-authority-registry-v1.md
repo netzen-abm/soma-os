@@ -1,7 +1,8 @@
 # SOMA-OS Documentation Authority Registry v1
 
-**Status:** governing documentation map  
-**Date:** 2026-09-11
+**Status:** Governing documentation map  
+**Date:** 2026-09-12  
+**Audience:** Human owner, developers, reviewers, and AI agents
 
 ## Purpose
 
@@ -33,9 +34,10 @@ A lower-level document must not silently redefine a higher-level authority.
 
 ### Security and governance
 
-- `docs/architecture/identity-authorization-enforcement-v1.md` and its implementation specification — identity/authorization boundary.
-- `docs/architecture/protected-data-access-enforcement-v1.md` and its implementation specification — protected-data access boundary.
-- Policy Kernel documents — centralized authorization policy authority.
+- `docs/architecture/identity-authorization-enforcement-implementation-v1.md` and related identity contracts — identity/scope enforcement.
+- `docs/architecture/authorization-policy-decision-boundary-v1.md` — canonical authorization composition boundary.
+- `services/shared/policy_kernel.md` — current Policy Kernel v0.4 implementation contract.
+- `docs/architecture/protected-data-access-enforcement-implementation-v1.md` and related specifications — protected-data access boundary.
 - `docs/architecture/automation-governance-gate-v1.md` — automation governance boundary.
 - `docs/governance/branch-lifecycle.md` — branch lifecycle rules.
 - `docs/governance/code-maintainability-policy.md` — maintainability rules.
@@ -43,14 +45,14 @@ A lower-level document must not silently redefine a higher-level authority.
 
 ### Capability architecture
 
-- `schemas/capability-registry-v1.json` / `services/shared/capability_registry.json` where present — machine-readable capability inventory.
+- `schemas/capability-registry-v1.json` / `services/shared/capability_registry.json` — machine-readable capability inventory.
 - `docs/architecture/capability-adapter-contract.md` — adapter boundary.
 - `docs/architecture/capability-assurance-requirements-v1.md` — assurance expectations.
 - `docs/architecture/canonical-governed-capability-operation-v1.md` — governed operation lifecycle and authority gates.
 
 ### Health information architecture
 
-- `docs/architecture/health-state-model-v1.md` — canonical personal health semantic model.
+- `docs/architecture/health-state-model-v1.md` — canonical personal-health semantic model.
 - `schemas/health-state-v1.json` — machine-readable Health State contract.
 - `docs/architecture/health-evidence-graph-v1.md` — canonical general evidence model.
 - `schemas/health-evidence-graph-v1.json` — machine-readable evidence contract.
@@ -59,7 +61,7 @@ A lower-level document must not silently redefine a higher-level authority.
 - `docs/architecture/personal-health-record-repository-v1.md` — local vault/index/reference boundary.
 - `docs/architecture/longitudinal-evidence-driven-health-intelligence-v1.md` — future health-intelligence architecture baseline.
 - `docs/architecture/health-context-framework-v1.md` — health-context contract.
-- `docs/architecture/food-life-evidence-model.md` — Food–Life shared evidence/domain model; consumes canonical Health State and Evidence Graph semantics.
+- `docs/architecture/food-life-evidence-model.md` — Food–Life shared evidence/domain model.
 
 ### Evidence and epistemics
 
@@ -87,15 +89,7 @@ A lower-level document must not silently redefine a higher-level authority.
 
 Repository documentation must use durable, independently resolvable references. Do not commit transient tool/chat citation artifacts such as `cite...`, `turn...` source identifiers, or other session-local references.
 
-For external evidence, prefer:
-
-- official source URLs;
-- DOI;
-- PMID/PMCID;
-- ISBN or other stable bibliographic identifiers;
-- repository-internal source IDs where applicable.
-
-Repository citations must remain understandable and verifiable outside the chat/session in which they were created.
+For external evidence, prefer official source URLs, DOI, PMID/PMCID, ISBN, or stable repository-internal source IDs.
 
 ## Overlap rules
 
@@ -108,7 +102,8 @@ Examples:
 - Health State semantics vs repository/storage boundary;
 - project memory vs chronological decision log;
 - product strategy vs technical architecture;
-- architecture contracts vs governance/process controls.
+- architecture contracts vs governance/process controls;
+- Policy Kernel evaluation vs Authorization Decision Boundary composition.
 
 ### Consolidate when authority is actually duplicated
 
@@ -143,9 +138,11 @@ Before creating a Markdown file:
 ```text
 Search repository
   ↓
-Search docs/architecture
+Read this authority registry
   ↓
 Search schemas and contract tests
+  ↓
+Search architecture
   ↓
 Search decisions
   ↓
@@ -160,14 +157,10 @@ Create new document only for a distinct authority boundary
 
 ## Reorganization safety
 
-Do not rename, move, or delete a document merely to make the tree look cleaner. First verify:
-
-- inbound links;
-- CI/workflow references;
-- code/test references;
-- PR references;
-- external links where known;
-- historical significance;
-- whether the destination already contains an authoritative document.
+Do not rename, move, or delete a document merely to make the tree look cleaner. First verify inbound links, CI/workflow references, code/test references, PR references, external links where known, historical significance, and destination authority.
 
 Archive before deletion.
+
+## Organization freeze
+
+The 2026-09-12 content/organization audit establishes the current documentation structure. Further movement should require a demonstrated authority, lifecycle, broken-reference, or duplication problem rather than aesthetic preference.
