@@ -94,7 +94,7 @@ where
     A: VaultAuthorizer,
 {
     fn put_reference(&self, record_id: &str, context: &AuthorizationContext) -> Result<(), RepositoryError> {
-        self.vault.verify(record_id, context).map_err(Into::into)?;
+        self.vault.verify(record_id, context).map_err(RepositoryError::from)?;
         self.list(context)?
             .into_iter()
             .find(|entry| entry.record_id == record_id)
