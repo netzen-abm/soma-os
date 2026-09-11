@@ -1,6 +1,16 @@
 # SOMA-OS Governance
 
-This section defines how humans, developers, and AI agents should work in the SOMA repository.
+This section defines how humans, developers, reviewers, and AI agents should work in the SOMA repository.
+
+## Start here
+
+1. `documentation-authority-registry-v1.md` — canonical documentation ownership and lookup rules.
+2. `documentation-content-and-organization-audit-2026-09-12.md` — latest content/authority/organization audit.
+3. `SOMA-OS-CURRENT-OPERATING-BASELINE-2026-09-12.md` — current execution and architectural operating baseline.
+4. `SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md` — detailed shared operating guide.
+5. `cleanup-execution-plan.md` — repository cleanup, archive-first, deletion, CI, and merge-control procedure.
+6. `branch-lifecycle.md` — branch creation, verification, retirement, and cleanup.
+7. `code-maintainability-policy.md` — engineering maintainability practices.
 
 ## Non-negotiable rules
 
@@ -18,8 +28,6 @@ This section defines how humans, developers, and AI agents should work in the SO
 12. Do not create duplicate contracts, schemas, databases, or documentation when an existing canonical authority exists.
 
 ## Shared-first implementation gate
-
-Before implementing a capability:
 
 ```text
 1. Identify the user/system need
@@ -101,15 +109,8 @@ Verify post-merge
 Update documentation/readiness
 ```
 
-## Governance documents
-
-- `documentation-authority-registry-v1.md` — canonical documentation ownership and lookup rules.
-- `documentation-audit-2026-09-11.md` — current documentation authority/overlap audit.
-- `cleanup-execution-plan.md` — repository cleanup, archive-first, deletion, CI, and merge-control procedure.
-- `branch-lifecycle.md` — branch creation, verification, retirement, and cleanup.
-- `code-maintainability-policy.md` — engineering maintainability practices.
-- `SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md` — shared operating context for humans, developers, and AI agents.
-
 ## Repository hygiene
 
-Use descriptive, stable names. Avoid date suffixes for canonical contracts unless the date is itself semantically important. Version contracts explicitly. Keep historical documents in `docs/archive/` when superseded rather than deleting them immediately.
+Use descriptive, stable names. Avoid date suffixes for canonical contracts unless the date is semantically important. Version contracts explicitly. Keep historical documents in `docs/archive/` when superseded rather than deleting them immediately.
+
+The 2026-09-12 documentation audit establishes the current organization baseline. Further movement requires a demonstrated authority, lifecycle, broken-reference, or duplication problem rather than aesthetic preference.
