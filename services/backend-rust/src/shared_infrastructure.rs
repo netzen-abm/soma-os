@@ -18,6 +18,7 @@ pub enum CapabilityDomain {
     Spatial,
     Knowledge,
     Intelligence,
+    Research,
     Transport,
     Infrastructure,
 }
@@ -33,6 +34,7 @@ impl CapabilityDomain {
             "spatial" => Some(Self::Spatial),
             "knowledge" => Some(Self::Knowledge),
             "intelligence" => Some(Self::Intelligence),
+            "research" => Some(Self::Research),
             "transport" => Some(Self::Transport),
             "infrastructure" => Some(Self::Infrastructure),
             _ => None,
