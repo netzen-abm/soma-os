@@ -1,8 +1,12 @@
-//! SOMA shared infrastructure capability registry.
+//! SOMA shared infrastructure capability registry projection.
 //!
-//! Domain applications must consume reusable capabilities from this layer rather
-//! than implementing their own copies of privacy, provenance, spatial, evidence,
-//! or data-processing primitives.
+//! The versioned JSON registry is the canonical source of capability identity
+//! and metadata. This Rust module is a typed projection for runtime consumers;
+//! it must not maintain a second capability inventory.
+
+use serde::Deserialize;
+
+const CANONICAL_REGISTRY: &str = include_str!("../../shared/capability_registry.json");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CapabilityDomain {
@@ -18,65 +22,106 @@ pub enum CapabilityDomain {
     Infrastructure,
 }
 
+impl CapabilityDomain {
+    fn parse(value: &str) -> Option<Self> {
+        match value {
+            "privacy" => Some(Self::Privacy),
+            "security" => Some(Self::Security),
+            "data" => Some(Self::Data),
+            "provenance" => Some(Self::Provenance),
+            "evidence" => Some(Self::Evidence),
+            "spatial" => Some(Self::Spatial),
+            "knowledge" => Some(Self::Knowledge),
+            "intelligence" => Some(Self::Intelligence),
+            "transport" => Some(Self::Transport),
+            "infrastructure" => Some(Self::Infrastructure),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CapabilityStatus {
     Proposed,
     Experimental,
     Validated,
+    Implemented,
+    Architecture,
+    AdapterBoundary,
+    Optional,
+    Planned,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+impl CapabilityStatus {
+    fn parse(value: &str) -> Option<Self> {
+        match value {
+            "proposed" => Some(Self::Proposed),
+            "experimental" => Some(Self::Experimental),
+            "validated" => Some(Self::Validated),
+            "implemented" => Some(Self::Implemented),
+            "architecture" => Some(Self::Architecture),
+            "adapter-boundary" => Some(Self::AdapterBoundary),
+            "optional" => Some(Self::Optional),
+            "planned" => Some(Self::Planned),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CapabilityDescriptor {
-    pub id: &'static str,
+    pub id: String,
+    pub version: String,
     pub domain: CapabilityDomain,
     pub status: CapabilityStatus,
 }
 
-/// Canonical registry of shared capabilities.
-///
-/// New domain features should register a reusable capability here before being
-/// implemented as an application-specific module. This keeps capabilities
-/// discoverable and reusable across web, mobile, bots, AI and protocol adapters.
-pub const CAPABILITIES: &[CapabilityDescriptor] = &[
-    CapabilityDescriptor {
-        id: "privacy.local_first",
-        domain: CapabilityDomain::Privacy,
-        status: CapabilityStatus::Validated,
-    },
-    CapabilityDescriptor {
-        id: "security.authenticated_encryption",
-        domain: CapabilityDomain::Security,
-        status: CapabilityStatus::Proposed,
-    },
-    CapabilityDescriptor {
-        id: "knowledge.provenance",
-        domain: CapabilityDomain::Provenance,
-        status: CapabilityStatus::Experimental,
-    },
-    CapabilityDescriptor {
-        id: "knowledge.evidence",
-        domain: CapabilityDomain::Evidence,
-        status: CapabilityStatus::Experimental,
-    },
-    CapabilityDescriptor {
-        id: "data.evidence_migration",
-        domain: CapabilityDomain::Data,
-        status: CapabilityStatus::Experimental,
-    },
-    CapabilityDescriptor {
-        id: "spatial.point_mapping",
-        domain: CapabilityDomain::Spatial,
-        status: CapabilityStatus::Proposed,
-    },
-    CapabilityDescriptor {
-        id: "infrastructure.capability_adapter_boundary",
-        domain: CapabilityDomain::Infrastructure,
-        status: CapabilityStatus::Validated,
-    },
-];
+#[derive(Debug, Deserialize)]
+struct Registry {
+    schema_version: String,
+    capabilities: Vec<RegistryCapability>,
+}
 
-pub fn capability(id: &str) -> Option<&'static CapabilityDescriptor> {
-    CAPABILITIES.iter().find(|item| item.id == id)
+#[derive(Debug, Deserialize)]
+struct RegistryCapability {
+    id: String,
+    version: String,
+    domain: String,
+    status: String,
+}
+
+fn canonical_registry() -> Registry {
+    serde_json::from_str(CANONICAL_REGISTRY).expect("canonical capability registry must be valid")
+}
+
+/// Return a typed projection of one capability from the canonical JSON registry.
+pub fn capability(id: &str) -> Option<CapabilityDescriptor> {
+    canonical_registry()
+        .capabilities
+        .into_iter()
+        .find(|item| item.id == id)
+        .and_then(|item| {
+            Some(CapabilityDescriptor {
+                id: item.id,
+                version: item.version,
+                domain: CapabilityDomain::parse(&item.domain)?,
+                status: CapabilityStatus::parse(&item.status)?,
+            })
+        })
+}
+
+/// Validate that the embedded registry has a supported schema version and that
+/// every entry can be projected into the typed runtime representation.
+pub fn validate_registry() -> bool {
+    let registry = canonical_registry();
+    registry.schema_version == "1.0.0"
+        && !registry.capabilities.is_empty()
+        && registry.capabilities.iter().all(|item| {
+            !item.id.is_empty()
+                && !item.version.is_empty()
+                && CapabilityDomain::parse(&item.domain).is_some()
+                && CapabilityStatus::parse(&item.status).is_some()
+        })
 }
 
 #[cfg(test)]
@@ -84,28 +129,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn shared_privacy_capability_is_registered() {
+    fn canonical_registry_is_valid() {
+        assert!(validate_registry());
+    }
+
+    #[test]
+    fn lookup_uses_canonical_registry() {
         let capability = capability("privacy.local_first").expect("privacy capability");
+        assert_eq!(capability.version, "0.1.0");
         assert_eq!(capability.domain, CapabilityDomain::Privacy);
         assert_eq!(capability.status, CapabilityStatus::Validated);
     }
 
     #[test]
-    fn evidence_capabilities_are_shared_but_not_overclaimed() {
-        assert_eq!(capability("knowledge.provenance").unwrap().status, CapabilityStatus::Experimental);
-        assert_eq!(capability("knowledge.evidence").unwrap().status, CapabilityStatus::Experimental);
-        assert_eq!(capability("data.evidence_migration").unwrap().status, CapabilityStatus::Experimental);
+    fn canonical_registry_contains_governed_operation_dependencies() {
+        for capability_id in ["evidence.research", "intelligence.ai", "protocol.mcp"] {
+            assert!(capability(capability_id).is_some(), "missing {capability_id}");
+        }
     }
 
     #[test]
-    fn adapter_boundary_is_a_shared_infrastructure_capability() {
-        let capability = capability("infrastructure.capability_adapter_boundary").expect("capability adapter boundary");
-        assert_eq!(capability.domain, CapabilityDomain::Infrastructure);
-        assert_eq!(capability.status, CapabilityStatus::Validated);
-    }
-
-    #[test]
-    fn security_capability_is_not_claimed_validated() {
-        assert_eq!(capability("security.authenticated_encryption").unwrap().status, CapabilityStatus::Proposed);
+    fn ai_remains_optional() {
+        assert_eq!(
+            capability("intelligence.ai").unwrap().status,
+            CapabilityStatus::Optional
+        );
     }
 }
