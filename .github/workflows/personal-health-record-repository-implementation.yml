@@ -37,7 +37,7 @@ jobs:
         run: cargo check --all-targets
 
       - name: Rust repository tests
-        run: cargo test personal_health_record_repository --lib -- --nocapture
+        run: cargo test personal_health_record_repository --bin soma_backend -- --nocapture
 
       - name: Rust lint
         run: cargo clippy --all-targets -- -D warnings
