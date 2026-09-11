@@ -9,17 +9,20 @@ REGISTRY = ROOT / "capability_registry.json"
 SCHEMA = REPO_ROOT / "schemas" / "capability-registry-v1.json"
 
 REQUIRED_FIELDS = {
-    "id",
-    "version",
-    "domain",
-    "status",
-    "maturity",
-    "principal_types",
-    "identity_requirements",
-    "policy",
-    "adapters",
-    "surfaces",
+    "id", "version", "domain", "status", "maturity", "principal_types",
+    "identity_requirements", "policy", "adapters", "surfaces"
 }
+DOMAINS = {
+    "privacy", "security", "data", "provenance", "evidence", "spatial",
+    "knowledge", "intelligence", "transport", "infrastructure", "research"
+}
+STATUSES = {
+    "proposed", "experimental", "validated", "implemented", "architecture",
+    "adapter-boundary", "optional", "planned"
+}
+MATURITIES = {"development", "validated", "production"}
+ASSURANCE_LEVELS = {"LOW", "SUBSTANTIAL", "HIGH"}
+IDENTITY_MODES = {"anonymous_local", "authenticated_account"}
 
 
 class CapabilityRegistryTests(unittest.TestCase):
@@ -36,17 +39,36 @@ class CapabilityRegistryTests(unittest.TestCase):
             self.assertEqual(set(capability), REQUIRED_FIELDS)
             self.assertTrue(capability["id"])
             self.assertTrue(capability["version"])
+            self.assertIn(capability["domain"], DOMAINS)
+            self.assertIn(capability["status"], STATUSES)
+            self.assertIn(capability["maturity"], MATURITIES)
             self.assertTrue(capability["principal_types"])
             self.assertTrue(capability["policy"])
             self.assertIsInstance(capability["adapters"], list)
             self.assertIsInstance(capability["surfaces"], list)
 
+            identity = capability["identity_requirements"]
+            self.assertEqual(
+                set(identity),
+                {
+                    "applies_to_principal_types",
+                    "allowed_identity_modes",
+                    "minimum_assurance_level",
+                    "requires_durable_identity",
+                },
+            )
+            self.assertTrue(identity["applies_to_principal_types"])
+            self.assertTrue(identity["allowed_identity_modes"])
+            self.assertTrue(set(identity["allowed_identity_modes"]) <= IDENTITY_MODES)
+            self.assertIn(identity["minimum_assurance_level"], ASSURANCE_LEVELS)
+            self.assertIsInstance(identity["requires_durable_identity"], bool)
+
     def test_registry_is_valid_and_unique(self):
         data = self.load_registry()
         capabilities = data["capabilities"]
         ids = [item["id"] for item in capabilities]
-        self.assertEqual(len(ids), len(set(ids)))
         versions = [(item["id"], item["version"]) for item in capabilities]
+        self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(versions), len(set(versions)))
 
     def test_registry_is_canonical_not_a_runtime_inventory(self):
@@ -58,9 +80,7 @@ class CapabilityRegistryTests(unittest.TestCase):
         data = self.load_registry()
         items = {item["id"]: item for item in data["capabilities"]}
         for capability_id in (
-            "protocol.web3",
-            "identity.decentralized",
-            "storage.content-addressed",
+            "protocol.web3", "identity.decentralized", "storage.content-addressed"
         ):
             capability = items[capability_id]
             self.assertTrue(capability["adapters"])
