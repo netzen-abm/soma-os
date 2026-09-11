@@ -1,6 +1,6 @@
 # SOMA-OS Documentation Audit — 2026-09-11
 
-**Audit basis:** repository tree at `main` commit `41f1e151f080b8c27413e19dea27e9e0ba3a...` as inspected during this documentation pass.
+**Audit basis:** repository tree at `main` commit `41f1e151f080b8c27413e19dea27e9e0ba93fb21` as inspected during this documentation pass.
 
 ## Audit objective
 
@@ -10,7 +10,7 @@ Prevent documentation duplication, preserve institutional memory, and establish 
 
 The repository already has meaningful documentation domains: architecture, decisions, evidence sources, research, strategy, product, UI/UX, operating model, and archive. The main weakness is not absence of documentation; it is **authority overlap and discoverability**. The architecture directory contains many highly specific documents, some of which describe adjacent lifecycle stages or implementation details.
 
-The current repository tree also contains active code and schema areas for apps, services, database, health vault, protocols, operations, scripts, and schemas. This reinforces the need for documentation to explain ownership rather than reproduce code semantics. fileciteturn391file0
+The current repository tree also contains active code and schema areas for apps, services, database, health vault, protocols, operations, scripts, and schemas. This reinforces the need for documentation to explain ownership rather than reproduce code semantics.
 
 ## Authority model adopted
 
@@ -30,13 +30,11 @@ The current repository tree also contains active code and schema areas for apps,
 
 ### 1. Project memory vs decision log
 
-These should **not** be merged. Project Memory is a consolidated historical context; the Decision Log preserves chronological decisions. The new documentation index treats both as complementary rather than competing authorities.
+These should **not** be merged. Project Memory is a consolidated historical context; the Decision Log preserves chronological decisions. The documentation index treats both as complementary rather than competing authorities.
 
 ### 2. System architecture spec vs Shared Infrastructure Charter
 
 These overlap on shared-first principles, but they have different scope. The charter is a foundational rule; the system architecture spec is the whole-system architecture baseline. Keep both and make the architecture index establish their relationship.
-
-The system architecture explicitly defines shared-first, one canonical domain, policy-before-execution, evidence integrity, fail-closed behavior, independent surfaces, optional AI/protocol capabilities, and archive-before-deletion. fileciteturn392file0 The charter expresses the same principles at policy level and adds the reusable-capability admission rule. fileciteturn393file0
 
 ### 3. Cross-paradigm methodology vs Epistemic Context Mapping
 
@@ -45,11 +43,9 @@ Keep both. They are adjacent but distinct:
 - **Epistemic Context Mapping:** understand a knowledge tradition, its native concepts, epistemic framework, and contextual meaning before comparison.
 - **Cross-Paradigm Evidence Methodology:** evaluate a specific claim/intervention/outcome across paradigms using evidence, safety, replication, contradiction, applicability, and uncertainty.
 
-The existing documents explicitly establish these different functions. fileciteturn414file0 fileciteturn395file0
-
 ### 4. Health State vs Longitudinal Observation
 
-Do not create a second canonical health-state model. Health State remains canonical; longitudinal observation/timeline is a repository/projection concern. The repository already contains both the Health State contract and longitudinal observation contract/schema, so future work must prevent semantic drift.
+Do not create a second canonical health-state model. Health State remains canonical; longitudinal observation/timeline is a repository/projection concern. Future work must prevent semantic drift.
 
 ### 5. Personal Health Record vs Personal Health Record Repository
 
@@ -57,15 +53,15 @@ Keep both only because they have different boundaries: the health-record semanti
 
 ### 6. Context/implementation documents
 
-Several security areas have both context/contract and implementation documents. This is acceptable where the distinction is real. The rule is: the contract states invariants; the implementation document states how the current implementation realizes them. Do not duplicate the invariant text unnecessarily.
+Several security areas have both context/contract and implementation documents. This is acceptable where the distinction is real. The contract states invariants; the implementation document states how the current implementation realizes them. Do not duplicate the invariant text unnecessarily.
 
 ### 7. Legacy-data promotion documents
 
-There are multiple documents for classification, preflight, implementation, executor, and operator specification. These should remain separate while each has a distinct lifecycle boundary. A future consolidation pass should add a single navigation map rather than flatten the documents into one oversized specification.
+There are multiple documents for classification, preflight, implementation, executor, and operator specification. These should remain separate while each has a distinct lifecycle boundary. A future consolidation pass should add navigation rather than flatten the documents into one oversized specification.
 
 ## New behavioral/epistemic material
 
-The Behavioral & Epistemic Evidence Layer is correctly positioned as a semantic extension rather than a new application. Its purpose, lateral-thinking protocol, AI boundary, and non-goals are aligned with the existing shared-first architecture. The PR remains draft and must be validated against canonical Health State and Evidence Graph contracts before merge. fileciteturn411file0
+The Behavioral & Epistemic Evidence Layer is correctly positioned as a semantic extension rather than a new application. Its purpose, lateral-thinking protocol, AI boundary, and non-goals are aligned with the existing shared-first architecture. The PR remains draft and must be validated against canonical Health State and Evidence Graph contracts before merge.
 
 The key architectural constraint is that behavioral observations must not become a competing canonical health-state model. The proposed contract is therefore subject to cross-contract testing before acceptance.
 
@@ -77,6 +73,7 @@ Added:
 - `docs/architecture/README.md` — canonical architecture/contract map.
 - `docs/governance/README.md` — governance for humans, developers, and AI agents.
 - `docs/governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md` — consolidated operating context.
+- `docs/governance/documentation-authority-registry-v1.md` — canonical ownership/navigation map.
 - `docs/governance/documentation-audit-2026-09-11.md` — this audit.
 - `docs/decisions/README.md` — decision-record index.
 - `docs/research/README.md` — research boundary and workflow.
