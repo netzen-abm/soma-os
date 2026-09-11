@@ -93,21 +93,47 @@ class GovernedCapabilityOperationContractTests(unittest.TestCase):
         operation["status"] = "SELF_AUTHORIZED"
         self.assert_invalid(operation)
 
+    def test_authorized_or_terminal_execution_states_require_policy_record(self):
+        policy_required_states = {
+            "DENIED", "REQUIRES_CONSENT", "REQUIRES_HUMAN_REVIEW",
+            "AUTHORIZED", "EXECUTING", "SUCCEEDED", "FAILED", "DEGRADED",
+        }
+        for status in policy_required_states:
+            operation = self.base_operation()
+            operation["status"] = status
+            self.assertNotIn("policy", operation)
+            self.assertNotIn("policy", operation)
+            operation["policy"] = {
+                "decision": "ALLOW" if status not in {"DENIED", "REQUIRES_CONSENT", "REQUIRES_HUMAN_REVIEW"} else "DENY",
+                "policy_version": "0.4.0",
+                "decision_ref": "policy-001",
+            }
+            self.assert_valid(operation)
+
+    def test_policy_decision_is_required_before_execution_semantically(self):
+        operation = self.base_operation()
+        operation["status"] = "EXECUTING"
+        self.assertFalse("policy" in operation)
+        operation["policy"] = {"decision": "ALLOW", "policy_version": "0.4.0", "decision_ref": "policy-001"}
+        self.assert_valid(operation)
+
+    def test_consent_and_review_gate_states_are_explicit(self):
+        consent = self.base_operation()
+        consent["status"] = "REQUIRES_CONSENT"
+        consent["consent"] = {"required": True, "status": "pending"}
+        self.assert_valid(consent)
+
+        review = self.base_operation()
+        review["status"] = "REQUIRES_HUMAN_REVIEW"
+        review["human_review"] = {"required": True, "status": "pending"}
+        self.assert_valid(review)
+
     def test_sensitive_payload_is_not_required_by_envelope(self):
         operation = self.base_operation()
         operation["result"] = {"status": "success", "result_ref": "vault-ref-001", "digest": "sha256:example"}
         self.assert_valid(operation)
         self.assertNotIn("health_record", operation)
         self.assertNotIn("raw_payload", operation)
-
-    def test_consent_and_human_review_are_explicit(self):
-        operation = self.base_operation()
-        operation["status"] = "REQUIRES_CONSENT"
-        operation["consent"] = {"required": True, "status": "pending"}
-        self.assert_valid(operation)
-        operation["status"] = "REQUIRES_HUMAN_REVIEW"
-        operation["human_review"] = {"required": True, "status": "pending"}
-        self.assert_valid(operation)
 
     def test_unknown_root_properties_are_rejected(self):
         operation = self.base_operation()
