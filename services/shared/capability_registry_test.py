@@ -20,7 +20,7 @@ STATUSES = {
     "proposed", "experimental", "validated", "implemented", "architecture",
     "adapter-boundary", "optional", "planned"
 }
-MATURITIES = {"development", "validated", "production"}
+MATURITIES = {"development", "validated", "production", "planned"}
 ASSURANCE_LEVELS = {"LOW", "SUBSTANTIAL", "HIGH"}
 IDENTITY_MODES = {"anonymous_local", "authenticated_account"}
 
