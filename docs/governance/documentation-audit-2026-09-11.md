@@ -73,6 +73,10 @@ There are multiple documents for classification, preflight, implementation, exec
 
 This is a controlled authority correction, not a content deletion. The original files remain recoverable through Git history and the destination paths are now the active locations.
 
+### 11. Food–Life evidence model placement
+
+`food-life-evidence-model.md` defines shared evidence/domain infrastructure, provenance, safety, and analytical boundaries rather than a governance process or a surface-specific product. It has therefore been relocated from the documentation root to `docs/architecture/food-life-evidence-model.md`. The move preserves the existing content/blob and gives the model the same architectural discoverability as other shared evidence contracts.
+
 ## Citation and reference hygiene
 
 A content audit found transient ChatGPT/tool citation artifacts in four Markdown documents:
@@ -136,6 +140,7 @@ These changes improve discoverability without discarding substantive content.
 - Relocated the cleanup execution plan to the governance domain after confirming that its content is process/governance guidance rather than a technical architecture contract.
 - Relocated branch lifecycle and code maintainability policies to governance after confirming they govern repository/engineering process rather than SOMA technical architecture.
 - Relocated the Food–Life evidence model into architecture after confirming that it defines shared evidence infrastructure, domain entities, provenance, safety, and analytical boundaries.
+- Synchronized the documentation authority registry and architecture/governance indexes with the final relocated paths.
 
 ## What is deliberately NOT done yet
 
