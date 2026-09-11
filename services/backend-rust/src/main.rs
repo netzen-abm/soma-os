@@ -25,6 +25,7 @@ mod meta_outbound;
 mod mnemonic_validator;
 mod nostr_client;
 mod personal_health_record_repository;
+mod longitudinal_observation_repository;
 mod privacy_policy;
 mod protected_db_context;
 mod shared_infrastructure;
@@ -67,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = PgPoolOptions::new().max_connections(5).connect(&db_url).await?;
     let db_manager = SomaDatabaseManager::new(pool);
 
-    let outbound_runner = MetaOutboundRunner::new(&wa_token, &wa_phone_id, &fb_token);
+    let outbound_runner = MetaOutboundRunner::new(&wa_token);
     let orchestrator = FermentationOrchestrator::new(outbound_runner);
     let menu_controller = MultiChannelMenuController::new(orchestrator);
 
