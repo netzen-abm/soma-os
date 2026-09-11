@@ -3,7 +3,9 @@ use std::cmp::Ordering;
 use thiserror::Error;
 
 use crate::local_health_vault::LocalHealthVaultRecord;
-use crate::local_health_vault_storage::{AuthorizationContext, AuthorizedIndexEntry, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider};
+use crate::local_health_vault_storage::{
+    AuthorizationContext, AuthorizedIndexEntry, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider,
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RepositoryQuery {
