@@ -1,76 +1,101 @@
 # SOMA-OS System Architecture + Product Specification v1
 
-**Status:** Proposed baseline for review  
-**Branch:** `docs/soma-system-product-spec-v1`  
-**Scope:** architecture and product contract for the current SOMA security/data foundation and the next legacy-data migration gate.
+**Status:** Architecture baseline  
+**Scope:** Whole SOMA ecosystem and shared infrastructure  
+**Authority:** System-level architecture baseline; machine-readable semantics are authoritative in schemas and executable contract tests. Durable rationale belongs in `docs/decisions/`.  
+**Implementation note:** This document describes the intended/current architectural composition and must not be interpreted as proof of production readiness.
 
 ## 1. Purpose
 
-SOMA-OS is an evidence-aware health intelligence infrastructure. This specification freezes the current architectural direction before further implementation of verified legacy-data promotion and the final protected-row constraint gate.
+SOMA-OS is a privacy-first, evidence-aware health intelligence infrastructure. It is one ecosystem built from shared capabilities and governed contracts. Product surfaces, providers, AI/agents, and protocols consume the shared foundation rather than implementing parallel health, evidence, privacy, safety, authorization, or provenance logic.
 
-This document is a design baseline, not a claim that every component below is already production-ready.
+This specification establishes the whole-system architecture. Feature-specific implementation status belongs in the product-readiness master checklist and implementation documents.
 
 ## 2. Product principles
 
 1. **Shared-first:** reusable capability belongs in shared infrastructure.
-2. **One canonical domain:** contracts and domain invariants are canonical even when implementations are polyglot.
-3. **Rust as canonical/reference runtime:** security-sensitive and domain-critical behavior is implemented or specified against the Rust reference runtime.
-4. **Policy before execution:** no protected operation reaches storage without identity, authorization, and target-scope validation.
-5. **Evidence integrity:** provenance, uncertainty, source status, and transformation lineage survive downstream processing.
-6. **Fail closed:** ambiguous security state denies access rather than guessing.
-7. **Independent surfaces:** a transport, provider, model, agent, or optional protocol cannot redefine core policy.
-8. **Optional capabilities remain optional:** AI, Nostr, Web3, DID/VC, and content-addressed storage are adapters, not core dependencies.
-9. **Archive before deletion:** historical material is preserved until removal is evidenced.
+2. **One canonical domain:** domain contracts and invariants remain canonical even when implementation is polyglot.
+3. **Canonical/reference runtime:** Rust is the canonical/reference runtime for security-sensitive and domain-critical behavior; other runtimes conform through explicit contracts where justified.
+4. **Authorization before protected execution:** protected operations require validated identity/security context, canonical policy evaluation, and target-scope enforcement.
+5. **Evidence integrity:** provenance, uncertainty, source status, safety, applicability, contradiction, and transformation lineage survive downstream processing.
+6. **Fail closed:** ambiguous security state denies rather than guesses.
+7. **Independent surfaces:** a transport, provider, model, agent, or protocol cannot redefine core policy or domain semantics.
+8. **Optional capabilities remain optional:** AI, Nostr, Web3, DID/VC, MCP, and content-addressed storage are adapters/capabilities, not mandatory core dependencies.
+9. **Archive before deletion:** historical material is preserved until safe removal is evidenced.
 10. **No silent legacy promotion:** legacy data becomes protected only through explicit, verified, auditable promotion.
 
 ## 3. System context
 
-```mermaid
-flowchart TB
-  U[User / Operator / Service] --> S[Product Surfaces]
-  S --> A[IdentityContext]
-  A --> Z[Identity → Authorization Enforcement]
-  Z --> P[Policy Kernel]
-  P --> G[ProtectedDataAccess]
-  G --> T[Trusted Persistence DB Identity]
-  T --> C[Trusted Transaction Context]
-  C --> R[PostgreSQL RLS + Constraints]
-  R --> D[(Protected Health Data)]
-
-  S --> E[Evidence & Research Capabilities]
-  E --> EG[(Health Evidence Graph)]
-  S --> H[Health State Model]
-  H --> HL[Health-State ↔ Evidence Links]
-  HL --> EG
-
-  S --> X[Optional Adapters]
-  X --> AI[AI / Agents]
-  X --> MCP[MCP]
-  X --> N[Nostr]
-  X --> W[Web3 / DID / VC]
-  X --> IPFS[Content-addressed Storage]
-
-  D --> O[Audit / Observability]
-  EG --> O
-  P --> O
-  G --> O
+```text
+User / Operator / Service
+        ↓
+Product Surface / Adapter
+        ↓
+IdentityContext
+        ↓
+Identity → Authorization Enforcement
+        ↓
+Authorization + Policy Decision Boundary
+        ↓
+Policy Kernel
+        ↓
+Canonical Authorization Decision
+        ↓
+Governed Capability Operation / ProtectedDataAccess
+        ↓
+Trusted Persistence Identity
+        ↓
+Trusted Transaction Context
+        ↓
+PostgreSQL RLS / constraints or approved vault adapter
+        ↓
+Protected Data
+        ↓
+Provenance / Audit
 ```
 
-### Authority boundaries
+Health/evidence capabilities compose alongside this security path:
+
+```text
+Observation / imported record
+        ↓
+Provenance + context + uncertainty
+        ↓
+Canonical Health State
+        ↓
+Explicit Health-State ↔ Evidence linkage
+        ↓
+Health Evidence Graph
+        ↓
+Bounded interpretation
+        ↓
+Human decision
+        ↓
+Outcome
+        ↓
+New observation
+```
+
+Optional adapters include AI, agents, MCP, messaging, Nostr, Web3/DID/VC, content-addressed storage, research providers, wearables, labs, and other health-data sources.
+
+## 4. Authority boundaries
 
 | Layer | Authority | Responsibility | Must not do |
 |---|---|---|---|
-| Product surfaces | none | UX, transport, request collection | redefine policy or infer security scope |
-| IdentityContext | identity/scope assertion | represent verified principal and explicit scopes | contain credentials/tokens or delegation |
-| Authorization Enforcement | security boundary | validate identity + target + exact PolicyRequest | invent grants |
-| Policy Kernel | authorization authority | deterministic allow/deny/degrade/review semantics | read/write protected data directly |
-| ProtectedDataAccess | persistence gate | bind authorized operation to target and adapter | grant access independently |
-| Trusted DB identity/context | storage trust boundary | establish DB execution identity and transaction-local scope | accept untrusted caller claims |
-| PostgreSQL RLS/constraints | defense-in-depth | contain storage-layer mistakes and cross-scope access | replace application authorization |
-| Evidence Graph | evidence authority | represent source/claim/evidence/safety/applicability | silently convert evidence into diagnosis |
-| Optional adapters | integration boundary | connect external protocols/providers | become required for core operation |
+| Product surfaces | none | UX, transport, request collection | redefine policy or security scope |
+| IdentityContext | verified identity/security context | represent principal and explicit scope | contain untrusted authorization or credentials |
+| Identity Authorization Enforcement | identity/scope security boundary | validate identity context and target scope | invent policy grants |
+| Authorization + Policy Decision Boundary | authorization composition boundary | bind request, invoke Policy Kernel, preserve authoritative decision | become a second policy engine |
+| Policy Kernel | policy evaluation authority | deterministic policy decision | read/write protected data directly |
+| Governed Capability Operation | execution governance | operation lifecycle and authority gates | replace authorization decision |
+| ProtectedDataAccess | persistence gate | bind authorized operation to protected target | grant access independently |
+| Trusted DB identity/context | storage trust boundary | establish trusted DB identity and transaction scope | accept caller-controlled scope |
+| PostgreSQL RLS/constraints | defense-in-depth | contain storage-layer mistakes | replace application authorization |
+| Health State | personal-health semantic authority | represent observations/interventions/outcomes and related context | become population evidence |
+| Health Evidence Graph | general evidence authority | represent claims/sources/studies/evidence/safety/applicability | become personal health fact automatically |
+| Optional adapters | integration boundary | connect external systems | become core authority/dependency |
 
-## 4. Canonical execution path
+## 5. Canonical authorization path
 
 ```text
 Request
@@ -79,148 +104,134 @@ Verified IdentityContext
   ↓
 Identity → Authorization Enforcement
   ↓
-Policy Kernel decision
+Authorization + Policy Decision Boundary
   ↓
-ProtectedDataAccess target binding
+Policy Kernel
   ↓
-Trusted persistence service identity
+Canonical Authorization Decision
   ↓
-Transaction-local trusted tenant/data-domain context
+Governed Capability Operation / ProtectedDataAccess
   ↓
-PostgreSQL RLS + constraints
+Trusted persistence boundary
   ↓
-Protected data operation
+Protected operation
   ↓
-Audit / evidence-preserving result
+Audit / provenance
 ```
 
-Any missing, malformed, expired, revoked, conflicting, or caller-supplied security field fails closed.
+The Policy Kernel is the sole policy evaluator. The Authorization + Policy Decision Boundary is the authoritative composition boundary around it. Consent, human review, authentication, grant administration, RLS, and execution remain distinct contracts.
 
-## 5. Health information architecture
+## 6. Health information architecture
 
-SOMA distinguishes personal state from general evidence.
+SOMA deliberately separates:
 
-```mermaid
-flowchart LR
-  HS[Health State Model]
-  HE[Health Evidence Graph]
-  LK[Health-State Evidence Link]
-  HS --> LK
-  LK --> HE
-  HE --> C[Canonical Mapping]
-  C --> G[Governance Gate]
-  G --> O[User-facing / Research / Management Output]
+```text
+Observation
+  ≠ Claim
+  ≠ Evidence
+  ≠ Interpretation
+  ≠ Recommendation
 ```
 
-### Health State Model
+The Health State Model is the canonical personal-health semantic model. The Health Evidence Graph is the canonical general evidence semantic model. Explicit directional links connect them without making either source of truth for the other.
 
-Canonical entity types are:
+Unknown time remains unknown. Derived signals retain their source observations and processing lineage.
 
-- person
-- observation
-- interpretation
-- goal
-- context
-- intervention
-- response
-- outcome
+## 7. Longitudinal health intelligence
 
-Observations and interpretations carry uncertainty. Provenance is mandatory.
+The future intelligence loop is:
 
-### Evidence Graph
-
-The graph represents claims, sources, studies, populations, interventions, outcomes, evidence assessment, safety assessment, and applicability. Evidence status is lifecycle-based rather than binary.
-
-The system must not collapse “source found”, “evidence assessed”, “safe”, and “applicable” into one trust flag.
-
-## 6. Legacy data lifecycle
-
-The next implementation gate is deliberately staged:
-
-```mermaid
-flowchart LR
-  L[Legacy rows] --> I[Inventory]
-  I --> CL[Classification Evidence]
-  CL --> V{Authoritative verified provenance?}
-  V -- No --> Q[Quarantine / Review / Rejection]
-  V -- Yes --> PR[Explicit Promotion Event]
-  PR --> PF[Preflight: zero NULL protected scope]
-  PF --> NG[Final NOT NULL / validated constraint]
-  NG --> P[Normal protected lifecycle]
+```text
+Observe / Import
+  → Verify
+  → Normalize
+  → Preserve provenance/context
+  → Longitudinal timeline
+  → Retrieve evidence
+  → Examine contradictions / negative evidence
+  → Assess evidence quality / applicability / uncertainty
+  → Apply safety gates
+  → Produce bounded interpretation / questions / options
+  → Human / clinician decision
+  → Outcome
+  → Learn from new observation
 ```
 
-### Promotion invariants
+This is an architecture baseline, not authorization to implement autonomous clinical reasoning.
 
-- A legacy row cannot become protected because it has a plausible tenant, domain, hash, transport, model, agent, or caller assertion.
-- Only `SCOPED_VERIFIED` classification with `VERIFIED` verification, both scope dimensions, and provenance can qualify.
-- Authoritative verification must be provenance-bound to the classification.
-- Conflicting or ambiguous classifications cannot promote.
-- Promotion is explicit and auditable.
-- Promotion is idempotent and rollback-safe.
-- The final constraint gate is blocked while any protected row remains NULL-scoped.
-- Classification history remains append-only/recoverable.
+## 8. Legacy data lifecycle
 
-## 7. Product roles
+```text
+Legacy rows
+  ↓
+Inventory
+  ↓
+Classification evidence
+  ↓
+Authoritative provenance verification
+  ↓
+Quarantine / review / rejection OR explicit promotion
+  ↓
+Preflight: zero NULL protected scope
+  ↓
+Final constraints / NOT NULL gate
+  ↓
+Normal protected lifecycle
+```
 
-### End user
+Promotion must be explicit, provenance-bound, idempotent, auditable, and rollback-safe. Untrusted metadata cannot establish protected scope.
 
-Can view and manage their authorized health information and evidence-derived outputs within explicit scope and consent boundaries.
+## 9. Product capability families
 
-### Research/knowledge operator
-
-Can work with evidence and research artifacts according to capability-specific authorization without receiving implicit access to personal protected data.
-
-### Security/data operator
-
-Can execute migration/classification/promotion workflows only through separately authorized operational capabilities. Migration authority is not equivalent to normal application access.
-
-### System service
-
-Executes approved shared capabilities under explicit service identity and capability policy.
-
-## 8. Product capability map
-
-| Capability family | Status | Product rule |
+| Capability family | Architectural status | Rule |
 |---|---|---|
-| Identity + authorization | foundational | canonical shared infrastructure |
+| Identity / authorization | foundational shared infrastructure | canonical path required |
 | Protected health data | foundational | explicit tenant/data-domain isolation |
-| Evidence graph | foundational | provenance + uncertainty preserved |
-| Legacy classification | foundational migration capability | classification does not equal promotion |
-| Verified promotion | next implementation gate | explicit provenance-bound promotion only |
-| AI | optional | user-controlled; no independent authorization |
-| Agents | optional/infrastructure | capability-scoped and auditable |
-| MCP | optional/infrastructure | tool discovery/invocation must remain authorized |
+| Health State | foundational | canonical personal-health model |
+| Evidence Graph | foundational | provenance + uncertainty + safety |
+| Governed Operations | foundational | canonical operation lifecycle |
+| Capability Registry | foundational | canonical capability inventory |
+| Research/evidence adapters | shared infrastructure | provider-neutral and replaceable |
+| AI | optional | user-controlled; cannot authorize itself |
+| Agents | optional/shared infrastructure | capability-scoped and auditable |
+| MCP | optional/shared infrastructure | discovery/invocation remains governed |
 | Nostr/Web3/DID/VC/IPFS | future adapters | plug-and-play; never core dependencies |
 
-## 9. Product acceptance boundary for the next phase
+## 10. Product roles
 
-Issue #50 is considered complete only when the implementation demonstrates:
+End users, research/knowledge operators, security/data operators, and system services receive only the capabilities and data for which they are authorized. Operational migration authority is not equivalent to normal application access.
 
-1. deterministic classification eligibility;
-2. explicit provenance-bound promotion;
-3. conflict and ambiguity denial;
-4. no scope inference from untrusted metadata;
-5. idempotent promotion behavior;
-6. transactional rollback safety;
-7. a preflight proving zero NULL-scoped protected rows;
-8. final constraint/NOT NULL enforcement only after successful preflight;
-9. realistic legacy-state PostgreSQL verification;
-10. full CI, evidence pipeline, protected-data bypass audit, and PostgreSQL adversarial tests;
-11. documentation and product-readiness tracker reconciliation.
+## 11. Product acceptance boundary
 
-## 10. Non-goals of v1
+A feature is not production-ready merely because its architecture or code exists. The applicable readiness gates are maintained in `docs/PRODUCT-READINESS-MASTER-CHECKLIST.md`.
 
-- authentication provider implementation;
-- session/token lifecycle;
-- clinical diagnosis or treatment automation;
-- replacing Policy Kernel authorization with database policy;
-- automatic legacy inference;
-- making AI mandatory;
-- making decentralized protocols mandatory;
-- broad UI implementation beyond the migration/security workflow specification.
+At system level, the first meaningful product milestone is one complete health/evidence workflow that demonstrates shared capability composition, identity/authorization, evidence/provenance, safety, failure isolation, auditability, and a real user outcome.
 
-## 11. Architectural decision
+## 12. Non-goals
 
-**Decision:** freeze the architecture above as the current SOMA-OS design baseline. Proceed with implementation only through explicit contracts and gates. Do not redesign the Policy Kernel, IdentityContext, or protected-data trust chain while implementing Issue #50 unless new evidence demonstrates a security defect.
+This baseline does not itself implement:
 
-This document is a design baseline and must not be interpreted as proof of production readiness. The repository master checklist remains the authoritative readiness tracker.
+- authentication provider integration;
+- consent lifecycle;
+- autonomous diagnosis or treatment;
+- autonomous clinical authority;
+- universal causal inference;
+- mandatory AI;
+- mandatory decentralized protocols;
+- multiple independent SOMA applications;
+- broad implementation of every future capability mentioned in this document.
+
+## 13. Architectural rule for future work
+
+Before implementing a feature:
+
+1. find the existing canonical contract;
+2. determine whether the capability is shared;
+3. identify its policy/security boundary;
+4. identify authoritative data/evidence schemas;
+5. define provenance and failure semantics;
+6. add contract/adversarial tests;
+7. implement the smallest necessary shared primitive;
+8. expose it through adapters only after the shared boundary is sound.
+
+The objective is not maximum module count. The objective is a coherent shared infrastructure capable of safely supporting multiple SOMA use cases.

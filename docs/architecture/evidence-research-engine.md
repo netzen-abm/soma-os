@@ -89,7 +89,7 @@ Suggested source classes:
 
 Search provenance must be retained.
 
-The engine should follow a reproducible review pattern: formulate the question, define inclusion/exclusion criteria, search broadly, screen, extract data, assess bias/quality and synthesize results. This aligns with established systematic-review methodology. 
+The engine should follow a reproducible review pattern: formulate the question, define inclusion/exclusion criteria, search broadly, screen, extract data, assess bias/quality and synthesize results. This is consistent with established systematic-review methodology and should be implemented with an explicit methodology contract rather than relying on a model-generated process.
 
 ## 5. Search layers
 
@@ -427,7 +427,7 @@ No client-specific evidence engine is permitted.
 
 ## 22. External alignment
 
-WHO's Global Traditional Medicine Strategy 2025–2034 emphasizes strengthening evidence, ensuring safety and regulation, appropriate integration, and respect for local heritage and rights. WHO's Research and Evidence unit also identifies appropriate research methods and evidence gaps as important work areas. citeturn0search0turn0search2
+WHO's Global Traditional Medicine Strategy 2025–2034 emphasizes strengthening evidence, ensuring safety and regulation, appropriate integration, and respect for local heritage and rights. WHO's Research and Evidence work also addresses research methods and evidence gaps. See the official [WHO Global Traditional Medicine Strategy 2025–2034](https://www.who.int/publications/i/item/9789240113176) and [WHO Traditional Medicine: Research and Evidence](https://www.who.int/teams/global-traditional-medicine-centre/research-and-evidence).
 
 This architecture is therefore intentionally evidence-first while preserving the contextual integrity of traditional knowledge.
 

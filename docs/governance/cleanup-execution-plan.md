@@ -1,7 +1,9 @@
 # SOMA Cleanup and Merge Execution Plan
 
-**Date:** 2026-08-31
-**Branch:** `stabilization/baseline-audit`
+**Date:** 2026-08-31  
+**Originating branch:** `stabilization/baseline-audit`
+
+> **Document placement:** Governance/process guidance. This document describes repository-cleanup, validation, security, evidence, and merge procedure; it is not a technical architecture contract.
 
 ## Objective
 

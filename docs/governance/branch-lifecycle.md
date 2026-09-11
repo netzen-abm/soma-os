@@ -3,6 +3,10 @@
 **Status:** Active
 **Version:** 0.1.0
 
+## Authority boundary
+
+This is a repository governance policy. It governs branch lifecycle and retirement; it is not a SOMA technical architecture contract.
+
 ## Principle
 
 `main` is the canonical verified ecosystem state. Branches exist to isolate

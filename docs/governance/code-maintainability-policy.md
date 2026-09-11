@@ -1,5 +1,9 @@
 # SOMA Code Maintainability Policy
 
+## Authority boundary
+
+This is an engineering governance policy. It defines maintainability expectations for SOMA source code; technical architecture contracts remain authoritative for system structure and behavior.
+
 ## Purpose
 
 SOMA source code must remain easy to review, test, and maintain.

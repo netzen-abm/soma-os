@@ -8,7 +8,7 @@ First free/public research-provider adapter specification.
 
 NCBI PubMed via Entrez E-utilities.
 
-NCBI provides public APIs for Entrez databases, including PubMed and PMC. PubMed E-utilities support programmatic search and retrieval of PubMed records. The adapter must follow NCBI's current usage policies and identify the calling application with registered `tool` and `email` values. citeturn0search1turn0search3
+NCBI provides public APIs for Entrez databases, including PubMed and PMC. PubMed E-utilities support programmatic search and retrieval of PubMed records. The adapter must follow NCBI's current usage policies and identify the calling application with registered `tool` and `email` values. See the official [NCBI E-utilities documentation](https://www.ncbi.nlm.nih.gov/books/NBK25501/).
 
 ## Why PubMed first
 
@@ -35,7 +35,7 @@ Normalized study records
 PubMed verification URL
 ```
 
-NCBI documents ESearch for returning matching UIDs and ESummary/EFetch for retrieving records. citeturn0search1turn0search2
+NCBI documents ESearch for returning matching UIDs and ESummary/EFetch for retrieving records. See the official [NCBI E-utilities documentation](https://www.ncbi.nlm.nih.gov/books/NBK25501/).
 
 ## Query construction
 
@@ -76,11 +76,11 @@ The adapter must preserve the PMID as the provider record identifier.
 
 ## Retrieval policy
 
-The adapter should use ESearch for discovery and ESummary/EFetch for metadata/full structured records as appropriate. E-utilities return structured XML/JSON forms and support batch retrieval; the core service should batch records where practical rather than making unnecessary individual requests. citeturn0search1turn0search12
+The adapter should use ESearch for discovery and ESummary/EFetch for metadata/full structured records as appropriate. E-utilities return structured XML/JSON forms and support batch retrieval; the core service should batch records where practical rather than making unnecessary individual requests. See the official [NCBI E-utilities documentation](https://www.ncbi.nlm.nih.gov/books/NBK25501/).
 
 ## Rate limiting
 
-NCBI's current documentation states that applications should identify themselves using `tool` and `email`. Without an API key, more than three requests per second from a single IP can trigger rate limiting; an API key raises the default supported rate to ten requests per second. citeturn0search1turn0search12
+NCBI's documentation describes application identification using `tool` and `email` and documents request-rate limits, including higher limits when an API key is used. SOMA must treat those limits as provider policy and verify the current values during implementation rather than hard-coding historical limits into the architecture document. See the official [NCBI E-utilities documentation](https://www.ncbi.nlm.nih.gov/books/NBK25501/).
 
 SOMA should therefore:
 
@@ -112,9 +112,9 @@ This is the user-facing verification path.
 
 ## Copyright boundary
 
-PubMed metadata and abstracts may be subject to copyright. NCBI explicitly notes that abstracts can contain protected material and that users of E-utilities must comply with NCBI disclaimer/copyright requirements. SOMA should therefore store structured metadata and concise evidence summaries rather than republishing entire copyrighted articles or abstracts without appropriate rights. citeturn0search12
+PubMed metadata and abstracts may be subject to copyright. NCBI notes that users of E-utilities must comply with applicable disclaimer/copyright requirements. SOMA should therefore store structured metadata and concise evidence summaries rather than republishing entire copyrighted articles or abstracts without appropriate rights. See the official [NCBI E-utilities documentation](https://www.ncbi.nlm.nih.gov/books/NBK25501/).
 
-For full-text research retrieval, use PMC or another source only through permitted APIs and respect article-specific licensing. PMC states that not all articles are available for text mining/reuse and that automated PMC retrieval should use its approved services. citeturn0search6
+For full-text research retrieval, use PMC or another source only through permitted APIs and respect article-specific licensing. PMC states that not all articles are available for text mining/reuse and that automated PMC retrieval should use its approved services. See the official [PMC APIs and access guidance](https://www.ncbi.nlm.nih.gov/pmc/tools/).
 
 ## Failure states
 

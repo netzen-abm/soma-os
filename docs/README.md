@@ -1,0 +1,61 @@
+# SOMA-OS Documentation
+
+This directory is the canonical documentation home for SOMA-OS.
+
+SOMA-OS is one ecosystem built on shared infrastructure. Documentation follows the same rule: each concept should have one canonical home, with other documents linking to it rather than redefining it.
+
+## Start here
+
+1. [`governance/documentation-authority-registry-v1.md`](governance/documentation-authority-registry-v1.md) — **first stop before creating or changing documentation**; maps authority and canonical ownership.
+2. [`governance/SOMA-OS-CURRENT-OPERATING-BASELINE-2026-09-12.md`](governance/SOMA-OS-CURRENT-OPERATING-BASELINE-2026-09-12.md) — current execution, architecture, CI, and priority baseline.
+3. [`governance/documentation-content-and-organization-audit-2026-09-12.md`](governance/documentation-content-and-organization-audit-2026-09-12.md) — latest documentation content/authority/organization audit.
+4. [`architecture/README.md`](architecture/README.md) — canonical architecture and contract map.
+5. [`governance/README.md`](governance/README.md) — repository, documentation, AI-agent, and developer operating rules.
+6. [`governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md`](governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md) — shared operating context for humans, developers, and AI agents.
+7. [`decisions/README.md`](decisions/README.md) — architectural decisions and durable choices.
+8. [`strategy/README.md`](strategy/README.md) — product and ecosystem direction.
+9. [`research/README.md`](research/README.md) — research-oriented material and research contributions.
+10. [`evidence-sources/README.md`](evidence-sources/README.md) — source assessments and evidence-specific material.
+11. [`product/README.md`](product/README.md) — product specifications and operational product contracts.
+12. [`ui-ux/README.md`](ui-ux/README.md) — interface and experience specifications.
+13. [`archive/README.md`](archive/README.md) — historical material retained for traceability.
+
+## Canonical documentation rules
+
+- **One concept, one canonical document.**
+- Link to canonical documents instead of copying their definitions.
+- A schema is authoritative for machine-readable data semantics when a schema exists.
+- An architecture contract is authoritative for system-level semantics.
+- An ADR/decision record is authoritative for a durable decision and its rationale.
+- Project memory is consolidated historical context, not a substitute for current contracts.
+- Product-readiness tracking is the authoritative readiness/status tracker.
+- Historical or superseded material must be archived before deletion.
+- When a document is superseded, preserve the historical record and add a clear pointer to the replacement.
+
+## Current execution rule
+
+CI failures that occur before a runner is assigned and before any workflow step executes are classified as **CI infrastructure/execution failures**, not test failures. Do not weaken workflows or bypass required checks to make such a run appear green.
+
+## Document lifecycle
+
+```text
+Idea / discussion
+      ↓
+Research / evidence
+      ↓
+Decision or architecture proposal
+      ↓
+Canonical contract
+      ↓
+Implementation
+      ↓
+Validation / CI
+      ↓
+Product-readiness status
+      ↓
+Superseded → archive with provenance
+```
+
+## Important distinction
+
+Documentation describes the system; it does not grant implementation authority. A future architecture baseline must not be interpreted as permission to implement every capability it mentions.

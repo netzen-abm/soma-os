@@ -1,24 +1,22 @@
-# SOMA Policy Kernel v0.3
+# SOMA Policy Kernel v0.4
 
-**Status:** Resource-scoped foundation contract
-**Version:** 0.3.0
+**Status:** Current implementation contract  
+**Version:** 0.4.0  
+**Authority:** Shared policy-evaluation implementation contract. The canonical architecture composition boundary is documented separately in `docs/architecture/authorization-policy-decision-boundary-v1.md`.
 
 ## Purpose
 
-The Policy Kernel is the shared authorization and governance decision boundary
-for SOMA capabilities, agents, tools, resources, adapters, and application
-surfaces. It remains protocol-neutral, deterministic, side-effect free, and
-fail-closed.
+The Policy Kernel is SOMA's deterministic, side-effect-free policy evaluator for capabilities, agents, tools, resources, adapters, and application surfaces. It evaluates a normalized `PolicyRequest` against the canonical capability registry, identity requirements, policy context, and trusted grants.
+
+It is **not** the authentication system, consent lifecycle, human-review workflow, protected-data executor, audit store, or a second authorization engine.
 
 ## Core rule
 
-No agent, model, MCP server, runtime, tool, adapter, or application surface is
-an authority merely because it can execute code or hold context. Authority is
-granted only by an evaluated policy decision.
+No agent, model, MCP server, runtime, tool, adapter, or application surface is an authority merely because it can execute code or hold context. Authority is established only by the canonical authorization path and its evaluated policy decision.
 
 ## Request model
 
-Every consequential operation should be representable as:
+Every consequential operation is representable as:
 
 ```text
 principal + capability + resource + action + context
@@ -28,15 +26,44 @@ Where:
 
 - **principal** identifies the actor (human, agent, service, or system);
 - **capability** identifies the governed capability;
-- **resource** identifies both the resource class and the concrete resource
-  instance;
+- **resource** identifies both the resource class and concrete resource instance;
 - **action** identifies the requested operation;
-- **context** carries policy-relevant facts but cannot create authorization.
+- **context** carries policy-relevant facts but cannot create authorization by itself.
+
+The evaluator requires non-empty string values for the principal, capability, resource, and action dimensions and requires a mapping-like context.
+
+## Capability validation
+
+The kernel indexes capabilities from the shared registry. An unknown capability fails closed.
+
+A capability must declare a non-empty list of valid `principal_types`. A request whose principal type is not declared by the capability is denied.
+
+Identity requirements declared by a capability are validated before the grant decision. Malformed identity requirements fail closed.
+
+## Identity requirements
+
+Where a capability declares identity requirements, the evaluator requires an identity context that matches the request's:
+
+- `principal_id`;
+- `principal_type`;
+- verified authentication status;
+- permitted identity mode;
+- minimum assurance level;
+- durable-identity requirement where applicable.
+
+The supported assurance ordering is:
+
+```text
+LOW < SUBSTANTIAL < HIGH
+```
+
+The supported identity modes are `anonymous_local` and `authenticated_account`.
+
+Identity Context validation and upstream authorization enforcement remain separate security responsibilities. The Policy Kernel does not authenticate credentials or invent identity.
 
 ## Resource-instance isolation
 
-A grant is scoped to the concrete `resource_id`, not merely the resource type.
-The v0.3 grant key is:
+The grant key is:
 
 ```text
 principal_id
@@ -47,17 +74,13 @@ resource_id
 action
 ```
 
-Therefore, a grant for `source-1` must not authorize `source-2` unless a
-separate grant explicitly exists. A request's context cannot substitute,
-expand, or override the resource scope used for authorization.
+Authorization therefore applies to the concrete resource instance. A grant for `source-1` does not authorize `source-2` unless a separate grant exists.
 
-This is the minimum resource isolation boundary. Tenant/data-domain isolation,
-expiry, revocation, delegation, and richer grant provenance remain separate
-hardening stages and must not be implied by this contract.
+Caller context cannot substitute for or expand the resource identity represented by the request.
 
 ## Decision model
 
-The kernel returns one explicit decision:
+The kernel returns exactly one explicit decision:
 
 ```text
 ALLOW
@@ -67,10 +90,39 @@ REQUIRE_HUMAN_REVIEW
 DEGRADE
 ```
 
-Unknown, malformed, mismatched, or insufficiently authorized requests fail
-closed.
+Unknown, malformed, mismatched, or insufficiently authorized requests fail closed.
+
+## Decision evaluation order
+
+The current evaluator applies these checks in order:
+
+```text
+request validity
+  ↓
+capability existence
+  ↓
+capability principal-type validity
+  ↓
+identity requirements
+  ↓
+human-review requirement
+  ↓
+consent requirement
+  ↓
+explicit policy deny
+  ↓
+exact resource-instance grant
+  ↓
+degrade requirement
+  ↓
+ALLOW
+```
+
+This ordering is implementation behavior and must not be described as a general-purpose policy language beyond what the evaluator actually implements.
 
 ## Policy precedence
+
+The conceptual policy precedence remains:
 
 ```text
 system safety
@@ -87,93 +139,95 @@ agent task context
 ```
 
 A lower layer cannot override a higher safety or authorization constraint.
-User preferences can shape permitted behavior but cannot grant authority that
-system or organization policy forbids.
 
-## Context boundary
-
-The request context is policy input, not a grant store. Context may cause a
-`REQUIRE_CONSENT`, `REQUIRE_HUMAN_REVIEW`, explicit `DENY`, or `DEGRADE`
-decision, but it cannot manufacture an `ALLOW` or expand the authorized
-resource scope.
-
-In production, context fields must be derived from trusted policy inputs or
-validated upstream claims rather than blindly trusting caller-supplied values.
+The current evaluator represents selected contextual gates through explicit context fields. A future richer policy-composition contract must not silently change the v0.4 evaluator semantics.
 
 ## Consent and human review
 
-Consent is a policy input, not an unconditional permission token. The kernel
-must eventually evaluate whether consent is applicable to the requested
-capability, resource, purpose, scope, and current context.
+Consent and human review are explicit decision states, not authentication substitutes.
 
-High-risk actions may require human review even when a technical credential
-would permit execution. Review requirements must be explicit and auditable.
-The current evaluator represents these requirements as decision states; a
-canonical consent/review lifecycle is a subsequent contract.
+When the request context requires human review, the evaluator returns `REQUIRE_HUMAN_REVIEW`. When consent is required, it returns `REQUIRE_CONSENT`.
 
-## Authorization grants
+The kernel does not manage the lifecycle, evidence, revocation, expiry, or user interface of consent or human approval. Those belong to separate contracts.
 
-The evaluator consumes explicit grants supplied by a trusted policy source.
-The grant store is intentionally outside the evaluator. A later implementation
-may load grants from a database, policy service, signed policy bundle, or other
-approved source without changing the decision contract.
+## Grants
 
-Grant management must eventually define expiry, revocation, provenance,
-delegation, tenant/data-domain scope, and capability-version compatibility.
-Those mechanisms are not claimed by v0.3 merely because the kernel supports
-resource-instance matching.
+The evaluator consumes explicit trusted grants supplied to the kernel. Grant storage and administration remain outside the evaluator.
 
-## Audit event contract
+The current grant contract provides exact resource-instance matching. Expiry, revocation, delegation, grant provenance, tenant/data-domain policy composition, and capability-version compatibility remain separate hardening contracts unless implemented explicitly.
 
-A consequential decision should eventually produce an audit event containing,
-at minimum:
+## Tenant and data-domain scope
+
+Tenant and data-domain isolation are enforced through the broader SOMA identity/authorization and protected-data path. The Policy Kernel must not be treated as the sole enforcement point for database isolation.
+
+A target outside the validated security scope must be rejected by the canonical authorization path before protected execution.
+
+## Audit boundary
+
+The kernel returns a deterministic `PolicyDecision` containing:
 
 ```text
-request_id
-principal_id
-capability_id
-resource_type
-resource_id
-action
-decision
-policy_version
-reason_codes
-timestamp
+ decision
+ policy_version
+ reason_code
 ```
 
-The evaluator does not persist audit events itself. Audit emission belongs to
-the surrounding gateway/runtime so policy evaluation remains side-effect free.
-Sensitive payloads and secrets must not be copied into audit records merely to
-make an event easier to debug.
+It does not persist audit events. The surrounding authorization/operation runtime is responsible for emitting an audit event from the immutable decision result.
+
+Audit records must not copy secrets, credentials, or sensitive health payloads merely to improve debugging.
 
 ## Adapter rule
 
-Adapters consume Policy Kernel decisions; they do not replace them. MCP,
-agent runtimes, Web3, Nostr, DID, IPFS, research providers, messaging
-transports, and AI providers remain interchangeable adapters around shared
-policy and capability contracts.
+Adapters consume canonical policy decisions; they do not replace or reinterpret them.
 
-## Determinism
+MCP, agent runtimes, Web3, Nostr, DID/VC, content-addressed storage, research providers, messaging transports, and AI providers remain interchangeable adapters around shared capability and policy infrastructure.
 
-The evaluator must be deterministic for the same normalized request, policy
-version, registry, and grant set. Network calls and model inference do not
-belong inside the core decision function.
+## Determinism and side effects
+
+For the same normalized request, registry, identity context, and trusted grant set, the evaluator must return the same decision.
+
+Network calls, model inference, database writes, external tool execution, and audit persistence do not belong inside the core evaluator.
 
 ## Versioning
 
-The resource-scope change is a breaking grant-contract change and therefore
-uses Policy Kernel version `0.3.0`. Existing v0.2 grant stores must be migrated
-or explicitly adapted before adoption. A v0.2 grant cannot be silently treated
-as a v0.3 resource-scoped grant.
+`0.4.0` is the current implementation version reflected by `services/shared/policy_kernel.py`.
 
-## Non-goals for v0.3
+The earlier v0.3 resource-scope contract remains preserved by the decision history. It must not be represented as the current implementation contract after v0.4 adoption.
 
-- tenant isolation implementation;
-- grant expiry/revocation implementation;
-- unrestricted delegation;
-- automatic permission escalation;
-- autonomous policy generation;
-- model-based authorization decisions;
-- protocol-specific authorization logic inside the kernel;
-- persistent audit storage inside the evaluator;
-- a claim of complete production authorization security.
+A future breaking change must increment the Policy Kernel version and explicitly document migration or compatibility behavior.
+
+## Relationship to Authorization + Policy Decision Boundary
+
+The canonical security composition is:
+
+```text
+IdentityContext
+  → Identity Authorization Enforcement
+  → Authorization + Policy Decision Boundary
+  → Policy Kernel
+  → Canonical Authorization Decision
+  → Governed Capability Operation / ProtectedDataAccess
+```
+
+The Authorization + Policy Decision Boundary is the authoritative composition contract. The Policy Kernel remains the policy evaluator within that boundary.
+
+## Non-goals
+
+The Policy Kernel does not by itself implement:
+
+- authentication provider integration;
+- credential lifecycle;
+- consent lifecycle;
+- human-review workflow;
+- grant administration;
+- delegation;
+- revocation infrastructure;
+- database RLS;
+- protected-data execution;
+- distributed transaction management;
+- autonomous clinical decisions;
+- model-based self-authorization.
+
+## Implementation truthfulness
+
+This document describes the current evaluator. Architecture documents may define future composition, but they must not imply that a future capability is already implemented merely because the architecture names it.

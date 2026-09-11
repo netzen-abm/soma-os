@@ -122,15 +122,15 @@ The user must be able to inspect the original publication independently.
 
 ## 6. Example — millet / diabetes management
 
-A current literature search demonstrates why this model is appropriate.
+A literature search demonstrates why this model is appropriate.
 
-A 2021 systematic review/meta-analysis reported that long-term millet consumption was associated with reductions in fasting and post-prandial blood glucose in diabetic subjects and examined glycemic-index outcomes across different millet types and processing methods. citeturn0search4
+A 2021 systematic review/meta-analysis reported that long-term millet consumption was associated with reductions in fasting and post-prandial blood glucose in diabetic subjects and examined glycemic-index outcomes across different millet types and processing methods. See the PubMed record for PMID **34395493**: https://pubmed.ncbi.nlm.nih.gov/34395493/
 
-However, another 2024 systematic review/meta-analysis of ancient grains found that pooled analyses using millet did not show significant effects for the selected diabetes outcomes, illustrating that the evidence base is not uniform. citeturn0search9
+However, another 2024 systematic review/meta-analysis of ancient grains found that pooled analyses using millet did not show significant effects for the selected diabetes outcomes, illustrating that the evidence base is not uniform. See the PubMed record for PMID **38553358**: https://pubmed.ncbi.nlm.nih.gov/38553358/
 
-More broadly, systematic reviews of whole grains and dietary fibre provide evidence relevant to glycemic management, but they do not validate any particular Siridhanya or Kashaya protocol. For example, a 2020 systematic review/meta-analysis found improvements in several glycemic and cardiometabolic measures with higher fibre intake, while noting substantial heterogeneity in trial results. citeturn0search3
+More broadly, systematic reviews of whole grains and dietary fibre provide evidence relevant to glycemic management, but they do not validate any particular Siridhanya or Kashaya protocol. For example, a 2020 systematic review/meta-analysis found improvements in several glycemic and cardiometabolic measures with higher fibre intake, while noting substantial heterogeneity in trial results. See the PubMed record for PMID **32142510**: https://pubmed.ncbi.nlm.nih.gov/32142510/
 
-A 2024 systematic review/meta-analysis of whole grains included 37 randomized trials and found reductions in fasting blood glucose, with more modest/uncertain effects for HbA1c and HOMA-IR. citeturn0search1
+A 2024 systematic review/meta-analysis of whole grains included 37 randomized trials and found reductions in fasting blood glucose, with more modest/uncertain effects for HbA1c and HOMA-IR. See the PubMed record for PMID **38664726**: https://pubmed.ncbi.nlm.nih.gov/38664726/
 
 Therefore SOMA should report something like:
 
