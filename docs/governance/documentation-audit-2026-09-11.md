@@ -67,6 +67,12 @@ There are multiple documents for classification, preflight, implementation, exec
 
 `cleanup-execution-plan.md` describes repository hygiene, security/evidence gates, CI/merge procedure, and deletion controls. Those are governance/process concerns rather than technical architecture. It has therefore been relocated from `docs/architecture/cleanup-execution-plan.md` to `docs/governance/cleanup-execution-plan.md` on this branch, with the content preserved and its new placement explicitly marked as governance guidance.
 
+### 10. Branch lifecycle and code maintainability policy placement
+
+`branch-lifecycle.md` governs branch creation, verification, retirement, archive-first behavior, and branch cleanup. `code-maintainability-policy.md` governs engineering maintainability practices such as formatting, function structure, testing, and readability. Neither defines SOMA domain architecture or a runtime contract. Both have therefore been moved from `docs/architecture/` to `docs/governance/`, with explicit authority-boundary language added and substantive policy content preserved.
+
+This is a controlled authority correction, not a content deletion. The original files remain recoverable through Git history and the destination paths are now the active locations.
+
 ## Citation and reference hygiene
 
 A content audit found transient ChatGPT/tool citation artifacts in four Markdown documents:
@@ -95,7 +101,7 @@ Added:
 - `docs/README.md` — documentation entry point and lifecycle.
 - `docs/architecture/README.md` — canonical architecture/contract map.
 - `docs/governance/README.md` — governance for humans, developers, and AI agents.
-- `docs/governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md` — consolidated operating context.
+- `docs/governance/SOMA-OS-AI-HUMAN-DEVELOPER-GUIDE.md` — shared operating context for humans, developers, and AI agents.
 - `docs/governance/documentation-authority-registry-v1.md` — canonical ownership/navigation map.
 - `docs/governance/documentation-audit-2026-09-11.md` — this audit.
 - `docs/decisions/README.md` — decision-record index.
@@ -106,23 +112,30 @@ Added:
 - `docs/ui-ux/README.md` — UI/UX boundary.
 - `docs/archive/README.md` — archive lifecycle.
 - `docs/governance/cleanup-execution-plan.md` — governance/process placement for repository cleanup and merge controls.
+- `docs/governance/branch-lifecycle.md` — branch lifecycle and retirement governance.
+- `docs/governance/code-maintainability-policy.md` — engineering maintainability governance.
 
 Relocated:
 
 - `docs/architecture/cleanup-execution-plan.md` → `docs/governance/cleanup-execution-plan.md`.
+- `docs/architecture/branch-lifecycle.md` → `docs/governance/branch-lifecycle.md`.
+- `docs/architecture/code-maintainability-policy.md` → `docs/governance/code-maintainability-policy.md`.
+- `docs/food-life-evidence-model.md` → `docs/architecture/food-life-evidence-model.md`.
 
-These changes improve discoverability without discarding the substantive content of the cleanup plan.
+These changes improve discoverability without discarding substantive content.
 
 ## Content-level changes made in this pass
 
 - Reclassified the ecosystem-principles document from architecture policy to strategic guidance.
 - Added an explicit strategy-to-architecture authority boundary.
-- Replaced transient PubMed citation markers with durable NCBI documentation references.
+- Replaced transient PubMed citation markers with durable NCBI/PubMed references.
 - Replaced transient evidence citations in the disease-management policy with stable PubMed identifiers/URLs for the specific studies described.
 - Replaced transient WHO citation markers in the Evidence Research Engine with durable official WHO URLs.
 - Replaced the transient citation marker in the Biswaroop/Khadar source assessment with the canonical source URL already identified by that document.
 - Added repository-wide citation hygiene rules to the authority registry.
 - Relocated the cleanup execution plan to the governance domain after confirming that its content is process/governance guidance rather than a technical architecture contract.
+- Relocated branch lifecycle and code maintainability policies to governance after confirming they govern repository/engineering process rather than SOMA technical architecture.
+- Relocated the Food–Life evidence model into architecture after confirming that it defines shared evidence infrastructure, domain entities, provenance, safety, and analytical boundaries.
 
 ## What is deliberately NOT done yet
 
@@ -134,7 +147,7 @@ These changes improve discoverability without discarding the substantive content
 - No change to Policy Kernel authority.
 - No forced merge of PR #81 or PR #82.
 
-The single cleanup-plan relocation above is a controlled, content-preserving move with a clear authority destination. Broader reorganization remains evidence-driven; premature mass moves can break links, CI references, historical traceability, and agent navigation.
+The relocations above are controlled, content-preserving authority corrections with clear destinations. Broader reorganization remains evidence-driven; premature mass moves can break links, CI references, historical traceability, and agent navigation.
 
 ## Next organization phase
 
