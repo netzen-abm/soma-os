@@ -44,7 +44,8 @@ Adapters / protocols / surfaces
 | Capability adapters | `capability-adapter-contract.md` | Adapter boundary |
 | Cross-paradigm evidence | `cross-paradigm-evidence-methodology-v1.md` | Claim-level epistemic neutrality and evidence assessment |
 | Behavioral/epistemic layer | `behavioral-and-epistemic-evidence-layer-v1.md` | Behavioral observations and epistemic metadata as an extension, not a competing domain model |
-| Domain runtime | `canonical-domain-runtime-polyglot-v1.md` | Canonical domain/reference runtime and justified polyglot implementation |
+| Food–Life evidence model | `food-life-evidence-model.md` | Shared Food–Life evidence/domain model consuming canonical Health State and Evidence Graph semantics |
+| Domain runtime | `canonical-domain-runtime-polyglot-v1.md` | Canonical/reference runtime and justified polyglot implementation |
 | Security | security/identity/protected-data documents | Security contracts and implementation boundaries |
 
 ## Security chain
