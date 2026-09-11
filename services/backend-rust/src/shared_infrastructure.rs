@@ -6,7 +6,7 @@
 
 use serde::Deserialize;
 
-const CANONICAL_REGISTRY: &str = include_str!("../../shared/capability_registry.json");
+const CANONICAL_REGISTRY: &str = include_str!("../../../services/shared/capability_registry.json");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CapabilityDomain {
@@ -152,9 +152,6 @@ mod tests {
 
     #[test]
     fn ai_remains_optional() {
-        assert_eq!(
-            capability("intelligence.ai").unwrap().status,
-            CapabilityStatus::Optional
-        );
+        assert_eq!(capability("intelligence.ai").unwrap().status, CapabilityStatus::Optional);
     }
 }
