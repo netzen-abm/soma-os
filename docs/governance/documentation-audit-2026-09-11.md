@@ -63,6 +63,10 @@ There are multiple documents for classification, preflight, implementation, exec
 
 `docs/strategy/2026-09-soma-ecosystem-principles.md` contains a useful 12-point ecosystem summary, but its former label **Working architecture policy** incorrectly implied architectural authority. The document has been retained and relabeled **Strategic guidance**, with an explicit authority boundary pointing to the Shared Infrastructure Charter and canonical governance/architecture documents. Its substance was preserved rather than deleted or flattened.
 
+### 9. Cleanup execution plan placement
+
+`cleanup-execution-plan.md` describes repository hygiene, security/evidence gates, CI/merge procedure, and deletion controls. Those are governance/process concerns rather than technical architecture. It has therefore been relocated from `docs/architecture/cleanup-execution-plan.md` to `docs/governance/cleanup-execution-plan.md` on this branch, with the content preserved and its new placement explicitly marked as governance guidance.
+
 ## Citation and reference hygiene
 
 A content audit found transient ChatGPT/tool citation artifacts in four Markdown documents:
@@ -101,8 +105,13 @@ Added:
 - `docs/strategy/README.md` — strategy-document boundary.
 - `docs/ui-ux/README.md` — UI/UX boundary.
 - `docs/archive/README.md` — archive lifecycle.
+- `docs/governance/cleanup-execution-plan.md` — governance/process placement for repository cleanup and merge controls.
 
-These additions improve discoverability without deleting or moving historical documents.
+Relocated:
+
+- `docs/architecture/cleanup-execution-plan.md` → `docs/governance/cleanup-execution-plan.md`.
+
+These changes improve discoverability without discarding the substantive content of the cleanup plan.
 
 ## Content-level changes made in this pass
 
@@ -113,18 +122,19 @@ These additions improve discoverability without deleting or moving historical do
 - Replaced transient WHO citation markers in the Evidence Research Engine with durable official WHO URLs.
 - Replaced the transient citation marker in the Biswaroop/Khadar source assessment with the canonical source URL already identified by that document.
 - Added repository-wide citation hygiene rules to the authority registry.
+- Relocated the cleanup execution plan to the governance domain after confirming that its content is process/governance guidance rather than a technical architecture contract.
 
 ## What is deliberately NOT done yet
 
 - No mass rename.
 - No mass move.
-- No deletion of existing Markdown files.
+- No deletion of unrelated existing Markdown files.
 - No merging of documents merely because they share vocabulary.
 - No change to canonical health/evidence schemas.
 - No change to Policy Kernel authority.
 - No forced merge of PR #81 or PR #82.
 
-This is intentional. Repository organization must be evidence-driven; a premature mass move can break links, CI references, historical traceability, and agent navigation.
+The single cleanup-plan relocation above is a controlled, content-preserving move with a clear authority destination. Broader reorganization remains evidence-driven; premature mass moves can break links, CI references, historical traceability, and agent navigation.
 
 ## Next organization phase
 
