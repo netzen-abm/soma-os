@@ -150,9 +150,6 @@ mod tests {
 
     #[test]
     fn ai_remains_optional() {
-        assert_eq!(
-            capability("intelligence.ai").unwrap().status,
-            CapabilityStatus::Optional
-        );
+        assert_eq!(capability("intelligence.ai").unwrap().status, CapabilityStatus::Optional);
     }
 }
