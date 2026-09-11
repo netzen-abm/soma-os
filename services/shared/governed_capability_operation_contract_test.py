@@ -36,6 +36,53 @@ def validate(schema, instance):
     return errors
 
 
+def validate_operation_semantics(instance):
+    """Validate cross-field authority/lifecycle invariants not expressible by the lightweight schema checker."""
+    errors = []
+    status = instance.get("status")
+    policy = instance.get("policy")
+    policy_decision = policy.get("decision") if isinstance(policy, dict) else None
+
+    if status in {"DENIED", "REQUIRES_CONSENT", "REQUIRES_HUMAN_REVIEW", "AUTHORIZED", "EXECUTING", "SUCCEEDED", "FAILED", "DEGRADED"}:
+        if not isinstance(policy, dict):
+            errors.append("policy decision is required after authorization begins")
+        elif not all(isinstance(policy.get(key), str) and policy[key].strip() for key in ("decision", "policy_version", "decision_ref")):
+            errors.append("policy record must contain decision, policy_version, and decision_ref")
+
+    expected_decisions = {
+        "DENIED": {"DENY"},
+        "REQUIRES_CONSENT": {"REQUIRE_CONSENT"},
+        "REQUIRES_HUMAN_REVIEW": {"REQUIRE_HUMAN_REVIEW"},
+        "AUTHORIZED": {"ALLOW", "DEGRADE"},
+        "EXECUTING": {"ALLOW", "DEGRADE"},
+        "SUCCEEDED": {"ALLOW", "DEGRADE"},
+        "FAILED": {"ALLOW", "DEGRADE"},
+        "DEGRADED": {"DEGRADE"},
+    }
+    if status in expected_decisions and policy_decision not in expected_decisions[status]:
+        errors.append(f"status {status} is incompatible with policy decision {policy_decision}")
+
+    if status == "REQUIRES_CONSENT":
+        consent = instance.get("consent")
+        if not isinstance(consent, dict) or consent.get("required") is not True or consent.get("status") != "pending":
+            errors.append("consent gate must be explicitly pending when consent is required")
+
+    if status == "REQUIRES_HUMAN_REVIEW":
+        review = instance.get("human_review")
+        if not isinstance(review, dict) or review.get("required") is not True or review.get("status") != "pending":
+            errors.append("human-review gate must be explicitly pending when review is required")
+
+    if status in {"AUTHORIZED", "EXECUTING", "SUCCEEDED", "FAILED", "DEGRADED"}:
+        consent = instance.get("consent")
+        if isinstance(consent, dict) and consent.get("required") is True and consent.get("status") != "granted":
+            errors.append("execution cannot proceed through an ungranted consent gate")
+        review = instance.get("human_review")
+        if isinstance(review, dict) and review.get("required") is True and review.get("status") != "approved":
+            errors.append("execution cannot proceed through an unapproved human-review gate")
+
+    return errors
+
+
 class GovernedCapabilityOperationContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -43,9 +90,13 @@ class GovernedCapabilityOperationContractTests(unittest.TestCase):
 
     def assert_valid(self, instance):
         self.assertEqual(validate(self.schema, instance), [])
+        self.assertEqual(validate_operation_semantics(instance), [])
 
-    def assert_invalid(self, instance):
+    def assert_schema_invalid(self, instance):
         self.assertTrue(validate(self.schema, instance))
+
+    def assert_semantically_invalid(self, instance):
+        self.assertTrue(validate_operation_semantics(instance))
 
     def base_operation(self):
         return {
@@ -62,70 +113,77 @@ class GovernedCapabilityOperationContractTests(unittest.TestCase):
             "requested_at": "2026-09-11T08:00:00Z",
         }
 
+    def policy(self, decision="ALLOW"):
+        return {"decision": decision, "policy_version": "0.4.0", "decision_ref": "policy-001"}
+
     def test_schema_is_strict_and_versioned(self):
         self.assertEqual(self.schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
         self.assertFalse(self.schema["additionalProperties"])
         self.assertEqual(self.schema["properties"]["schema_version"]["const"], "1.0.0")
 
-    def test_minimal_governed_operation_is_valid(self):
+    def test_minimal_requested_operation_is_valid(self):
         self.assert_valid(self.base_operation())
 
     def test_operation_requires_identity_and_capability_authority(self):
         operation = self.base_operation()
         del operation["identity_context_ref"]
-        self.assert_invalid(operation)
+        self.assert_schema_invalid(operation)
         operation = self.base_operation()
         del operation["capability_id"]
-        self.assert_invalid(operation)
+        self.assert_schema_invalid(operation)
 
     def test_policy_decision_is_bounded(self):
         operation = self.base_operation()
-        operation["policy"] = {"decision": "ALLOW", "policy_version": "0.3.0", "decision_ref": "policy-001"}
+        operation["policy"] = self.policy()
         self.assert_valid(operation)
         operation["policy"]["decision"] = "GRANT_MYSELF_ADMIN"
-        self.assert_invalid(operation)
+        self.assert_schema_invalid(operation)
 
     def test_lifecycle_is_bounded(self):
         operation = self.base_operation()
         for status in self.schema["properties"]["status"]["enum"]:
             operation["status"] = status
+            if status in {"DENIED", "REQUIRES_CONSENT", "REQUIRES_HUMAN_REVIEW", "AUTHORIZED", "EXECUTING", "SUCCEEDED", "FAILED", "DEGRADED"}:
+                operation["policy"] = self.policy("DENY" if status == "DENIED" else "REQUIRE_CONSENT" if status == "REQUIRES_CONSENT" else "REQUIRE_HUMAN_REVIEW" if status == "REQUIRES_HUMAN_REVIEW" else "DEGRADE" if status == "DEGRADED" else "ALLOW")
+            if status == "REQUIRES_CONSENT":
+                operation["consent"] = {"required": True, "status": "pending"}
+            if status == "REQUIRES_HUMAN_REVIEW":
+                operation["human_review"] = {"required": True, "status": "pending"}
             self.assert_valid(operation)
-        operation["status"] = "SELF_AUTHORIZED"
-        self.assert_invalid(operation)
-
-    def test_authorized_or_terminal_execution_states_require_policy_record(self):
-        policy_required_states = {
-            "DENIED", "REQUIRES_CONSENT", "REQUIRES_HUMAN_REVIEW",
-            "AUTHORIZED", "EXECUTING", "SUCCEEDED", "FAILED", "DEGRADED",
-        }
-        for status in policy_required_states:
             operation = self.base_operation()
-            operation["status"] = status
-            self.assertNotIn("policy", operation)
-            self.assertNotIn("policy", operation)
-            operation["policy"] = {
-                "decision": "ALLOW" if status not in {"DENIED", "REQUIRES_CONSENT", "REQUIRES_HUMAN_REVIEW"} else "DENY",
-                "policy_version": "0.4.0",
-                "decision_ref": "policy-001",
-            }
-            self.assert_valid(operation)
+        operation["status"] = "SELF_AUTHORIZED"
+        self.assert_schema_invalid(operation)
 
-    def test_policy_decision_is_required_before_execution_semantically(self):
+    def test_authorized_execution_cannot_exist_without_policy(self):
         operation = self.base_operation()
         operation["status"] = "EXECUTING"
-        self.assertFalse("policy" in operation)
-        operation["policy"] = {"decision": "ALLOW", "policy_version": "0.4.0", "decision_ref": "policy-001"}
+        self.assert_semantically_invalid(operation)
+        operation["policy"] = self.policy()
         self.assert_valid(operation)
 
-    def test_consent_and_review_gate_states_are_explicit(self):
+    def test_policy_must_match_lifecycle_authority(self):
+        operation = self.base_operation()
+        operation["status"] = "DENIED"
+        operation["policy"] = self.policy("ALLOW")
+        self.assert_semantically_invalid(operation)
+        operation["policy"] = self.policy("DENY")
+        self.assert_valid(operation)
+
+    def test_consent_and_review_gates_cannot_be_bypassed(self):
         consent = self.base_operation()
-        consent["status"] = "REQUIRES_CONSENT"
+        consent["status"] = "AUTHORIZED"
+        consent["policy"] = self.policy()
         consent["consent"] = {"required": True, "status": "pending"}
+        self.assert_semantically_invalid(consent)
+        consent["consent"]["status"] = "granted"
         self.assert_valid(consent)
 
         review = self.base_operation()
-        review["status"] = "REQUIRES_HUMAN_REVIEW"
+        review["status"] = "AUTHORIZED"
+        review["policy"] = self.policy()
         review["human_review"] = {"required": True, "status": "pending"}
+        self.assert_semantically_invalid(review)
+        review["human_review"]["status"] = "approved"
         self.assert_valid(review)
 
     def test_sensitive_payload_is_not_required_by_envelope(self):
@@ -138,14 +196,14 @@ class GovernedCapabilityOperationContractTests(unittest.TestCase):
     def test_unknown_root_properties_are_rejected(self):
         operation = self.base_operation()
         operation["unexpected_authority"] = True
-        self.assert_invalid(operation)
+        self.assert_schema_invalid(operation)
 
     def test_ai_agent_reference_can_be_a_runtime_but_not_a_new_authority_field(self):
         operation = self.base_operation()
         operation["execution"] = {"runtime_ref": "ai-runtime-001"}
         self.assert_valid(operation)
         operation["agent_granted_authorization"] = True
-        self.assert_invalid(operation)
+        self.assert_schema_invalid(operation)
 
 
 if __name__ == "__main__":
