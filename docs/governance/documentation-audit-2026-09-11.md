@@ -1,6 +1,6 @@
 # SOMA-OS Documentation Audit — 2026-09-11
 
-**Audit basis:** repository tree at `main` commit `41f1e151f080b8c27413e19dea27e9e0ba93fb21` as inspected during this documentation pass.
+**Audit basis:** repository tree at `main` commit `41f1e151f080b8c27413e19dea27e9e0ba93fb21` as inspected during this documentation pass. Changes in the current documentation branch are audited against actual file content before organization decisions are made.
 
 ## Audit objective
 
@@ -59,6 +59,25 @@ Several security areas have both context/contract and implementation documents. 
 
 There are multiple documents for classification, preflight, implementation, executor, and operator specification. These should remain separate while each has a distinct lifecycle boundary. A future consolidation pass should add navigation rather than flatten the documents into one oversized specification.
 
+### 8. Strategy vs foundational architecture
+
+`docs/strategy/2026-09-soma-ecosystem-principles.md` contains a useful 12-point ecosystem summary, but its former label **Working architecture policy** incorrectly implied architectural authority. The document has been retained and relabeled **Strategic guidance**, with an explicit authority boundary pointing to the Shared Infrastructure Charter and canonical governance/architecture documents. Its substance was preserved rather than deleted or flattened.
+
+## Citation and reference hygiene
+
+A content audit found transient ChatGPT/tool citation artifacts in four Markdown documents:
+
+- `services/evidence-research/adapters/pubmed-adapter.md`
+- `docs/architecture/disease-management-protocol-evidence-policy.md`
+- `docs/architecture/evidence-research-engine.md`
+- `docs/evidence-sources/biswaroop-khadar-source-assessment.md`
+
+These are not durable repository references. They have been replaced on the documentation branch with stable external references where the underlying source could be identified from the document content.
+
+The repository-wide rule is now recorded in `docs/governance/documentation-authority-registry-v1.md`: repository documentation must not contain session-local citation markers such as `cite...` or `turn...` identifiers. External evidence should use durable URLs, DOI/PMID/PMCID, ISBN, or repository-internal source IDs.
+
+A follow-up search against the default `main` branch may continue to show the old artifacts because the cleanup is currently on the documentation branch; that is expected until the branch is validated and merged.
+
 ## New behavioral/epistemic material
 
 The Behavioral & Epistemic Evidence Layer is correctly positioned as a semantic extension rather than a new application. Its purpose, lateral-thinking protocol, AI boundary, and non-goals are aligned with the existing shared-first architecture. The PR remains draft and must be validated against canonical Health State and Evidence Graph contracts before merge.
@@ -85,6 +104,16 @@ Added:
 
 These additions improve discoverability without deleting or moving historical documents.
 
+## Content-level changes made in this pass
+
+- Reclassified the ecosystem-principles document from architecture policy to strategic guidance.
+- Added an explicit strategy-to-architecture authority boundary.
+- Replaced transient PubMed citation markers with durable NCBI documentation references.
+- Replaced transient evidence citations in the disease-management policy with stable PubMed identifiers/URLs for the specific studies described.
+- Replaced transient WHO citation markers in the Evidence Research Engine with durable official WHO URLs.
+- Replaced the transient citation marker in the Biswaroop/Khadar source assessment with the canonical source URL already identified by that document.
+- Added repository-wide citation hygiene rules to the authority registry.
+
 ## What is deliberately NOT done yet
 
 - No mass rename.
@@ -93,7 +122,7 @@ These additions improve discoverability without deleting or moving historical do
 - No merging of documents merely because they share vocabulary.
 - No change to canonical health/evidence schemas.
 - No change to Policy Kernel authority.
-- No forced merge of PR #81.
+- No forced merge of PR #81 or PR #82.
 
 This is intentional. Repository organization must be evidence-driven; a premature mass move can break links, CI references, historical traceability, and agent navigation.
 
@@ -104,9 +133,10 @@ After the index is validated, perform a second pass that:
 1. inventories every Markdown file and its canonical authority;
 2. detects exact/semantic duplicate sections and stale references;
 3. marks superseded documents explicitly;
-4. moves only documents with a clear destination and verified link impact;
-5. archives only when historical value requires preservation;
-6. updates links and CI/documentation references;
-7. validates the complete repository after the reorganization.
+4. verifies inbound links, CI/workflow references, code/test references, PR references, and known external references before each move/rename;
+5. moves only documents with a clear destination and verified link impact;
+6. archives only when historical value requires preservation;
+7. updates links and documentation references;
+8. validates the complete repository after the reorganization.
 
 The target is not the fewest Markdown files. The target is one clear owner, one authority, one lifecycle, and one discoverable path for every concept.
