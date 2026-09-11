@@ -1,7 +1,10 @@
 # SOMA-OS Ecosystem Principles
 
 **Date:** 2026-09-02  
-**Status:** Working architecture policy
+**Status:** Strategic guidance  
+**Authority:** Strategy guidance derived from the foundational architecture and governance contracts. Normative shared-infrastructure rules are owned by [`docs/architecture/shared-infrastructure-charter.md`](../architecture/shared-infrastructure-charter.md) and the canonical governance/architecture documents listed in [`docs/governance/documentation-authority-registry-v1.md`](../governance/documentation-authority-registry-v1.md).
+
+> **Purpose:** Preserve the strategic principles that guide how the SOMA ecosystem should evolve without creating a competing architecture authority. Where this document conflicts with a canonical contract, schema, test, architecture document, or durable decision, the canonical authority prevails.
 
 ## 1. Shared infrastructure first
 
@@ -101,3 +104,7 @@ Completion requires the relevant combination of:
 - maintainability;
 - provenance;
 - regression coverage.
+
+## Relationship to canonical architecture
+
+This document is intentionally a strategic summary, not a second specification. Detailed invariants belong in the canonical architecture, schema, contract-test, security, product-readiness, and decision documents. This distinction allows the strategy to remain readable while keeping one authoritative definition for each system rule.
