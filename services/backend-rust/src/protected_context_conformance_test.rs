@@ -114,7 +114,12 @@ fn context() -> AuthorizationContext {
 #[test]
 fn list_requires_list_authorization_and_filters_each_record_by_read_authorization() {
     let root = root("list-read-conformance");
-    let store = LocalFileVaultStore::new(root.clone(), keys(), SelectiveAuthorizer).unwrap();
+    let store = LocalFileVaultStore::new(
+        root.clone(),
+        keys(),
+        SelectiveAuthorizer,
+    )
+    .unwrap();
     let context = context();
 
     store
@@ -143,7 +148,12 @@ fn list_denial_stops_before_filesystem_enumeration() {
             values
         },
     };
-    let store = LocalFileVaultStore::new(root.clone(), key_provider, DenyListAuthorizer).unwrap();
+    let store = LocalFileVaultStore::new(
+        root.clone(),
+        key_provider,
+        DenyListAuthorizer,
+    )
+    .unwrap();
 
     assert_eq!(
         store.list(&context()),
