@@ -30,6 +30,7 @@ mod nostr_client;
 mod personal_health_record_repository;
 mod privacy_policy;
 mod protected_db_context;
+#[cfg(test)]
 mod protected_context_conformance_test;
 mod shared_infrastructure;
 mod vault_exporter;
