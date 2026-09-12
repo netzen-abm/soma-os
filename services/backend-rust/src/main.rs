@@ -10,6 +10,7 @@ use tokio::net::TcpListener;
 mod ambali_timer;
 mod backup_scheduler;
 mod bot_menus;
+mod canonical_authorization;
 mod compliance_shield;
 mod compressor;
 mod crypto;
