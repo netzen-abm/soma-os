@@ -86,7 +86,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/webhook/unified", post(process_unified_bot_webhook))
         .with_state(shared_state);
 
-    let bind_address = env::var("SOMA_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let bind_address =
+        env::var("SOMA_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
     let listener = TcpListener::bind(&bind_address).await?;
 
     println!("SomaOS backend listening on {bind_address}");
@@ -103,14 +104,28 @@ async fn process_unified_bot_webhook(
     Json(payload): Json<UnifiedChannelMessage>,
 ) -> (StatusCode, String) {
     let mut controller = state.menu_controller.lock().await;
-    let raw_response = controller.evaluate_channel_input(&payload.sender_id, &payload.text_payload).await;
+    let raw_response = controller
+        .evaluate_channel_input(&payload.sender_id, &payload.text_payload)
+        .await;
 
     let evaluation = SovereignComplianceShield::enforce_regulatory_compliance_checks(&raw_response);
 
     if !evaluation.is_permissible_for_delivery {
-        eprintln!("Outbound message blocked by compliance shield: {:?}", evaluation.security_compliance_flags);
-        return (StatusCode::UNPROCESSABLE_ENTITY, "Response blocked by the SOMA-OS compliance policy.".to_string());
+        eprintln!(
+            "Outbound message blocked by compliance shield: {:?}",
+            evaluation.security_compliance_flags
+        );
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "Response blocked by the SOMA-OS compliance policy.".to_string(),
+        );
     }
 
-    (StatusCode::OK, format!("{}{}", raw_response, evaluation.appended_regulatory_disclaimer))
+    (
+        StatusCode::OK,
+        format!(
+            "{}{}",
+            raw_response, evaluation.appended_regulatory_disclaimer
+        ),
+    )
 }
