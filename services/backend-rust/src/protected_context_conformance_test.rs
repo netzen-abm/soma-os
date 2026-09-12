@@ -76,7 +76,10 @@ fn root(label: &str) -> PathBuf {
     std::env::temp_dir().join(format!("soma-{label}-{nanos}"))
 }
 
-fn record(id: &str, subject: &str) -> crate::local_health_vault::LocalHealthVaultRecord {
+fn record(
+    id: &str,
+    subject: &str,
+) -> crate::local_health_vault::LocalHealthVaultRecord {
     LocalHealthVaultCrypto::encrypt_record(
         &[7u8; KEY_LEN],
         VaultRecordMetadata {
