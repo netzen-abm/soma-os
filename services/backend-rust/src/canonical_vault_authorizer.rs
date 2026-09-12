@@ -6,9 +6,7 @@
 //! translates the vault operation into the canonical request envelope and
 //! preserves the existing subject-scope precondition before protected execution.
 
-use crate::canonical_authorization::{
-    AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary,
-};
+use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 use crate::local_health_vault_storage::{AuthorizationContext, VaultAction, VaultAuthorizer};
 
 const RESOURCE_TYPE: &str = "health_vault_record";
