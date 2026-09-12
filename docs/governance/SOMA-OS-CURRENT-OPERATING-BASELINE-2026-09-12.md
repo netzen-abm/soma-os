@@ -67,19 +67,19 @@ These components are progressively being integrated and hardened; their presence
 
 ## 6. Authorization workstream
 
-The Authorization + Policy Decision Boundary v1 architecture and decision envelope schema have been created on the dedicated authorization branch/PR. Runtime integration is intentionally deferred until the contract and existing Identity Authorization Enforcement, Policy Kernel, Governed Operation, and ProtectedDataAccess responsibilities are reconciled and validated together.
+The canonical Authorization + Policy Decision Boundary is now implemented and integrated across the currently verified protected-data paths.
 
-The decision vocabulary is:
+The completed convergence sequence is:
 
-```text
-ALLOW
-DENY
-REQUIRE_CONSENT
-REQUIRE_HUMAN_REVIEW
-DEGRADE
-```
+1. Canonical authorization decision envelope and boundary contract.
+2. Canonical authorization decision composition.
+3. ProtectedDataAccess integration.
+4. Rust canonical authorization boundary.
+5. Local Health Vault authorization adapter.
 
-A non-ALLOW result must never be silently converted into authorization by a downstream adapter or operation.
+The Local Health Vault adapter is a translation boundary, not a second policy engine. It preserves the existing identity-scope precondition and permits protected vault execution only when the canonical decision is explicitly `ALLOW`. `DENY`, `REQUIRE_CONSENT`, `REQUIRE_HUMAN_REVIEW`, and `DEGRADE` are not silently converted into authorization.
+
+The legacy `VaultAuthorizer` interface remains temporarily as a compatibility boundary. Its removal is deferred until an actual production vault provider/runtime wiring exists and can be verified. The remaining authorization audit must therefore distinguish test-only compatibility implementations from real production execution paths.
 
 ## 7. Documentation architecture
 
@@ -111,22 +111,23 @@ GitHub Actions has repeatedly recorded PR #82 and PR #83 jobs as failures withou
 
 Do not weaken workflows, remove required checks, force merge, or report these runs as successful.
 
-The repository workflow definitions use GitHub-hosted `ubuntu-latest` runners and contain real executable steps. The remaining CI blocker is runner/account execution availability and must be resolved independently of application architecture.
+The repository workflow definitions use GitHub-hosted `ubuntu-latest` runners and contain real executable steps. The previously observed runner/execution blocker is not evidence that application architecture should be changed to accommodate CI anomalies.
+
+For each merge, verify the exact PR head and all applicable executable jobs before merging. Jobs with no executable steps must not be treated as successful test evidence.
 
 ## 9. Current priority order
 
 ### P0 — Trustworthy CI
 
-1. Verify Actions-specific usage/quota and account-level execution state.
-2. Restore genuine runner execution.
-3. Obtain real job steps, logs, and test results.
+1. Continue verifying exact-head CI execution for every change.
+2. Preserve real runner execution and truthful interpretation of workflow results.
+3. Investigate account/runner execution anomalies independently when they occur.
 
 ### P1 — Shared security foundation
 
-1. Validate Capability Registry PR #80.
-2. Validate Documentation Governance PR #82.
-3. Validate Authorization Boundary PR #83.
-4. Implement the smallest runtime authorization composition layer only after contract validation.
+1. Re-audit remaining protected-data and authorization paths against the canonical decision boundary.
+2. Reconcile compatibility authorization interfaces with real production wiring before removing them.
+3. Verify authorization scope/resource intersection and fail-closed behavior across protected operations.
 
 ### P2 — First end-to-end SOMA vertical
 
@@ -179,6 +180,8 @@ Speculative future architecture does not automatically require implementation.
 
 ## 12. Immediate operating instruction
 
-Until CI execution is restored, prioritize documentation accuracy, contract review, and non-mutating audits. Do not add unrelated architecture or product features merely to fill the CI waiting period.
+With the current authorization convergence now merged, the next work is a **non-mutating authorization/protected-data audit of `main`**. Identify every remaining authorization boundary, direct protected-data access path, compatibility authorizer, and production wiring point; classify each as canonical, adapter, test-only, compatibility, or unresolved.
 
-Once CI is trustworthy, move from architecture accumulation to **validate → integrate → prove → merge → build the first complete SOMA vertical**.
+Do not remove compatibility interfaces or introduce Tool Gateway, broad agent infrastructure, or unrelated product features until this audit establishes that the current protected execution paths converge on the canonical authorization boundary.
+
+Once that audit is complete, move from architecture accumulation to **validate → integrate → prove → merge → build the first complete SOMA vertical**.
