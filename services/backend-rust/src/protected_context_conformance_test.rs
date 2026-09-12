@@ -5,8 +5,7 @@
 
 use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
 use crate::local_health_vault_storage::{
-    AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer,
-    VaultKeyProvider,
+    AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
 };
 use sha2::Digest;
 use std::{
@@ -29,10 +28,7 @@ struct Keys {
 impl VaultKeyProvider for Keys {
     fn key_for(&self, key_ref: &str) -> Result<[u8; KEY_LEN], StorageError> {
         self.calls.set(self.calls.get() + 1);
-        self.values
-            .get(key_ref)
-            .copied()
-            .ok_or(StorageError::KeyResolutionFailed)
+        self.values.get(key_ref).copied().ok_or(StorageError::KeyResolutionFailed)
     }
 }
 
@@ -40,12 +36,7 @@ impl VaultKeyProvider for Keys {
 struct SelectiveAuthorizer;
 
 impl VaultAuthorizer for SelectiveAuthorizer {
-    fn authorize(
-        &self,
-        _context: &AuthorizationContext,
-        record_id: &str,
-        action: VaultAction,
-    ) -> bool {
+    fn authorize(&self, _context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
         match action {
             VaultAction::List => true,
             VaultAction::Read => record_id != "person-1-record-2",
@@ -58,28 +49,17 @@ impl VaultAuthorizer for SelectiveAuthorizer {
 struct DenyListAuthorizer;
 
 impl VaultAuthorizer for DenyListAuthorizer {
-    fn authorize(
-        &self,
-        _context: &AuthorizationContext,
-        _record_id: &str,
-        action: VaultAction,
-    ) -> bool {
+    fn authorize(&self, _context: &AuthorizationContext, _record_id: &str, action: VaultAction) -> bool {
         !matches!(action, VaultAction::List)
     }
 }
 
 fn root(label: &str) -> PathBuf {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
+    let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
     std::env::temp_dir().join(format!("soma-{label}-{nanos}"))
 }
 
-fn record(
-    id: &str,
-    subject: &str,
-) -> crate::local_health_vault::LocalHealthVaultRecord {
+fn record(id: &str, subject: &str) -> crate::local_health_vault::LocalHealthVaultRecord {
     LocalHealthVaultCrypto::encrypt_record(
         &[7u8; KEY_LEN],
         VaultRecordMetadata {
@@ -101,7 +81,10 @@ fn keys() -> Keys {
     let calls = Rc::new(Cell::new(0));
     let mut values = HashMap::new();
     values.insert("vault-key-v1".into(), [7u8; KEY_LEN]);
-    Keys { calls, values }
+    Keys {
+        calls,
+        values,
+    }
 }
 
 fn context() -> AuthorizationContext {
@@ -114,20 +97,11 @@ fn context() -> AuthorizationContext {
 #[test]
 fn list_requires_list_authorization_and_filters_each_record_by_read_authorization() {
     let root = root("list-read-conformance");
-    let store = LocalFileVaultStore::new(
-        root.clone(),
-        keys(),
-        SelectiveAuthorizer,
-    )
-    .unwrap();
+    let store = LocalFileVaultStore::new(root.clone(), keys(), SelectiveAuthorizer).unwrap();
     let context = context();
 
-    store
-        .put(record("person-1-record-1", "person-1"), &context)
-        .unwrap();
-    store
-        .put(record("person-1-record-2", "person-1"), &context)
-        .unwrap();
+    store.put(record("person-1-record-1", "person-1"), &context).unwrap();
+    store.put(record("person-1-record-2", "person-1"), &context).unwrap();
 
     let entries = store.list(&context).unwrap();
     assert_eq!(entries.len(), 1);
@@ -148,17 +122,9 @@ fn list_denial_stops_before_filesystem_enumeration() {
             values
         },
     };
-    let store = LocalFileVaultStore::new(
-        root.clone(),
-        key_provider,
-        DenyListAuthorizer,
-    )
-    .unwrap();
+    let store = LocalFileVaultStore::new(root.clone(), key_provider, DenyListAuthorizer).unwrap();
 
-    assert_eq!(
-        store.list(&context()),
-        Err(StorageError::AuthorizationDenied)
-    );
+    assert_eq!(store.list(&context()), Err(StorageError::AuthorizationDenied));
     assert_eq!(calls.get(), 0);
 
     let subject_dir = root.join(hex::encode(sha2::Sha256::digest(b"person-1")));
