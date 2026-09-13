@@ -6,10 +6,12 @@
 //! authorization boundary.
 
 use crate::local_health_vault::LocalHealthVaultRecord;
-use crate::local_health_vault_storage::{AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider};
+use crate::local_health_vault_storage::{
+    AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider,
+};
 use crate::longitudinal_observation_repository::{
-    AuthorizedObservationAccessContext, LongitudinalObservationRepository, ObservationQuery,
-    ObservationRepositoryError, ObservationTimelineEntry, sort_timeline,
+    sort_timeline, AuthorizedObservationAccessContext, LongitudinalObservationRepository,
+    ObservationQuery, ObservationRepositoryError, ObservationTimelineEntry,
 };
 
 /// Local provider for longitudinal observations.
@@ -107,15 +109,14 @@ where
                 continue;
             }
 
-            let record = self.vault.get(&entry.record_id, &vault_context).map_err(Self::map_error)?;
-            if !Self::is_observation(&record) {
-                continue;
-            }
-
-            // Concept/status filtering belongs to the canonical observation payload.
-            // The vault adapter deliberately does not parse or reinterpret encrypted
-            // payloads; a higher observation-domain adapter can apply those filters.
-            observations.push(record);
+            // The encrypted vault intentionally does not expose payload fields through
+            // its metadata index. Concept/status filtering therefore remains outside
+            // this storage adapter rather than forcing a second plaintext index.
+            observations.push(
+                self.vault
+                    .get(&entry.record_id, &vault_context)
+                    .map_err(Self::map_error)?,
+            );
         }
 
         Ok(observations)
@@ -133,9 +134,9 @@ where
             .map(|entry| ObservationTimelineEntry {
                 observation_id: entry.record_id,
                 subject_ref: entry.subject_ref,
-                // The current vault index exposes recorded/created time but does not
-                // expose observed_at. Keep observed time unknown rather than silently
-                // substituting recorded_at, per the observation contract.
+                // The current vault index does not expose observed_at. Preserve the
+                // distinction required by the contract instead of fabricating it from
+                // recorded_at.
                 observed_at: None,
                 recorded_at: entry.created_at,
             })
@@ -150,7 +151,9 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        self.vault.tombstone(observation_id, &vault_context).map_err(Self::map_error)
+        self.vault
+            .tombstone(observation_id, &vault_context)
+            .map_err(Self::map_error)
     }
 
     fn verify(
@@ -159,15 +162,18 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        self.vault.verify(observation_id, &vault_context).map_err(Self::map_error)
+        self.vault
+            .verify(observation_id, &vault_context)
+            .map_err(Self::map_error)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::local_health_vault::LocalHealthVaultCrypto;
-    use crate::local_health_vault_storage::{VaultAction, VaultRecordMetadata};
+    use crate::canonical_authorization::AuthorizationRequest;
+    use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
+    use crate::local_health_vault_storage::VaultAction;
     use std::{collections::HashMap, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
 
     const KEY: [u8; 32] = [7u8; 32];
@@ -200,7 +206,7 @@ mod tests {
     }
 
     fn context() -> AuthorizedObservationAccessContext {
-        AuthorizedObservationAccessContext::from_authorized_request(&crate::canonical_authorization::AuthorizationRequest {
+        AuthorizedObservationAccessContext::from_authorized_request(&AuthorizationRequest {
             principal_ref: "person-1".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
@@ -224,31 +230,32 @@ mod tests {
                 created_at: "2026-09-13T00:00:00Z",
                 updated_at: "2026-09-13T00:00:00Z",
             },
-            br#"{"id":"person-1-observation-1","subject_ref":"person-1","entity_type":"observation","schema_version":"1.0.0","status":"active","concept":"heart_rate","recorded_at":"2026-09-13T00:00:00Z","provenance":{"origin":"device","method":"measurement"},"classification":"personal_health","uncertainty":"known"}"#,
+            br#"{"id":"person-1-observation-1","entity_type":"observation","concept":"heart_rate"}"#,
         ).unwrap()
     }
 
     fn repository(root: &PathBuf) -> LocalLongitudinalObservationRepository<Keys, SubjectAuthorizer> {
         let mut keys = HashMap::new();
         keys.insert("key-1".into(), KEY);
-        let vault = LocalFileVaultStore::new(root, Keys(keys), SubjectAuthorizer).unwrap();
-        LocalLongitudinalObservationRepository::new(vault)
+        LocalLongitudinalObservationRepository::new(
+            LocalFileVaultStore::new(root, Keys(keys), SubjectAuthorizer).unwrap(),
+        )
     }
 
     #[test]
-    fn adapter_reads_only_observation_entities() {
+    fn adapter_reads_observation_from_existing_vault() {
         let root = root();
         let repository = repository(&root);
         let context = context();
         let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
-        assert_eq!(repository.put_reference("person-1-observation-1", &context), Ok(()));
         assert!(repository.get("person-1-observation-1", &context).is_ok());
+        assert_eq!(repository.put_reference("person-1-observation-1", &context), Ok(()));
         std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
-    fn timeline_never_promotes_recorded_time_to_observed_time() {
+    fn timeline_keeps_observed_time_unknown() {
         let root = root();
         let repository = repository(&root);
         let context = context();
@@ -262,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn adapter_rejects_non_observation_reference() {
+    fn non_observation_entity_is_rejected() {
         let root = root();
         let repository = repository(&root);
         let context = context();
