@@ -48,9 +48,7 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                Ok(AuthorizedProtectedDbContext::from_authorized_request(request))
-            }
+            AuthorizationDecision::Allow => Ok(AuthorizedProtectedDbContext::from_authorized_request(request)),
             decision => Err(decision),
         }
     }
@@ -124,9 +122,6 @@ mod tests {
         assert_eq!(context.tenant_id(), "tenant-1");
         assert_eq!(context.data_domain(), "personal_health");
 
-        assert_eq!(
-            DenyBoundary.authorize_protected_context(&request()),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
     }
 }
