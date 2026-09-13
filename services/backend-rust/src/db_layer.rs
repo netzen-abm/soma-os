@@ -1,7 +1,7 @@
 use sqlx::{PgPool, Row};
 use std::error::Error;
 
-use crate::protected_db_context::{begin_protected_transaction, ProtectedDbContext};
+use crate::protected_db_context::{begin_protected_transaction, AuthorizedProtectedDbContext};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct DbVitalRecord {
@@ -24,14 +24,13 @@ impl SomaDatabaseManager {
         }
     }
 
-    /// Append a protected vital-log record for an explicitly authorized tenant/data domain.
+    /// Append a protected vital-log record using an authorization-bound context.
     ///
-    /// The DB transaction context is established before SQL execution and is transaction-local.
-    /// This method does not evaluate authorization; callers must provide a trusted persistence
-    /// context produced after the canonical identity/authorization boundary.
+    /// The context can only be minted by the canonical Rust authorization boundary.
+    /// This method does not evaluate authorization.
     pub async fn append_anonymous_vital_log(
         &self,
-        context: &ProtectedDbContext,
+        context: &AuthorizedProtectedDbContext,
         user_hash: &str,
         pubkey_hex: &str,
         score: i32,
@@ -49,8 +48,8 @@ impl SomaDatabaseManager {
         "#;
 
         let row = sqlx::query(insert_query)
-            .bind(&context.tenant_id)
-            .bind(&context.data_domain)
+            .bind(context.tenant_id())
+            .bind(context.data_domain())
             .bind(user_hash)
             .bind(pubkey_hex)
             .bind(score)
@@ -64,13 +63,10 @@ impl SomaDatabaseManager {
         Ok(inserted_id)
     }
 
-    /// Fetch vital-log records only inside the explicitly supplied protected scope.
-    ///
-    /// The explicit scope predicates provide defense in depth even before PostgreSQL RLS is
-    /// enabled. Legacy rows with NULL scope are therefore excluded from protected access.
+    /// Fetch vital-log records only inside the authorization-bound protected scope.
     pub async fn get_logs_by_user_hash(
         &self,
-        context: &ProtectedDbContext,
+        context: &AuthorizedProtectedDbContext,
         user_hash: &str,
     ) -> Result<Vec<DbVitalRecord>, Box<dyn Error>> {
         let mut tx = begin_protected_transaction(&self.pool, context).await?;
@@ -87,8 +83,8 @@ impl SomaDatabaseManager {
 
         let rows = sqlx::query_as::<_, DbVitalRecord>(select_query)
             .bind(user_hash)
-            .bind(&context.tenant_id)
-            .bind(&context.data_domain)
+            .bind(context.tenant_id())
+            .bind(context.data_domain())
             .fetch_all(&mut *tx)
             .await?;
 
