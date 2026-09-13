@@ -43,16 +43,14 @@ pub trait CanonicalAuthorizationBoundary {
     fn authorize(&self, request: &AuthorizationRequest) -> AuthorizationDecision;
 
     /// Mint a protected execution context only from an authoritative ALLOW.
-    ///
-    /// The returned context has private scope fields and can only be constructed
-    /// inside the canonical authorization boundary. Callers cannot manufacture
-    /// protected execution authority by supplying tenant/data-domain strings.
     fn authorize_protected_context(
         &self,
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => Ok(AuthorizedProtectedDbContext::from_authorized_request(request)),
+            AuthorizationDecision::Allow => {
+                Ok(AuthorizedProtectedDbContext::from_authorized_request(request))
+            }
             decision => Err(decision),
         }
     }
