@@ -1,5 +1,4 @@
 use sqlx::{postgres::Postgres, PgPool, Transaction};
-use std::error::Error;
 
 /// Canonical database service identity expected by the protected persistence adapter.
 pub const TRUSTED_PERSISTENCE_DB_ROLE: &str = "somaos_persistence";
