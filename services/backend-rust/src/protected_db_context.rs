@@ -93,10 +93,7 @@ pub async fn begin_protected_transaction<'a>(
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    if let Err(error) = sqlx::query("SET LOCAL ROLE somaos_persistence")
-        .execute(&mut *tx)
-        .await
-    {
+    if let Err(error) = sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut *tx).await {
         let _ = tx.rollback().await;
         return Err(error);
     }
