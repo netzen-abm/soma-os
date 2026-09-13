@@ -16,9 +16,7 @@ pub struct AuthorizedProtectedDbContext {
 }
 
 impl AuthorizedProtectedDbContext {
-    pub(crate) fn from_authorized_request(
-        request: &crate::canonical_authorization::AuthorizationRequest,
-    ) -> Self {
+    pub(crate) fn from_authorized_request(request: &crate::canonical_authorization::AuthorizationRequest) -> Self {
         Self {
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
