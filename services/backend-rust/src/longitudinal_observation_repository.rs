@@ -1,12 +1,81 @@
+//! Provider-neutral longitudinal observation and timeline contract.
+//!
+//! Protected observation access must cross the canonical authorization boundary
+//! before a provider can read payloads or resolve vault keys. This module keeps
+//! the resulting access context non-forgeable at the application boundary.
+
 use std::cmp::Ordering;
 use thiserror::Error;
 
-/// Provider-neutral authorization context. Implementations must enforce subject scope
-/// before accessing protected observation payloads or resolving vault keys.
+use crate::canonical_authorization::AuthorizationRequest;
+
+/// Authorization-bound context for protected observation access.
+///
+/// The fields are intentionally private. Callers cannot construct a context from
+/// arbitrary subject/scope strings; the canonical authorization boundary mints it
+/// only after an authoritative `ALLOW` decision and request validation.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ObservationAuthorizationContext {
-    pub subject_ref: String,
-    pub scope: String,
+pub struct AuthorizedObservationAccessContext {
+    subject_ref: String,
+    scope: String,
+    capability_id: String,
+    resource_type: String,
+    resource_id: String,
+    action: String,
+}
+
+impl AuthorizedObservationAccessContext {
+    pub(crate) fn from_authorized_request(
+        request: &AuthorizationRequest,
+    ) -> Result<Self, ObservationRepositoryError> {
+        if [
+            &request.principal_ref,
+            &request.capability_id,
+            &request.resource_type,
+            &request.resource_id,
+            &request.action,
+            &request.tenant_id,
+            &request.data_domain,
+        ]
+        .iter()
+        .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
+        {
+            return Err(ObservationRepositoryError::AuthorizationDenied);
+        }
+
+        Ok(Self {
+            subject_ref: request.principal_ref.clone(),
+            scope: format!("{}:{}", request.tenant_id, request.data_domain),
+            capability_id: request.capability_id.clone(),
+            resource_type: request.resource_type.clone(),
+            resource_id: request.resource_id.clone(),
+            action: request.action.clone(),
+        })
+    }
+
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+
+    pub fn scope(&self) -> &str {
+        &self.scope
+    }
+
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,54 +112,55 @@ pub enum ObservationRepositoryError {
 
 /// Canonical longitudinal observation repository boundary.
 ///
-/// This contract deliberately does not define a clinical payload model. Canonical
-/// Health State observations remain the domain representation; a provider stores or
-/// indexes references to those entities according to SOMA's governed storage boundary.
-/// Implementations must preserve provenance and uncertainty and must not infer causation.
+/// This contract deliberately does not define a competing clinical payload model.
+/// Canonical Health State observations remain the domain representation; a provider
+/// stores or indexes references to those entities according to SOMA's governed
+/// storage boundary. Implementations must preserve provenance and uncertainty and
+/// must not infer causation.
 pub trait LongitudinalObservationRepository {
     type Observation;
 
     fn put_reference(
         &self,
         observation_id: &str,
-        context: &ObservationAuthorizationContext,
+        context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError>;
 
     fn get(
         &self,
         observation_id: &str,
-        context: &ObservationAuthorizationContext,
+        context: &AuthorizedObservationAccessContext,
     ) -> Result<Self::Observation, ObservationRepositoryError>;
 
     fn query(
         &self,
-        context: &ObservationAuthorizationContext,
+        context: &AuthorizedObservationAccessContext,
         query: &ObservationQuery,
     ) -> Result<Vec<Self::Observation>, ObservationRepositoryError>;
 
     fn timeline(
         &self,
-        context: &ObservationAuthorizationContext,
+        context: &AuthorizedObservationAccessContext,
     ) -> Result<Vec<ObservationTimelineEntry>, ObservationRepositoryError>;
 
     fn tombstone(
         &self,
         observation_id: &str,
-        context: &ObservationAuthorizationContext,
+        context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError>;
 
     fn verify(
         &self,
         observation_id: &str,
-        context: &ObservationAuthorizationContext,
+        context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError>;
 }
 
 /// Shared deterministic timeline ordering helper for all repository providers.
 ///
 /// Known observation time is authoritative for chronology. Recorded time is only a
-/// deterministic fallback/tie-breaker; it is never substituted into the observation
-/// itself when observation time is unknown. Stable ID closes the ordering relation.
+/// deterministic secondary key; it is never substituted into an observation when
+/// observation time is unknown. Stable ID closes the ordering relation.
 pub fn sort_timeline(entries: &mut [ObservationTimelineEntry]) {
     entries.sort_by(|left, right| {
         match (&left.observed_at, &right.observed_at) {
@@ -110,11 +180,37 @@ pub fn sort_timeline(entries: &mut [ObservationTimelineEntry]) {
 mod tests {
     use super::*;
 
-    fn context() -> ObservationAuthorizationContext {
-        ObservationAuthorizationContext {
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
+    fn request() -> AuthorizationRequest {
+        AuthorizationRequest {
+            principal_ref: "person-1".into(),
+            capability_id: "health.read".into(),
+            resource_type: "health_record".into(),
+            resource_id: "record-1".into(),
+            action: "read".into(),
+            tenant_id: "tenant-1".into(),
+            data_domain: "personal_health".into(),
         }
+    }
+
+    #[test]
+    fn authorized_context_binds_request_scope() {
+        let context = AuthorizedObservationAccessContext::from_authorized_request(&request()).unwrap();
+        assert_eq!(context.subject_ref(), "person-1");
+        assert_eq!(context.scope(), "tenant-1:personal_health");
+        assert_eq!(context.capability_id(), "health.read");
+        assert_eq!(context.resource_type(), "health_record");
+        assert_eq!(context.resource_id(), "record-1");
+        assert_eq!(context.action(), "read");
+    }
+
+    #[test]
+    fn malformed_authorized_request_cannot_create_context() {
+        let mut request = request();
+        request.action = "".into();
+        assert_eq!(
+            AuthorizedObservationAccessContext::from_authorized_request(&request),
+            Err(ObservationRepositoryError::AuthorizationDenied)
+        );
     }
 
     #[test]
@@ -141,7 +237,6 @@ mod tests {
         ];
 
         sort_timeline(&mut entries);
-
         assert_eq!(entries[0].observation_id, "c");
         assert_eq!(entries[1].observation_id, "a");
         assert_eq!(entries[2].observation_id, "b");
@@ -170,14 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn authorization_context_is_subject_scoped() {
-        let value = context();
-        assert_eq!(value.subject_ref, "person-1");
-        assert_eq!(value.scope, "self");
-    }
-
-    #[test]
-    fn contract_does_not_expose_causal_relationships() {
+    fn observation_contract_does_not_expose_causal_relationships() {
         let query = ObservationQuery {
             concept: Some("heart_rate".into()),
             status: Some("active".into()),
