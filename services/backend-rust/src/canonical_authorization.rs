@@ -42,13 +42,17 @@ pub struct AuthorizationRequest {
 pub trait CanonicalAuthorizationBoundary {
     fn authorize(&self, request: &AuthorizationRequest) -> AuthorizationDecision;
 
-    /// Mint a protected execution context only from an authoritative ALLOW.
+    /// Mint a protected execution context only from an authoritative ALLOW and
+    /// a structurally valid governed request.
     fn authorize_protected_context(
         &self,
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => Ok(AuthorizedProtectedDbContext::from_authorized_request(request)),
+            AuthorizationDecision::Allow => {
+                AuthorizedProtectedDbContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -119,9 +123,21 @@ mod tests {
     #[test]
     fn protected_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_protected_context(&request()).unwrap();
+        assert_eq!(context.principal_ref(), "principal-1");
+        assert_eq!(context.capability_id(), "health.read");
+        assert_eq!(context.resource_type(), "health_record");
+        assert_eq!(context.resource_id(), "record-1");
+        assert_eq!(context.action(), "read");
         assert_eq!(context.tenant_id(), "tenant-1");
         assert_eq!(context.data_domain(), "personal_health");
 
         assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn malformed_allow_cannot_mint_protected_context() {
+        let mut request = request();
+        request.action = "".into();
+        assert_eq!(AllowBoundary.authorize_protected_context(&request), Err(AuthorizationDecision::Deny));
     }
 }
