@@ -25,9 +25,7 @@ pub struct AuthorizedObservationAccessContext {
 }
 
 impl AuthorizedObservationAccessContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, ObservationRepositoryError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, ObservationRepositoryError> {
         if [
             &request.principal_ref,
             &request.capability_id,
