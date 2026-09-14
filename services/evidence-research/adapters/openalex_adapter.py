@@ -85,7 +85,12 @@ class OpenAlexAdapter:
         url = BASE_URL + endpoint + "?" + urllib.parse.urlencode(params)
         request = urllib.request.Request(
             url,
-            headers={"Accept": "application/json", "User-Agent": os.environ.get("SOMA_OPENALEX_USER_AGENT", "SOMA-OS/1.0")},
+            headers={
+                "Accept": "application/json",
+                "User-Agent": os.environ.get(
+                    "SOMA_OPENALEX_USER_AGENT", "SOMA-OS/1.0"
+                ),
+            },
         )
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
@@ -106,7 +111,14 @@ class OpenAlexAdapter:
     def fetch(self, record_id: str) -> SearchResult:
         if not record_id:
             raise ValueError("record_id is required")
-        record = self._request("works/" + urllib.parse.quote(record_id, safe=""), {})
+        parsed = urllib.parse.urlparse(record_id)
+        normalized_id = parsed.path.rsplit("/", 1)[-1] if parsed.scheme else record_id
+        normalized_id = normalized_id.strip()
+        if not normalized_id:
+            raise ValueError("record_id is required")
+        record = self._request(
+            "works/" + urllib.parse.quote(normalized_id, safe=""), {}
+        )
         return self._to_result(record)
 
     def _to_result(self, record: dict) -> SearchResult:
@@ -122,11 +134,14 @@ class OpenAlexAdapter:
         verification_url = provider_record_id
         doi = str(record.get("doi") or "").strip()
         if not verification_url.startswith("https://"):
-            verification_url = doi if doi.startswith("https://doi.org/") else provider_record_id
+            verification_url = (
+                doi if doi.startswith("https://doi.org/") else provider_record_id
+            )
 
-        abstract = self._abstract_from_inverted_index(record.get("abstract_inverted_index"))
-        source_contract = self.source_contract()
-        source_contract = source_contract.with_record(
+        abstract = self._abstract_from_inverted_index(
+            record.get("abstract_inverted_index")
+        )
+        source_contract = self.source_contract().with_record(
             source_record_id=provider_record_id,
             source_url=provider_record_id,
             verification_url=verification_url,
