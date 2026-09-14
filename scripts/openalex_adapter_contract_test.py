@@ -1,7 +1,5 @@
 """Focused contract tests for the OpenAlex source integration."""
 
-from datetime import datetime, timezone
-
 from openalex_adapter import OpenAlexAdapter, OpenAlexProviderError
 
 
