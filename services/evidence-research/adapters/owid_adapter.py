@@ -9,12 +9,10 @@ from __future__ import annotations
 import csv
 import io
 import json
-import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional
 
 from external_knowledge_source import ExternalKnowledgeSource
 
@@ -71,7 +69,7 @@ class OwidAdapter:
             retrieved_at=datetime.now(timezone.utc),
             published_at=None,
             entity_types=("public_dataset", "dataset_record"),
-            identifier_systems=("OWID_GRAPher_SLUG",),
+            identifier_systems=("OWID_GRAPHER_SLUG",),
             units=(),
             temporal_model="SOURCE_DEFINED",
             verification_status="SOURCE_VERIFIED",
@@ -106,10 +104,9 @@ class OwidAdapter:
         metadata_bytes = self._request(encoded_slug + ".metadata.json")
         try:
             reader = csv.DictReader(io.StringIO(csv_bytes.decode("utf-8")))
-            fieldnames = reader.fieldnames
-            if not fieldnames:
+            if not reader.fieldnames:
                 raise ValueError("missing CSV header")
-            rows = []
+            rows: list[dict[str, str]] = []
             for row in reader:
                 rows.append({str(k): str(v) for k, v in row.items() if k is not None})
                 if len(rows) >= query.limit:
