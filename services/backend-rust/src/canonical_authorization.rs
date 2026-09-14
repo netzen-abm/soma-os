@@ -7,6 +7,7 @@
 
 use crate::health_state_evidence_link::AuthorizedHealthStateEvidenceLinkContext;
 use crate::health_state_repository::AuthorizedHealthStateAccessContext;
+use crate::longitudinal_context::AuthorizedLongitudinalContextAccessContext;
 use crate::protected_db_context::AuthorizedProtectedDbContext;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,6 +81,21 @@ pub trait CanonicalAuthorizationBoundary {
         match self.authorize(request) {
             AuthorizationDecision::Allow => AuthorizedHealthStateAccessContext::from_authorized_request(request)
                 .map_err(|_| AuthorizationDecision::Deny),
+            decision => Err(decision),
+        }
+    }
+
+    /// Mint a longitudinal-context read context only from an authoritative ALLOW
+    /// and a structurally valid governed request.
+    fn authorize_longitudinal_context(
+        &self,
+        request: &AuthorizationRequest,
+    ) -> Result<AuthorizedLongitudinalContextAccessContext, AuthorizationDecision> {
+        match self.authorize(request) {
+            AuthorizationDecision::Allow => {
+                AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -193,9 +209,7 @@ mod tests {
 
     #[test]
     fn health_state_repository_context_requires_authoritative_allow() {
-        let context = AllowBoundary
-            .authorize_health_state_repository_context(&request())
-            .unwrap();
+        let context = AllowBoundary.authorize_health_state_repository_context(&request()).unwrap();
         assert_eq!(context.subject_ref(), "principal-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
         assert_eq!(
@@ -208,9 +222,21 @@ mod tests {
     fn malformed_allow_cannot_mint_health_state_repository_context() {
         let mut request = request();
         request.data_domain = "".into();
-        assert_eq!(
-            AllowBoundary.authorize_health_state_repository_context(&request),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(AllowBoundary.authorize_health_state_repository_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn longitudinal_context_requires_authoritative_allow() {
+        let context = AllowBoundary.authorize_longitudinal_context(&request()).unwrap();
+        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.scope(), "tenant-1:personal_health");
+        assert_eq!(DenyBoundary.authorize_longitudinal_context(&request()), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn malformed_allow_cannot_mint_longitudinal_context() {
+        let mut request = request();
+        request.data_domain = "".into();
+        assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
     }
 }

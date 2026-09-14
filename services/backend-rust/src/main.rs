@@ -25,6 +25,7 @@ mod legacy_promotion_preflight;
 mod local_health_vault;
 mod local_health_vault_storage;
 mod local_longitudinal_observation_repository;
+mod longitudinal_context;
 mod longitudinal_observation_repository;
 mod messenger_webhook;
 mod meta_outbound;
