@@ -102,6 +102,14 @@ source_classes:
       role: discovery of ICMR research portals, networks and registries
       verification: https://www.icmr.gov.in/portals
 
+  india_public_data:
+    - id: data_gov_in
+      geography: india
+      authority: Government of India
+      access: public_with_resource_specific_controls
+      role: Indian government public datasets and contextual data
+      verification: https://data.gov.in/
+
   food_nutrition_and_composition:
     - id: usda_fooddata_central
       geography: global
@@ -182,6 +190,7 @@ routing:
     safety: [cdsco, fda, ema]
     nutrition: [usda_fooddata_central, faostat]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
+    public_data: [data_gov_in]
   food_life:
     literature: [pubmed, openalex, europe_pmc]
     nutrition: [usda_fooddata_central, faostat]
