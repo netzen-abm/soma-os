@@ -77,9 +77,24 @@ def test_provider_failure_is_not_no_evidence():
         [ResearchQuery("q1", "millet diabetes", "biomedical_literature")],
         [SearchRoute("biomedical_literature", ("pubmed",))],
     )
-    assert result.status == "PARTIAL_PROVIDER_FAILURE"
+    assert result.status == "PROVIDER_UNAVAILABLE"
     assert result.provider_status["pubmed"] == "PROVIDER_UNAVAILABLE"
     assert result.results == []
+
+
+def test_partial_provider_failure_is_visible_when_one_provider_completes():
+    orchestrator = MultiSourceOrchestrator({
+        "pubmed": FakeAdapter("pubmed", [study("pubmed", "pmid:123")]),
+        "openalex": FakeAdapter("openalex", error=RuntimeError("timeout")),
+    })
+    result = orchestrator.run(
+        [ResearchQuery("q1", "millet diabetes", "biomedical_literature")],
+        [SearchRoute("biomedical_literature", ("pubmed", "openalex"))],
+    )
+    assert result.status == "PARTIAL_PROVIDER_FAILURE"
+    assert result.provider_status["pubmed"] == "COMPLETED_WITH_RESULTS"
+    assert result.provider_status["openalex"] == "PROVIDER_UNAVAILABLE"
+    assert len(result.results) == 1
 
 
 def test_completed_empty_search_is_distinct_from_provider_failure():
@@ -117,3 +132,25 @@ def test_verification_links_and_provider_provenance_survive_normalization():
     )
     assert result.results[0].provider_id == "pubmed"
     assert result.results[0].verification_url.endswith("pmid:999")
+
+
+def test_missing_required_provider_is_unavailable():
+    orchestrator = MultiSourceOrchestrator({})
+    result = orchestrator.run(
+        [ResearchQuery("q1", "millet diabetes", "biomedical_literature")],
+        [SearchRoute("biomedical_literature", ("pubmed",))],
+    )
+    assert result.status == "PROVIDER_UNAVAILABLE"
+    assert result.provider_status["pubmed"] == "PROVIDER_UNAVAILABLE"
+
+
+def test_route_without_matching_query_is_not_silently_complete():
+    orchestrator = MultiSourceOrchestrator({
+        "pubmed": FakeAdapter("pubmed", [study("pubmed", "pmid:123")]),
+    })
+    result = orchestrator.run(
+        [ResearchQuery("q1", "millet diabetes", "public_data")],
+        [SearchRoute("biomedical_literature", ("pubmed",))],
+    )
+    assert result.status == "PARTIAL_PROVIDER_FAILURE"
+    assert result.failed_routes == ["biomedical_literature"]
