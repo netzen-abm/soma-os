@@ -29,9 +29,7 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self {
-            vault,
-        }
+        Self { vault }
     }
 
     fn vault_context(context: &AuthorizedObservationAccessContext) -> AuthorizationContext {
@@ -168,7 +166,11 @@ mod tests {
     use crate::canonical_authorization::AuthorizationRequest;
     use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
     use crate::local_health_vault_storage::VaultAction;
-    use std::{collections::HashMap, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
+    use std::{
+        collections::HashMap,
+        path::PathBuf,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
     const KEY: [u8; 32] = [7u8; 32];
 
@@ -208,7 +210,8 @@ mod tests {
             action: "read".into(),
             tenant_id: "tenant-1".into(),
             data_domain: "personal_health".into(),
-        }).unwrap()
+        })
+        .unwrap()
     }
 
     fn observation() -> LocalHealthVaultRecord {
@@ -225,7 +228,8 @@ mod tests {
                 updated_at: "2026-09-13T00:00:00Z",
             },
             br#"{"id":"person-1-observation-1","entity_type":"observation","concept":"heart_rate"}"#,
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     fn repository(root: &PathBuf) -> LocalLongitudinalObservationRepository<Keys, SubjectAuthorizer> {
@@ -241,7 +245,8 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
+        let vault_context =
+            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
         assert!(repository.get("person-1-observation-1", &context).is_ok());
         assert_eq!(repository.put_reference("person-1-observation-1", &context), Ok(()));
@@ -253,7 +258,8 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
+        let vault_context =
+            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
         let timeline = repository.timeline(&context).unwrap();
         assert_eq!(timeline.len(), 1);
@@ -267,7 +273,8 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
+        let vault_context =
+            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         let record = LocalHealthVaultCrypto::encrypt_record(
             &KEY,
             VaultRecordMetadata {
@@ -281,9 +288,13 @@ mod tests {
                 updated_at: "2026-09-13T00:00:00Z",
             },
             b"{}",
-        ).unwrap();
+        )
+        .unwrap();
         repository.vault.put(record, &vault_context).unwrap();
-        assert_eq!(repository.put_reference("person-1-other-1", &context), Err(ObservationRepositoryError::InvalidObservation));
+        assert_eq!(
+            repository.put_reference("person-1-other-1", &context),
+            Err(ObservationRepositoryError::InvalidObservation)
+        );
         std::fs::remove_dir_all(root).unwrap();
     }
 }
