@@ -27,9 +27,7 @@ pub struct AuthorizedLongitudinalContextAccessContext {
 }
 
 impl AuthorizedLongitudinalContextAccessContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, LongitudinalContextError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, LongitudinalContextError> {
         let values = [
             &request.principal_ref,
             &request.capability_id,
@@ -39,10 +37,7 @@ impl AuthorizedLongitudinalContextAccessContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values
-            .iter()
-            .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
-        {
+        if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(LongitudinalContextError::AuthorizationDenied);
         }
 
@@ -115,20 +110,14 @@ impl LongitudinalContextAssembly {
     ) -> Result<GovernedLongitudinalContext, LongitudinalContextError> {
         let subject = context.subject_ref();
 
-        if health_state_timeline
-            .iter()
-            .any(|entry| entry.subject_ref != subject)
-            || observation_timeline
-                .iter()
-                .any(|entry| entry.subject_ref != subject)
+        if health_state_timeline.iter().any(|entry| entry.subject_ref != subject)
+            || observation_timeline.iter().any(|entry| entry.subject_ref != subject)
         {
             return Err(LongitudinalContextError::SubjectMismatch);
         }
 
         if evidence_links.iter().any(|link| {
-            link.health_state_ref.trim().is_empty()
-                || link.evidence_ref.trim().is_empty()
-                || link.id.trim().is_empty()
+            link.health_state_ref.trim().is_empty() || link.evidence_ref.trim().is_empty() || link.id.trim().is_empty()
         }) {
             return Err(LongitudinalContextError::InvalidEvidenceLink);
         }
@@ -162,9 +151,7 @@ impl LongitudinalContextAssembly {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::health_state_evidence_link::{
-        HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty,
-    };
+    use crate::health_state_evidence_link::{HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty};
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
