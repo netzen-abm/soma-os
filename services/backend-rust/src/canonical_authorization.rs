@@ -92,8 +92,10 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedLongitudinalContextAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
-                .map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -199,7 +201,10 @@ mod tests {
     fn malformed_allow_cannot_mint_health_state_evidence_link_context() {
         let mut request = request();
         request.data_domain = "".into();
-        assert_eq!(AllowBoundary.authorize_health_state_evidence_link_context(&request), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            AllowBoundary.authorize_health_state_evidence_link_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 
     #[test]
