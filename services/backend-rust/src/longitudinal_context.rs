@@ -5,12 +5,11 @@
 //! into a deterministic context view. It never dereferences an Evidence Graph
 //! record, performs clinical or causal inference, or grants agent authority.
 
+use crate::canonical_authorization::AuthorizationRequest;
 use crate::health_state_evidence_link::HealthStateEvidenceLink;
 use crate::health_state_repository::HealthStateTimelineEntry;
 use crate::longitudinal_observation_repository::ObservationTimelineEntry;
 use thiserror::Error;
-
-use crate::canonical_authorization::AuthorizationRequest;
 
 /// Authorization-bound context for reading a longitudinal context projection.
 ///
@@ -57,12 +56,29 @@ impl AuthorizedLongitudinalContextAccessContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn scope(&self) -> &str { &self.scope }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+
+    pub fn scope(&self) -> &str {
+        &self.scope
+    }
+
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 /// Canonical read-only longitudinal context projection.
@@ -146,7 +162,9 @@ impl LongitudinalContextAssembly {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::health_state_evidence_link::{HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty};
+    use crate::health_state_evidence_link::{
+        HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty,
+    };
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
