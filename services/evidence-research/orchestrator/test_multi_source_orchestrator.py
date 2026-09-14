@@ -152,5 +152,5 @@ def test_route_without_matching_query_is_not_silently_complete():
         [ResearchQuery("q1", "millet diabetes", "public_data")],
         [SearchRoute("biomedical_literature", ("pubmed",))],
     )
-    assert result.status == "COMPLETED_NO_RELEVANT_RESULTS"
+    assert result.status == "PARTIAL_PROVIDER_FAILURE"
     assert result.failed_routes == ["biomedical_literature"]
