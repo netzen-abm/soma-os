@@ -101,13 +101,13 @@ mod tests {
     #[test]
     fn authorization_request_keeps_governance_scope_explicit() {
         let request = AuthorizationRequest {
-            principal_ref: "principal-1".into(),
-            capability_id: "health.read".into(),
-            resource_type: "health_record".into(),
-            resource_id: "record-1".into(),
-            action: "read".into(),
-            tenant_id: "tenant-1".into(),
-            data_domain: "personal_health".into(),
+            principal_ref: "principal-1".to_owned(),
+            capability_id: "health.read".to_owned(),
+            resource_type: "health_record".to_owned(),
+            resource_id: "record-1".to_owned(),
+            action: "read".to_owned(),
+            tenant_id: "tenant-1".to_owned(),
+            data_domain: "personal_health".to_owned(),
         };
 
         assert_eq!(request.principal_ref, "principal-1");
