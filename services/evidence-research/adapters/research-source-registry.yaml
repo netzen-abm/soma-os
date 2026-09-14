@@ -178,22 +178,31 @@ source_classes:
       role: biodiversity and species occurrence data
       verification: https://www.gbif.org/
 
+  public_data_and_global_context:
+    - id: owid
+      geography: global
+      authority: Our World in Data
+      access: public
+      role: global public datasets and contextual indicators
+      verification: https://ourworldindata.org/
+
 routing:
   default:
     literature: [pubmed, openalex, europe_pmc]
     evidence_synthesis: [cochrane, epistemonikos]
     trials: [ctri, who_ictrp, clinicaltrials_gov, isrctn]
     safety: [fda, ema, cdsco]
+    public_data: [owid]
   india_relevant:
     literature: [pubmed, openalex, europe_pmc, ayush_research_portal, icmr_portals]
     trials: [ctri, who_ictrp, clinicaltrials_gov]
     safety: [cdsco, fda, ema]
     nutrition: [usda_fooddata_central, faostat]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
-    public_data: [data_gov_in]
+    public_data: [data_gov_in, owid]
   food_life:
     literature: [pubmed, openalex, europe_pmc]
-    nutrition: [usda_fooddata_central, faostat]
+    nutrition: [usda_fooddata_central, faostat, owid]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
     botanical_identity: [kew_powo, gbif]
 
