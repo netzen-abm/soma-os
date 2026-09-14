@@ -92,10 +92,7 @@ impl AuthorizedHealthStateEvidenceLinkContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values
-            .iter()
-            .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
-        {
+        if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(HealthStateEvidenceLinkError::InvalidAuthorizationContext);
         }
 
@@ -166,16 +163,8 @@ impl HealthStateEvidenceLinkBoundary {
             || link.health_state_ref.trim().is_empty()
             || link.evidence_ref.trim().is_empty()
             || link.provenance.method.trim().is_empty()
-            || link
-                .provenance
-                .created_at
-                .as_deref()
-                .is_some_and(|value| value.trim().is_empty())
-            || link
-                .provenance
-                .actor_ref
-                .as_deref()
-                .is_some_and(|value| value.trim().is_empty())
+            || link.provenance.created_at.as_deref().is_some_and(|value| value.trim().is_empty())
+            || link.provenance.actor_ref.as_deref().is_some_and(|value| value.trim().is_empty())
         {
             return Err(HealthStateEvidenceLinkError::InvalidLink);
         }
@@ -193,9 +182,7 @@ impl HealthStateEvidenceLinkBoundary {
         context: &AuthorizedHealthStateEvidenceLinkContext,
     ) -> Result<(), HealthStateEvidenceLinkError> {
         Self::validate(link, context)?;
-        if link.relationship
-            != HealthStateEvidenceRelationship::PersonalResponseObservedAfterIntervention
-        {
+        if link.relationship != HealthStateEvidenceRelationship::PersonalResponseObservedAfterIntervention {
             return Err(HealthStateEvidenceLinkError::InvalidLink);
         }
         Ok(())
