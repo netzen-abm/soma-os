@@ -12,7 +12,6 @@ use crate::canonical_authorization::AuthorizationRequest;
 use crate::local_health_vault::LocalHealthVaultRecord;
 use crate::local_health_vault_storage::{AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider};
 
-const HEALTH_STATE_SCHEMA_VERSION: &str = "1.1.0";
 const HEALTH_STATE_CONTENT_TYPE: &str = "application/json";
 
 const ALLOWED_ENTITY_TYPES: [&str; 8] = [
@@ -205,7 +204,6 @@ where
 
     fn validate_entity(record: &LocalHealthVaultRecord) -> Result<(), HealthStateRepositoryError> {
         if !ALLOWED_ENTITY_TYPES.contains(&record.entity_type.as_str())
-            || record.schema_version != HEALTH_STATE_SCHEMA_VERSION
             || record.content_type != HEALTH_STATE_CONTENT_TYPE
             || record.record_id.trim().is_empty()
             || record.subject_ref.trim().is_empty()
