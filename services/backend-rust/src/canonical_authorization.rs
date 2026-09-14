@@ -5,6 +5,7 @@
 //! decision boundary. Rust protected-data providers consume only the resulting
 //! decision and must fail closed unless the decision is explicitly ALLOW.
 
+use crate::health_state_evidence_link::AuthorizedHealthStateEvidenceLinkContext;
 use crate::protected_db_context::AuthorizedProtectedDbContext;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,7 +51,23 @@ pub trait CanonicalAuthorizationBoundary {
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedProtectedDbContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+                AuthorizedProtectedDbContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
+            decision => Err(decision),
+        }
+    }
+
+    /// Mint a Health State ↔ Evidence linkage context only from an authoritative
+    /// ALLOW and a structurally valid governed request.
+    fn authorize_health_state_evidence_link_context(
+        &self,
+        request: &AuthorizationRequest,
+    ) -> Result<AuthorizedHealthStateEvidenceLinkContext, AuthorizationDecision> {
+        match self.authorize(request) {
+            AuthorizationDecision::Allow => {
+                AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -130,13 +147,44 @@ mod tests {
         assert_eq!(context.tenant_id(), "tenant-1");
         assert_eq!(context.data_domain(), "personal_health");
 
-        assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            DenyBoundary.authorize_protected_context(&request()),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 
     #[test]
     fn malformed_allow_cannot_mint_protected_context() {
         let mut request = request();
         request.action = "".into();
-        assert_eq!(AllowBoundary.authorize_protected_context(&request), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            AllowBoundary.authorize_protected_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
+    }
+
+    #[test]
+    fn health_state_evidence_link_context_requires_authoritative_allow() {
+        let context = AllowBoundary
+            .authorize_health_state_evidence_link_context(&request())
+            .unwrap();
+        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.resource_type(), "health_record");
+        assert_eq!(context.resource_id(), "record-1");
+
+        assert_eq!(
+            DenyBoundary.authorize_health_state_evidence_link_context(&request()),
+            Err(AuthorizationDecision::Deny)
+        );
+    }
+
+    #[test]
+    fn malformed_allow_cannot_mint_health_state_evidence_link_context() {
+        let mut request = request();
+        request.data_domain = "".into();
+        assert_eq!(
+            AllowBoundary.authorize_health_state_evidence_link_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 }
