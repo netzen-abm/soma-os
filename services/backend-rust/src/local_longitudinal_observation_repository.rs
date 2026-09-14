@@ -10,8 +10,8 @@ use crate::local_health_vault_storage::{
     AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider,
 };
 use crate::longitudinal_observation_repository::{
-    sort_timeline, AuthorizedObservationAccessContext, LongitudinalObservationRepository,
-    ObservationQuery, ObservationRepositoryError, ObservationTimelineEntry,
+    sort_timeline, AuthorizedObservationAccessContext, LongitudinalObservationRepository, ObservationQuery,
+    ObservationRepositoryError, ObservationTimelineEntry,
 };
 
 /// Local provider for longitudinal observations.
@@ -29,7 +29,9 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self { vault }
+        Self {
+            vault,
+        }
     }
 
     fn vault_context(context: &AuthorizedObservationAccessContext) -> AuthorizationContext {
@@ -73,10 +75,7 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        let record = self
-            .vault
-            .get(observation_id, &vault_context)
-            .map_err(Self::map_error)?;
+        let record = self.vault.get(observation_id, &vault_context).map_err(Self::map_error)?;
         if !Self::is_observation(&record) {
             return Err(ObservationRepositoryError::InvalidObservation);
         }
@@ -89,10 +88,7 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<Self::Observation, ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        let record = self
-            .vault
-            .get(observation_id, &vault_context)
-            .map_err(Self::map_error)?;
+        let record = self.vault.get(observation_id, &vault_context).map_err(Self::map_error)?;
         if !Self::is_observation(&record) {
             return Err(ObservationRepositoryError::InvalidObservation);
         }
@@ -105,18 +101,12 @@ where
         query: &ObservationQuery,
     ) -> Result<Vec<Self::Observation>, ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        let entries = self
-            .vault
-            .list(&vault_context)
-            .map_err(Self::map_error)?;
+        let entries = self.vault.list(&vault_context).map_err(Self::map_error)?;
         let mut observations = Vec::new();
 
         for entry in entries {
             if entry.entity_type != "observation"
-                || query
-                    .classification
-                    .as_ref()
-                    .is_some_and(|value| entry.classification != *value)
+                || query.classification.as_ref().is_some_and(|value| entry.classification != *value)
             {
                 continue;
             }
@@ -124,11 +114,7 @@ where
             // The encrypted vault intentionally does not expose payload fields through
             // its metadata index. Concept/status filtering therefore remains outside
             // this storage adapter rather than forcing a second plaintext index.
-            observations.push(
-                self.vault
-                    .get(&entry.record_id, &vault_context)
-                    .map_err(Self::map_error)?,
-            );
+            observations.push(self.vault.get(&entry.record_id, &vault_context).map_err(Self::map_error)?);
         }
 
         Ok(observations)
@@ -139,10 +125,7 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<Vec<ObservationTimelineEntry>, ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        let entries = self
-            .vault
-            .list(&vault_context)
-            .map_err(Self::map_error)?;
+        let entries = self.vault.list(&vault_context).map_err(Self::map_error)?;
         let mut timeline = entries
             .into_iter()
             .filter(|entry| entry.entity_type == "observation")
@@ -166,9 +149,7 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        self.vault
-            .tombstone(observation_id, &vault_context)
-            .map_err(Self::map_error)
+        self.vault.tombstone(observation_id, &vault_context).map_err(Self::map_error)
     }
 
     fn verify(
@@ -177,9 +158,7 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        self.vault
-            .verify(observation_id, &vault_context)
-            .map_err(Self::map_error)
+        self.vault.verify(observation_id, &vault_context).map_err(Self::map_error)
     }
 }
 
@@ -189,11 +168,7 @@ mod tests {
     use crate::canonical_authorization::AuthorizationRequest;
     use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
     use crate::local_health_vault_storage::VaultAction;
-    use std::{
-        collections::HashMap,
-        path::PathBuf,
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::{collections::HashMap, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
 
     const KEY: [u8; 32] = [7u8; 32];
 
@@ -201,10 +176,7 @@ mod tests {
 
     impl VaultKeyProvider for Keys {
         fn key_for(&self, key_ref: &str) -> Result<[u8; 32], StorageError> {
-            self.0
-                .get(key_ref)
-                .copied()
-                .ok_or(StorageError::KeyResolutionFailed)
+            self.0.get(key_ref).copied().ok_or(StorageError::KeyResolutionFailed)
         }
     }
 
@@ -212,12 +184,7 @@ mod tests {
     struct SubjectAuthorizer;
 
     impl VaultAuthorizer for SubjectAuthorizer {
-        fn authorize(
-            &self,
-            context: &AuthorizationContext,
-            record_id: &str,
-            action: VaultAction,
-        ) -> bool {
+        fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
             match action {
                 VaultAction::List => true,
                 _ => record_id == "*" || record_id.starts_with(&context.subject_ref),
@@ -228,10 +195,7 @@ mod tests {
     fn root() -> PathBuf {
         std::env::temp_dir().join(format!(
             "soma-longitudinal-observation-test-{}",
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
         ))
     }
 
@@ -244,8 +208,7 @@ mod tests {
             action: "read".into(),
             tenant_id: "tenant-1".into(),
             data_domain: "personal_health".into(),
-        })
-        .unwrap()
+        }).unwrap()
     }
 
     fn observation() -> LocalHealthVaultRecord {
@@ -262,13 +225,10 @@ mod tests {
                 updated_at: "2026-09-13T00:00:00Z",
             },
             br#"{"id":"person-1-observation-1","entity_type":"observation","concept":"heart_rate"}"#,
-        )
-        .unwrap()
+        ).unwrap()
     }
 
-    fn repository(
-        root: &PathBuf,
-    ) -> LocalLongitudinalObservationRepository<Keys, SubjectAuthorizer> {
+    fn repository(root: &PathBuf) -> LocalLongitudinalObservationRepository<Keys, SubjectAuthorizer> {
         let mut keys = HashMap::new();
         keys.insert("key-1".into(), KEY);
         LocalLongitudinalObservationRepository::new(
@@ -281,18 +241,10 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context =
-            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(
-                &context,
-            );
+        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
-        assert!(repository
-            .get("person-1-observation-1", &context)
-            .is_ok());
-        assert_eq!(
-            repository.put_reference("person-1-observation-1", &context),
-            Ok(())
-        );
+        assert!(repository.get("person-1-observation-1", &context).is_ok());
+        assert_eq!(repository.put_reference("person-1-observation-1", &context), Ok(()));
         std::fs::remove_dir_all(root).unwrap();
     }
 
@@ -301,10 +253,7 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context =
-            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(
-                &context,
-            );
+        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
         let timeline = repository.timeline(&context).unwrap();
         assert_eq!(timeline.len(), 1);
@@ -318,10 +267,7 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context =
-            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(
-                &context,
-            );
+        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         let record = LocalHealthVaultCrypto::encrypt_record(
             &KEY,
             VaultRecordMetadata {
@@ -335,13 +281,9 @@ mod tests {
                 updated_at: "2026-09-13T00:00:00Z",
             },
             b"{}",
-        )
-        .unwrap();
+        ).unwrap();
         repository.vault.put(record, &vault_context).unwrap();
-        assert_eq!(
-            repository.put_reference("person-1-other-1", &context),
-            Err(ObservationRepositoryError::InvalidObservation)
-        );
+        assert_eq!(repository.put_reference("person-1-other-1", &context), Err(ObservationRepositoryError::InvalidObservation));
         std::fs::remove_dir_all(root).unwrap();
     }
 }
