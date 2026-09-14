@@ -83,6 +83,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db_manager,
     });
 
+    // Convert the stateless webhook router into a router whose missing state is AppState.
     let app = whatsapp_webhook::routes()
         .merge(messenger_webhook::routes())
         .with_state(())
