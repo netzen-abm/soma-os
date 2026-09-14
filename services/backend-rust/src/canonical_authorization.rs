@@ -101,13 +101,13 @@ mod tests {
     #[test]
     fn authorization_request_keeps_governance_scope_explicit() {
         let request = AuthorizationRequest {
-            principal_ref: "principal-1".to_owned(),
-            capability_id: "health.read".to_owned(),
-            resource_type: "health_record".to_owned(),
-            resource_id: "record-1".to_owned(),
-            action: "read".to_owned(),
-            tenant_id: "tenant-1".to_owned(),
-            data_domain: "personal_health".to_owned(),
+            principal_ref: "principal-1".into(),
+            capability_id: "health.read".into(),
+            resource_type: "health_record".into(),
+            resource_id: "record-1".into(),
+            action: "read".into(),
+            tenant_id: "tenant-1".into(),
+            data_domain: "personal_health".into(),
         };
 
         assert_eq!(request.principal_ref, "principal-1");
@@ -137,30 +137,44 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "principal-1".to_owned(),
-            capability_id: "health.read".to_owned(),
-            resource_type: "health_record".to_owned(),
-            resource_id: "record-1".to_owned(),
-            action: "read".to_owned(),
-            tenant_id: "tenant-1".to_owned(),
-            data_domain: "personal_health".to_owned(),
+            principal_ref: "principal-1".into(),
+            capability_id: "health.read".into(),
+            resource_type: "health_record".into(),
+            resource_id: "record-1".into(),
+            action: "read".into(),
+            tenant_id: "tenant-1".into(),
+            data_domain: "personal_health".into(),
         }
     }
 
     #[test]
-    fn protected_context_requires_allow() {
-        assert!(AllowBoundary.authorize_protected_context(&request()).is_ok());
-        assert_eq!(
-            DenyBoundary.authorize_protected_context(&request()),
-            Err(AuthorizationDecision::Deny)
-        );
+    fn protected_context_requires_authoritative_allow() {
+        let context = AllowBoundary.authorize_protected_context(&request()).unwrap();
+        assert_eq!(context.principal_ref(), "principal-1");
+        assert_eq!(context.capability_id(), "health.read");
+        assert_eq!(context.resource_type(), "health_record");
+        assert_eq!(context.resource_id(), "record-1");
+        assert_eq!(context.action(), "read");
+        assert_eq!(context.tenant_id(), "tenant-1");
+        assert_eq!(context.data_domain(), "personal_health");
+
+        assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
-    fn health_state_evidence_link_context_requires_allow() {
-        assert!(AllowBoundary
-            .authorize_health_state_evidence_link_context(&request())
-            .is_ok());
+    fn malformed_allow_cannot_mint_protected_context() {
+        let mut request = request();
+        request.action = "".into();
+        assert_eq!(AllowBoundary.authorize_protected_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn health_state_evidence_link_context_requires_authoritative_allow() {
+        let context = AllowBoundary.authorize_health_state_evidence_link_context(&request()).unwrap();
+        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.resource_type(), "health_record");
+        assert_eq!(context.resource_id(), "record-1");
+
         assert_eq!(
             DenyBoundary.authorize_health_state_evidence_link_context(&request()),
             Err(AuthorizationDecision::Deny)
@@ -168,7 +182,17 @@ mod tests {
     }
 
     #[test]
-    fn health_state_repository_context_requires_allow() {
+    fn malformed_allow_cannot_mint_health_state_evidence_link_context() {
+        let mut request = request();
+        request.data_domain = "".into();
+        assert_eq!(
+            AllowBoundary.authorize_health_state_evidence_link_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
+    }
+
+    #[test]
+    fn health_state_repository_context_requires_authoritative_allow() {
         let context = AllowBoundary
             .authorize_health_state_repository_context(&request())
             .unwrap();
@@ -183,7 +207,7 @@ mod tests {
     #[test]
     fn malformed_allow_cannot_mint_health_state_repository_context() {
         let mut request = request();
-        request.data_domain.clear();
+        request.data_domain = "".into();
         assert_eq!(
             AllowBoundary.authorize_health_state_repository_context(&request),
             Err(AuthorizationDecision::Deny)
