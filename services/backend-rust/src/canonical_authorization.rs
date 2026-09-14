@@ -50,10 +50,8 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedProtectedDbContext::from_authorized_request(request)
-                    .map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedProtectedDbContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
@@ -65,10 +63,8 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedHealthStateEvidenceLinkContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(request)
-                    .map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
@@ -147,27 +143,19 @@ mod tests {
         assert_eq!(context.tenant_id(), "tenant-1");
         assert_eq!(context.data_domain(), "personal_health");
 
-        assert_eq!(
-            DenyBoundary.authorize_protected_context(&request()),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
     fn malformed_allow_cannot_mint_protected_context() {
         let mut request = request();
         request.action = "".into();
-        assert_eq!(
-            AllowBoundary.authorize_protected_context(&request),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(AllowBoundary.authorize_protected_context(&request), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
     fn health_state_evidence_link_context_requires_authoritative_allow() {
-        let context = AllowBoundary
-            .authorize_health_state_evidence_link_context(&request())
-            .unwrap();
+        let context = AllowBoundary.authorize_health_state_evidence_link_context(&request()).unwrap();
         assert_eq!(context.subject_ref(), "principal-1");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
