@@ -1,8 +1,4 @@
-"""Bounded Data.gov.in public-dataset retrieval adapter for SOMA.
-
-Retrieval and source-contract binding only. This adapter does not assess
-quality, infer meaning, or make clinical decisions.
-"""
+"""Bounded Data.gov.in public-dataset retrieval adapter for SOMA."""
 
 from __future__ import annotations
 
@@ -36,7 +32,7 @@ class DataGovResult:
 
 
 class DataGovProviderError(RuntimeError):
-    """A Data.gov.in/provider failure; never interpret this as empty data."""
+    """A provider failure; never interpret this as an empty result."""
 
 
 class DataGovInAdapter:
@@ -81,10 +77,15 @@ class DataGovInAdapter:
         api_key = os.environ.get("DATA_GOV_IN_API_KEY")
         if not api_key:
             raise DataGovProviderError("DATA_GOV_IN_API_KEY is required for resource API access")
-        url = self.api_base_url + urllib.parse.quote(resource_id, safe="") + "?" + urllib.parse.urlencode(params)
+        request_params = dict(params)
+        request_params["api-key"] = api_key
+        url = self.api_base_url + urllib.parse.quote(resource_id, safe="") + "?" + urllib.parse.urlencode(request_params)
         request = urllib.request.Request(
             url,
-            headers={"Accept": "application/json", "User-Agent": os.environ.get("SOMA_DATA_GOV_USER_AGENT", "SOMA-OS/1.0")},
+            headers={
+                "Accept": "application/json",
+                "User-Agent": os.environ.get("SOMA_DATA_GOV_USER_AGENT", "SOMA-OS/1.0"),
+            },
         )
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
