@@ -1,5 +1,16 @@
 """Focused contract tests for the OpenAlex source integration."""
 
+from pathlib import Path
+import sys
+
+ADAPTER_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "services"
+    / "evidence-research"
+    / "adapters"
+)
+sys.path.insert(0, str(ADAPTER_DIR))
+
 from openalex_adapter import OpenAlexAdapter, OpenAlexProviderError
 
 
