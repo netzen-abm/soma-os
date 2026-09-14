@@ -123,9 +123,7 @@ impl From<StorageError> for HealthStateRepositoryError {
             StorageError::AuthorizationDenied => Self::AuthorizationDenied,
             StorageError::NotFound => Self::NotFound,
             StorageError::Tombstoned => Self::Tombstoned,
-            StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => {
-                Self::IntegrityFailure
-            }
+            StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => Self::IntegrityFailure,
             StorageError::InvalidRecord
             | StorageError::KeyResolutionFailed
             | StorageError::Io
@@ -434,10 +432,7 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizedHealthStateAccessContext::from_authorized_request(&request()).unwrap();
-        assert_eq!(
-            repository.put(record("evidence_claim"), &context),
-            Err(HealthStateRepositoryError::InvalidEntity)
-        );
+        assert_eq!(repository.put(record("evidence_claim"), &context), Err(HealthStateRepositoryError::InvalidEntity));
         fs::remove_dir_all(root).unwrap();
     }
 
