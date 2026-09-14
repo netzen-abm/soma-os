@@ -29,7 +29,9 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self { vault }
+        Self {
+            vault,
+        }
     }
 
     fn vault_context(context: &AuthorizedObservationAccessContext) -> AuthorizationContext {
@@ -245,8 +247,7 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context =
-            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
+        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
         assert!(repository.get("person-1-observation-1", &context).is_ok());
         assert_eq!(repository.put_reference("person-1-observation-1", &context), Ok(()));
@@ -258,8 +259,7 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context =
-            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
+        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         repository.vault.put(observation(), &vault_context).unwrap();
         let timeline = repository.timeline(&context).unwrap();
         assert_eq!(timeline.len(), 1);
@@ -273,8 +273,7 @@ mod tests {
         let root = root();
         let repository = repository(&root);
         let context = context();
-        let vault_context =
-            LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
+        let vault_context = LocalLongitudinalObservationRepository::<Keys, SubjectAuthorizer>::vault_context(&context);
         let record = LocalHealthVaultCrypto::encrypt_record(
             &KEY,
             VaultRecordMetadata {
