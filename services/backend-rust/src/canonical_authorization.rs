@@ -50,8 +50,9 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedProtectedDbContext::from_authorized_request(request)
-                .map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedProtectedDbContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
