@@ -92,9 +92,10 @@ impl AuthorizedHealthStateEvidenceLinkContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values.iter().any(|value| {
-            value.trim().is_empty() || value.chars().any(char::is_control)
-        }) {
+        if values
+            .iter()
+            .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
+        {
             return Err(HealthStateEvidenceLinkError::InvalidAuthorizationContext);
         }
 
