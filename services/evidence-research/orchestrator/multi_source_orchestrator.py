@@ -1,20 +1,33 @@
 """Provider-neutral multi-source research orchestration for SOMA.
 
-This module coordinates adapters; it does not make clinical or efficacy
-judgments. Assessment belongs to the core evidence layer.
+This module coordinates existing provider adapters; it does not make clinical
+or efficacy judgments. Assessment belongs to the core evidence layer.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, Sequence
+from typing import Any, Protocol, Sequence
 
 
 @dataclass(frozen=True)
 class ResearchQuery:
+    """Normalized query compatible with the current research adapters."""
+
     query_id: str
     terms: str
     source_class: str
     geography: str = "global"
+    retmax: int = 20
+
+    def __post_init__(self) -> None:
+        if not self.query_id:
+            raise ValueError("query_id is required")
+        if not self.terms.strip():
+            raise ValueError("terms are required")
+        if not self.source_class:
+            raise ValueError("source_class is required")
+        if self.retmax <= 0:
+            raise ValueError("retmax must be positive")
 
 
 @dataclass(frozen=True)
@@ -34,7 +47,8 @@ class ProviderResult:
 class ResearchAdapter(Protocol):
     provider_id: str
 
-    def search(self, query: ResearchQuery) -> Sequence[ProviderResult]:
+    def search(self, query: Any) -> Sequence[Any]:
+        """Search using the adapter's normalized query shape."""
         ...
 
 
@@ -43,6 +57,12 @@ class SearchRoute:
     source_class: str
     provider_ids: tuple[str, ...]
     required: bool = True
+
+    def __post_init__(self) -> None:
+        if not self.source_class:
+            raise ValueError("source_class is required")
+        if not self.provider_ids:
+            raise ValueError("provider_ids must not be empty")
 
 
 @dataclass
@@ -61,25 +81,66 @@ class MultiSourceOrchestrator:
         self.adapters = adapters
 
     @staticmethod
+    def _normalize_result(
+        result: Any, query: ResearchQuery
+    ) -> ProviderResult:
+        """Convert a governed adapter result into the shared orchestration envelope."""
+        provider_id = str(getattr(result, "provider_id", "")).strip()
+        provider_record_id = str(getattr(result, "provider_record_id", "")).strip()
+        if not provider_id or not provider_record_id:
+            raise ValueError("adapter result must contain provider identity")
+
+        identifiers = tuple(
+            identifier
+            for identifier in (provider_record_id, *getattr(result, "identifiers", ()))
+            if isinstance(identifier, str) and identifier.strip()
+        )
+        return ProviderResult(
+            provider_id=provider_id,
+            provider_record_id=provider_record_id,
+            title=" ".join(str(getattr(result, "title", "")).split()),
+            source_class=query.source_class,
+            geography=query.geography,
+            source_url=str(getattr(result, "source_url", "")),
+            verification_url=str(getattr(result, "verification_url", "")),
+            publication_year=getattr(result, "publication_year", None),
+            abstract_or_summary=getattr(result, "abstract_or_summary", None),
+            identifiers=identifiers,
+        )
+
+    @staticmethod
     def _dedupe_key(result: ProviderResult) -> tuple[str, str]:
-        """Prefer stable identifiers; fall back to normalized title/year."""
+        """Prefer stable cross-provider identifiers; fall back to title/year."""
         for identifier in result.identifiers:
-            if identifier:
-                prefix = identifier.split(":", 1)[0].lower()
-                if prefix in {"doi", "pmid", "nct", "ctri", "isrctn"}:
-                    return (prefix, identifier.lower())
+            if not identifier:
+                continue
+            normalized = identifier.strip().lower()
+            prefix = normalized.split(":", 1)[0]
+            if prefix in {"doi", "pmid", "nct", "ctri", "isrctn"}:
+                return (prefix, normalized)
         title = " ".join(result.title.lower().split())
         return ("title-year", f"{title}|{result.publication_year or ''}")
 
-    def run(self, queries: Sequence[ResearchQuery], routes: Sequence[SearchRoute]) -> OrchestrationResult:
+    def run(
+        self,
+        queries: Sequence[ResearchQuery],
+        routes: Sequence[SearchRoute],
+    ) -> OrchestrationResult:
         unique: dict[tuple[str, str], ProviderResult] = {}
         provider_status: dict[str, str] = {}
         completed_routes: list[str] = []
         failed_routes: list[str] = []
 
         for route in routes:
+            matching_queries = [q for q in queries if q.source_class == route.source_class]
+            if not matching_queries:
+                provider_status[f"route:{route.source_class}"] = "NO_QUERY"
+                if route.required:
+                    failed_routes.append(route.source_class)
+                continue
+
             route_completed = True
-            for query in (q for q in queries if q.source_class == route.source_class):
+            for query in matching_queries:
                 for provider_id in route.provider_ids:
                     adapter = self.adapters.get(provider_id)
                     if adapter is None:
@@ -88,20 +149,38 @@ class MultiSourceOrchestrator:
                         continue
                     try:
                         found = adapter.search(query)
-                        provider_status[provider_id] = "COMPLETED_WITH_RESULTS" if found else "COMPLETED_NO_RESULTS"
-                        for result in found:
-                            unique.setdefault(self._dedupe_key(result), result)
+                        if not found:
+                            provider_status[provider_id] = "COMPLETED_NO_RESULTS"
+                            continue
+                        provider_status[provider_id] = "COMPLETED_WITH_RESULTS"
+                        for raw_result in found:
+                            normalized = self._normalize_result(raw_result, query)
+                            unique.setdefault(self._dedupe_key(normalized), normalized)
                     except Exception:
                         provider_status[provider_id] = "PROVIDER_UNAVAILABLE"
                         route_completed = False
+
             if route_completed:
                 completed_routes.append(route.source_class)
             else:
                 failed_routes.append(route.source_class)
 
-        required_classes = {r.source_class for r in routes if r.required}
-        completed_classes = set(completed_routes)
-        if required_classes - completed_classes:
+        required_failed = {
+            route.source_class for route in routes if route.required
+        } & set(failed_routes)
+        attempted_required = {
+            route.source_class for route in routes if route.required
+        }
+        all_required_failed = bool(attempted_required) and all(
+            provider_status.get(provider_id) == "PROVIDER_UNAVAILABLE"
+            for route in routes
+            if route.required
+            for provider_id in route.provider_ids
+        )
+
+        if all_required_failed:
+            status = "PROVIDER_UNAVAILABLE"
+        elif required_failed:
             status = "PARTIAL_PROVIDER_FAILURE"
         elif unique:
             status = "COMPLETED_WITH_RESULTS"
