@@ -19,6 +19,7 @@ mod data_parser;
 mod db_layer;
 mod device_sync;
 mod health_state_evidence_link;
+mod health_state_repository;
 mod key_restoration;
 mod legacy_promotion_preflight;
 mod local_health_vault;
