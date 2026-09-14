@@ -185,6 +185,12 @@ source_classes:
       access: public
       role: global public datasets and contextual indicators
       verification: https://ourworldindata.org/
+    - id: un_data
+      geography: global
+      authority: United Nations Statistics Division
+      access: public
+      role: UN public statistics and contextual datasets through SDMX
+      verification: https://data.un.org/
 
 routing:
   default:
@@ -192,17 +198,17 @@ routing:
     evidence_synthesis: [cochrane, epistemonikos]
     trials: [ctri, who_ictrp, clinicaltrials_gov, isrctn]
     safety: [fda, ema, cdsco]
-    public_data: [owid]
+    public_data: [owid, un_data]
   india_relevant:
     literature: [pubmed, openalex, europe_pmc, ayush_research_portal, icmr_portals]
     trials: [ctri, who_ictrp, clinicaltrials_gov]
     safety: [cdsco, fda, ema]
     nutrition: [usda_fooddata_central, faostat]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
-    public_data: [data_gov_in, owid]
+    public_data: [data_gov_in, owid, un_data]
   food_life:
     literature: [pubmed, openalex, europe_pmc]
-    nutrition: [usda_fooddata_central, faostat, owid]
+    nutrition: [usda_fooddata_central, faostat, owid, un_data]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
     botanical_identity: [kew_powo, gbif]
 
