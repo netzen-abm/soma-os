@@ -131,12 +131,10 @@ class OpenAlexAdapter:
         if not isinstance(publication_year, int):
             publication_year = None
 
-        verification_url = provider_record_id
         doi = str(record.get("doi") or "").strip()
-        if not verification_url.startswith("https://"):
-            verification_url = (
-                doi if doi.startswith("https://doi.org/") else provider_record_id
-            )
+        verification_url = (
+            doi if doi.startswith("https://doi.org/") else provider_record_id
+        )
 
         abstract = self._abstract_from_inverted_index(
             record.get("abstract_inverted_index")
