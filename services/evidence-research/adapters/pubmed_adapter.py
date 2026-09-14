@@ -14,7 +14,10 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
+
+from external_knowledge_source import ExternalKnowledgeSource
 
 BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
@@ -35,6 +38,7 @@ class SearchResult:
     source_url: str
     verification_url: str
     abstract_or_summary: Optional[str]
+    source: ExternalKnowledgeSource
 
 
 class PubMedProviderError(RuntimeError):
@@ -54,6 +58,38 @@ class PubMedAdapter:
         self.min_interval_seconds = min_interval_seconds
         self.timeout_seconds = timeout_seconds
         self._last_request = 0.0
+
+    def source_contract(self) -> ExternalKnowledgeSource:
+        """Return PubMed's governed source-level contract metadata."""
+        source = ExternalKnowledgeSource(
+            source_id="pubmed",
+            provider="NCBI PubMed",
+            source_version=None,
+            protocol="Entrez E-utilities",
+            endpoint=BASE_URL,
+            authentication_mode="PUBLIC_API_KEY_OPTIONAL",
+            rate_policy_ref="NCBI_EUTILITIES_CURRENT_POLICY",
+            license_status="PROVIDER_TERMS_APPLY",
+            attribution_required=True,
+            permitted_use="RESEARCH_RETRIEVAL_SUBJECT_TO_PROVIDER_TERMS",
+            retention_policy_ref="SOURCE_SPECIFIC_POLICY",
+            redistribution_status="RESTRICTED_BY_SOURCE_TERMS",
+            source_record_id="SOURCE_LEVEL",
+            source_url="https://pubmed.ncbi.nlm.nih.gov/",
+            verification_url="https://pubmed.ncbi.nlm.nih.gov/",
+            retrieved_at=datetime.now(timezone.utc),
+            published_at=None,
+            entity_types=("biomedical_literature_record",),
+            identifier_systems=("PMID",),
+            units=(),
+            temporal_model="PUBLICATION_YEAR_OR_PROVIDER_DATE",
+            verification_status="SOURCE_VERIFIED",
+            transformation_history=(),
+            quality_status="NOT_ASSESSED",
+            uncertainty="UNKNOWN_WHERE_NOT_PROVIDED",
+        )
+        source.validate()
+        return source
 
     def _request(self, endpoint: str, params: dict[str, str]) -> str:
         now = time.monotonic()
@@ -99,6 +135,8 @@ class PubMedAdapter:
             raise PubMedProviderError("Invalid PubMed EFetch response") from exc
 
         results: list[SearchResult] = []
+        retrieved_at = datetime.now(timezone.utc)
+        source_contract = self.source_contract()
         for article in root.findall(".//PubmedArticle"):
             pmid = article.findtext(".//PMID")
             title = " ".join(article.findtext(".//ArticleTitle", default="").split())
@@ -122,6 +160,13 @@ class PubMedAdapter:
                 source_url=verification_url,
                 verification_url=verification_url,
                 abstract_or_summary=" ".join(abstract_parts) or None,
+                source=source_contract.with_record(
+                    source_record_id=pmid,
+                    source_url=verification_url,
+                    verification_url=verification_url,
+                    retrieved_at=retrieved_at,
+                    published_at=None,
+                ),
             ))
         return results
 
