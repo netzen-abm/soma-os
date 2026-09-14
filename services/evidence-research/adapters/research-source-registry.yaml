@@ -22,6 +22,12 @@ source_classes:
       access: public
       role: biomedical literature discovery and metadata
       verification: https://pubmed.ncbi.nlm.nih.gov/
+    - id: openalex
+      geography: global
+      authority: OpenAlex
+      access: public
+      role: scholarly literature discovery and metadata across disciplines
+      verification: https://openalex.org/
     - id: europe_pmc
       geography: global
       authority: Europe PMC
@@ -151,7 +157,7 @@ source_classes:
       verification: https://cdsco.gov.in/
 
   botanical_and_species_identity:
-    - id: kew_powо
+    - id: kew_powo
       geography: global
       authority: Royal Botanic Gardens, Kew
       access: public
@@ -166,21 +172,21 @@ source_classes:
 
 routing:
   default:
-    literature: [pubmed, europe_pmc]
+    literature: [pubmed, openalex, europe_pmc]
     evidence_synthesis: [cochrane, epistemonikos]
     trials: [ctri, who_ictrp, clinicaltrials_gov, isrctn]
     safety: [fda, ema, cdsco]
   india_relevant:
-    literature: [pubmed, europe_pmc, ayush_research_portal, icmr_portals]
+    literature: [pubmed, openalex, europe_pmc, ayush_research_portal, icmr_portals]
     trials: [ctri, who_ictrp, clinicaltrials_gov]
     safety: [cdsco, fda, ema]
     nutrition: [usda_fooddata_central, faostat]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
   food_life:
-    literature: [pubmed, europe_pmc]
+    literature: [pubmed, openalex, europe_pmc]
     nutrition: [usda_fooddata_central, faostat]
     traditional_knowledge: [ayush_research_portal, who_traditional_medicine]
-    botanical_identity: [kew_powо, gbif]
+    botanical_identity: [kew_powo, gbif]
 
 multi_source_rules:
   minimum_source_diversity:
