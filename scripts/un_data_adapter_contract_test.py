@@ -73,7 +73,7 @@ def test_invalid_query_is_rejected() -> None:
     adapter = UNDataAdapter()
     for query in (
         NormalizedUNDataQuery("q1", "", "SNA"),
-        NormalizedUNDataQuery("q1", "UNSD", "", 10),
+        NormalizedUNDataQuery("q1", "UNSD", "", limit=10),
         NormalizedUNDataQuery("q1", "UNSD", "SNA", limit=0),
     ):
         try:
