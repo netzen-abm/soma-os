@@ -10,20 +10,14 @@ use thiserror::Error;
 
 use crate::canonical_authorization::AuthorizationRequest;
 use crate::local_health_vault::LocalHealthVaultRecord;
-use crate::local_health_vault_storage::{AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider};
+use crate::local_health_vault_storage::{
+    AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider,
+};
 
 const HEALTH_STATE_CONTENT_TYPE: &str = "application/json";
 
-const ALLOWED_ENTITY_TYPES: [&str; 8] = [
-    "person",
-    "observation",
-    "interpretation",
-    "goal",
-    "context",
-    "intervention",
-    "response",
-    "outcome",
-];
+const ALLOWED_ENTITY_TYPES: [&str; 8] =
+    ["person", "observation", "interpretation", "goal", "context", "intervention", "response", "outcome"];
 
 /// Authorization-bound context for protected Health State repository access.
 ///
@@ -41,9 +35,7 @@ pub struct AuthorizedHealthStateAccessContext {
 }
 
 impl AuthorizedHealthStateAccessContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, HealthStateRepositoryError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, HealthStateRepositoryError> {
         let values = [
             &request.principal_ref,
             &request.capability_id,
@@ -53,10 +45,7 @@ impl AuthorizedHealthStateAccessContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values
-            .iter()
-            .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
-        {
+        if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(HealthStateRepositoryError::AuthorizationDenied);
         }
 
@@ -134,7 +123,9 @@ impl From<StorageError> for HealthStateRepositoryError {
             StorageError::AuthorizationDenied => Self::AuthorizationDenied,
             StorageError::NotFound => Self::NotFound,
             StorageError::Tombstoned => Self::Tombstoned,
-            StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => Self::IntegrityFailure,
+            StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => {
+                Self::IntegrityFailure
+            }
             StorageError::InvalidRecord
             | StorageError::KeyResolutionFailed
             | StorageError::Io
@@ -192,7 +183,9 @@ where
     A: VaultAuthorizer,
 {
     pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
-        Self { vault }
+        Self {
+            vault,
+        }
     }
 
     fn vault_context(context: &AuthorizedHealthStateAccessContext) -> AuthorizationContext {
@@ -236,7 +229,8 @@ where
         record_id: &str,
         context: &AuthorizedHealthStateAccessContext,
     ) -> Result<LocalHealthVaultRecord, HealthStateRepositoryError> {
-        let record = self.vault.get(record_id, &Self::vault_context(context)).map_err(HealthStateRepositoryError::from)?;
+        let record =
+            self.vault.get(record_id, &Self::vault_context(context)).map_err(HealthStateRepositoryError::from)?;
         Self::validate_entity(&record)?;
         Ok(record)
     }
@@ -277,16 +271,18 @@ where
                 recorded_at: entry.created_at,
             })
             .collect::<Vec<_>>();
-        timeline.sort_by(|left, right| match (&left.effective_time, &right.effective_time) {
-            (Some(left_time), Some(right_time)) => match left_time.cmp(right_time) {
-                Ordering::Equal => left.recorded_at.cmp(&right.recorded_at),
-                ordering => ordering,
-            },
-            (Some(_), None) => Ordering::Less,
-            (None, Some(_)) => Ordering::Greater,
-            (None, None) => left.recorded_at.cmp(&right.recorded_at),
-        }
-        .then_with(|| left.record_id.cmp(&right.record_id)));
+        timeline.sort_by(|left, right| {
+            match (&left.effective_time, &right.effective_time) {
+                (Some(left_time), Some(right_time)) => match left_time.cmp(right_time) {
+                    Ordering::Equal => left.recorded_at.cmp(&right.recorded_at),
+                    ordering => ordering,
+                },
+                (Some(_), None) => Ordering::Less,
+                (None, Some(_)) => Ordering::Greater,
+                (None, None) => left.recorded_at.cmp(&right.recorded_at),
+            }
+            .then_with(|| left.record_id.cmp(&right.record_id))
+        });
         Ok(timeline)
     }
 
@@ -295,9 +291,7 @@ where
         record_id: &str,
         context: &AuthorizedHealthStateAccessContext,
     ) -> Result<(), HealthStateRepositoryError> {
-        self.vault
-            .tombstone(record_id, &Self::vault_context(context))
-            .map_err(Into::into)
+        self.vault.tombstone(record_id, &Self::vault_context(context)).map_err(Into::into)
     }
 
     fn verify(
@@ -314,7 +308,14 @@ mod tests {
     use super::*;
     use crate::canonical_authorization::{AuthorizationDecision, CanonicalAuthorizationBoundary};
     use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
-    use std::{cell::Cell, collections::HashMap, fs, path::PathBuf, rc::Rc, time::{SystemTime, UNIX_EPOCH}};
+    use std::{
+        cell::Cell,
+        collections::HashMap,
+        fs,
+        path::PathBuf,
+        rc::Rc,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
     const KEY_LEN: usize = 32;
 
@@ -335,7 +336,12 @@ mod tests {
     struct SubjectAuthorizer;
 
     impl VaultAuthorizer for SubjectAuthorizer {
-        fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: crate::local_health_vault_storage::VaultAction) -> bool {
+        fn authorize(
+            &self,
+            context: &AuthorizationContext,
+            record_id: &str,
+            action: crate::local_health_vault_storage::VaultAction,
+        ) -> bool {
             match action {
                 crate::local_health_vault_storage::VaultAction::List => true,
                 _ => record_id == "*" || record_id.starts_with(&context.subject_ref),
@@ -390,7 +396,15 @@ mod tests {
         let calls = Rc::new(Cell::new(0));
         let mut values = HashMap::new();
         values.insert("vault-key-v1".into(), [7u8; KEY_LEN]);
-        let vault = LocalFileVaultStore::new(root, Keys { values, calls: calls.clone() }, SubjectAuthorizer).unwrap();
+        let vault = LocalFileVaultStore::new(
+            root,
+            Keys {
+                values,
+                calls: calls.clone(),
+            },
+            SubjectAuthorizer,
+        )
+        .unwrap();
         (LocalHealthStateRepository::new(vault), calls)
     }
 
@@ -420,7 +434,10 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizedHealthStateAccessContext::from_authorized_request(&request()).unwrap();
-        assert_eq!(repository.put(record("evidence_claim"), &context), Err(HealthStateRepositoryError::InvalidEntity));
+        assert_eq!(
+            repository.put(record("evidence_claim"), &context),
+            Err(HealthStateRepositoryError::InvalidEntity)
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
