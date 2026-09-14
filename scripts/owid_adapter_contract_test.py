@@ -11,7 +11,7 @@ ADAPTER_DIR = (
 )
 sys.path.insert(0, str(ADAPTER_DIR))
 
-from owid_adapter import OwidAdapter, OwidProviderError
+from owid_adapter import NormalizedOwidQuery, OwidAdapter, OwidProviderError
 
 
 def test_source_contract() -> None:
@@ -36,7 +36,7 @@ def test_response_mapping_preserves_identity_and_unknown_date(monkeypatch) -> No
         return b'{"title":"Example indicator","description":"Source metadata"}'
 
     monkeypatch.setattr(adapter, "_request", fake_request)
-    result = adapter.fetch(type("Q", (), {"slug": "example-indicator", "limit": 10})())
+    result = adapter.fetch(NormalizedOwidQuery("q1", "example-indicator", 10))
     assert result.provider_id == "owid"
     assert result.provider_record_id == "example-indicator"
     assert result.source.source_record_id == "example-indicator"
@@ -55,16 +55,20 @@ def test_provider_failure_is_distinct_from_empty_result(monkeypatch) -> None:
 
     monkeypatch.setattr(adapter, "_request", fail_request)
     try:
-        adapter.fetch(type("Q", (), {"slug": "example-indicator", "limit": 10})())
+        adapter.fetch(NormalizedOwidQuery("q1", "example-indicator", 10))
     except OwidProviderError:
         return
     raise AssertionError("provider failure must remain explicit")
 
 
-def test_invalid_slug_is_rejected() -> None:
+def test_invalid_slug_and_limit_are_rejected() -> None:
     adapter = OwidAdapter()
-    try:
-        adapter.fetch(type("Q", (), {"slug": "", "limit": 10})())
-    except ValueError:
-        return
-    raise AssertionError("empty OWID slug must be rejected")
+    for query in (
+        NormalizedOwidQuery("q1", "", 10),
+        NormalizedOwidQuery("q1", "example-indicator", 0),
+    ):
+        try:
+            adapter.fetch(query)
+        except ValueError:
+            continue
+        raise AssertionError("invalid OWID query must be rejected")
