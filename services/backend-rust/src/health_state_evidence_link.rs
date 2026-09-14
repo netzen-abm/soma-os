@@ -27,9 +27,13 @@ pub struct HealthStateEvidenceLink {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStateEvidenceRelationship {
+    #[serde(rename = "EVIDENCE_INFORMS_INTERPRETATION")]
     EvidenceInformsInterpretation,
+    #[serde(rename = "EVIDENCE_INFORMS_HYPOTHESIS")]
     EvidenceInformsHypothesis,
+    #[serde(rename = "EVIDENCE_SUPPORTS_CONTEXTUAL_DECISION")]
     EvidenceSupportsContextualDecision,
+    #[serde(rename = "PERSONAL_RESPONSE_OBSERVED_AFTER_INTERVENTION")]
     PersonalResponseObservedAfterIntervention,
 }
 
@@ -42,12 +46,19 @@ pub struct LinkProvenance {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LinkUncertainty {
+    #[serde(rename = "known")]
     Known,
+    #[serde(rename = "estimated")]
     Estimated,
+    #[serde(rename = "reported")]
     Reported,
+    #[serde(rename = "inferred")]
     Inferred,
+    #[serde(rename = "missing")]
     Missing,
+    #[serde(rename = "conflicting")]
     Conflicting,
+    #[serde(rename = "not_applicable")]
     NotApplicable,
 }
 
@@ -55,7 +66,8 @@ pub enum LinkUncertainty {
 ///
 /// Fields are private so a caller cannot manufacture a governed linkage context
 /// from arbitrary subject/scope strings. The canonical authorization boundary
-/// supplies the request; this module only validates its structure.
+/// supplies the request only after an authoritative ALLOW; this module validates
+/// the request structure but does not evaluate policy.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedHealthStateEvidenceLinkContext {
     subject_ref: String,
@@ -234,6 +246,17 @@ mod tests {
             &context()
         )
         .is_ok());
+    }
+
+    #[test]
+    fn serde_values_match_machine_readable_schema() {
+        let link = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
+        let value = serde_json::to_value(&link).unwrap();
+        assert_eq!(value["relationship"], "EVIDENCE_INFORMS_HYPOTHESIS");
+        assert_eq!(value["uncertainty"], "reported");
+
+        let round_trip: HealthStateEvidenceLink = serde_json::from_value(value).unwrap();
+        assert_eq!(round_trip, link);
     }
 
     #[test]
