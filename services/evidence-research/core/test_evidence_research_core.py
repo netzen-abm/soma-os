@@ -51,7 +51,6 @@ def test_consumption_preserves_identity_provenance_and_status() -> None:
 
 
 def test_core_does_not_reclassify_orchestration_failure() -> None:
-    result = make_result()
     failed = OrchestrationResult(
         results=[],
         provider_status={"pubmed": "PROVIDER_UNAVAILABLE"},
@@ -65,8 +64,6 @@ def test_core_does_not_reclassify_orchestration_failure() -> None:
 
 
 def test_invalid_candidate_without_verification_is_rejected() -> None:
-    result = make_result()
-    result.results[0].source_url = "" if False else result.results[0].source_url
     bad = OrchestrationResult(
         results=[
             ProviderResult(
