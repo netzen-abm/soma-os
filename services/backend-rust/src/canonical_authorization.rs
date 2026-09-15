@@ -6,6 +6,7 @@
 //! decision and must fail closed unless the decision is explicitly ALLOW.
 
 use crate::health_state_evidence_link::AuthorizedHealthStateEvidenceLinkContext;
+use crate::health_state_intervention::AuthorizedInterventionContext;
 use crate::health_state_repository::AuthorizedHealthStateAccessContext;
 use crate::longitudinal_context::AuthorizedLongitudinalContextAccessContext;
 use crate::protected_db_context::AuthorizedProtectedDbContext;
@@ -95,6 +96,20 @@ pub trait CanonicalAuthorizationBoundary {
             AuthorizationDecision::Allow => {
                 AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
                     .map_err(|_| AuthorizationDecision::Deny)
+            }
+            decision => Err(decision),
+        }
+    }
+
+    /// Mint an intervention context only from an authoritative ALLOW and a
+    /// structurally valid governed request. This does not authorize execution.
+    fn authorize_intervention_context(
+        &self,
+        request: &AuthorizationRequest,
+    ) -> Result<AuthorizedInterventionContext, AuthorizationDecision> {
+        match self.authorize(request) {
+            AuthorizationDecision::Allow => {
+                AuthorizedInterventionContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -238,5 +253,26 @@ mod tests {
         let mut request = request();
         request.data_domain = "".into();
         assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn intervention_context_requires_authoritative_allow() {
+        let mut request = request();
+        request.principal_ref = "person-1".into();
+        request.capability_id = "health.intervention.write".into();
+        request.resource_type = "health_state_intervention".into();
+        request.resource_id = "intervention-1".into();
+        request.action = "write".into();
+        let context = AllowBoundary.authorize_intervention_context(&request).unwrap();
+        assert_eq!(context.subject_ref(), "person-1");
+        assert_eq!(context.resource_type(), "health_state_intervention");
+        assert_eq!(DenyBoundary.authorize_intervention_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn malformed_allow_cannot_mint_intervention_context() {
+        let mut request = request();
+        request.data_domain = "".into();
+        assert_eq!(AllowBoundary.authorize_intervention_context(&request), Err(AuthorizationDecision::Deny));
     }
 }
