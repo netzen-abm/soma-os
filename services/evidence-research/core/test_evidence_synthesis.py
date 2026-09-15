@@ -12,6 +12,9 @@ def quality_evidence(provider: str = "pubmed", record: str = "123") -> QualityAs
         geography="global",
         source_url="https://example.org/source",
         verification_url="https://example.org/verify",
+        publication_year=2026,
+        abstract_or_summary=None,
+        identifiers=(f"{provider}:{record}",),
         screening_status="INCLUDED",
     )
     assessment = EvidenceQualityBiasAssessment(
@@ -61,6 +64,9 @@ def test_synthesis_rejects_non_included_evidence() -> None:
         geography=item.candidate.geography,
         source_url=item.candidate.source_url,
         verification_url=item.candidate.verification_url,
+        publication_year=item.candidate.publication_year,
+        abstract_or_summary=item.candidate.abstract_or_summary,
+        identifiers=item.candidate.identifiers,
         screening_status="EXCLUDED",
     )
     rejected = QualityAssessedEvidence(candidate=candidate, assessment=item.assessment)
