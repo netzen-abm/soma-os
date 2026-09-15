@@ -56,25 +56,13 @@ impl InterventionIntent {
             return Err(InterventionIntentError::InvalidIntent);
         }
         for refs in [&self.evidence_refs, &self.safety_refs, &self.causality_refs] {
-            if refs
-                .iter()
-                .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
-            {
+            if refs.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
                 return Err(InterventionIntentError::InvalidReference);
             }
         }
-        if self
-            .planned_start
-            .as_deref()
-            .is_some_and(|value| value.trim().is_empty())
-            || self
-                .planned_end
-                .as_deref()
-                .is_some_and(|value| value.trim().is_empty())
-            || self
-                .actor_ref
-                .as_deref()
-                .is_some_and(|value| value.trim().is_empty())
+        if self.planned_start.as_deref().is_some_and(|value| value.trim().is_empty())
+            || self.planned_end.as_deref().is_some_and(|value| value.trim().is_empty())
+            || self.actor_ref.as_deref().is_some_and(|value| value.trim().is_empty())
         {
             return Err(InterventionIntentError::InvalidIntent);
         }
@@ -94,9 +82,7 @@ pub struct AuthorizedInterventionContext {
 }
 
 impl AuthorizedInterventionContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, InterventionIntentError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, InterventionIntentError> {
         let values = [
             &request.principal_ref,
             &request.capability_id,
@@ -106,10 +92,7 @@ impl AuthorizedInterventionContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values
-            .iter()
-            .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
-        {
+        if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(InterventionIntentError::InvalidAuthorizationContext);
         }
         Ok(Self {
