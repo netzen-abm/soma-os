@@ -56,13 +56,25 @@ impl InterventionIntent {
             return Err(InterventionIntentError::InvalidIntent);
         }
         for refs in [&self.evidence_refs, &self.safety_refs, &self.causality_refs] {
-            if refs.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
+            if refs
+                .iter()
+                .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
+            {
                 return Err(InterventionIntentError::InvalidReference);
             }
         }
-        if self.planned_start.as_deref().is_some_and(|value| value.trim().is_empty())
-            || self.planned_end.as_deref().is_some_and(|value| value.trim().is_empty())
-            || self.actor_ref.as_deref().is_some_and(|value| value.trim().is_empty())
+        if self
+            .planned_start
+            .as_deref()
+            .is_some_and(|value| value.trim().is_empty())
+            || self
+                .planned_end
+                .as_deref()
+                .is_some_and(|value| value.trim().is_empty())
+            || self
+                .actor_ref
+                .as_deref()
+                .is_some_and(|value| value.trim().is_empty())
         {
             return Err(InterventionIntentError::InvalidIntent);
         }
@@ -94,7 +106,10 @@ impl AuthorizedInterventionContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
+        if values
+            .iter()
+            .any(|value| value.trim().is_empty() || value.chars().any(char::is_control))
+        {
             return Err(InterventionIntentError::InvalidAuthorizationContext);
         }
         Ok(Self {
@@ -108,13 +123,27 @@ impl AuthorizedInterventionContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn tenant_id(&self) -> &str { &self.tenant_id }
-    pub fn data_domain(&self) -> &str { &self.data_domain }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+    pub fn tenant_id(&self) -> &str {
+        &self.tenant_id
+    }
+    pub fn data_domain(&self) -> &str {
+        &self.data_domain
+    }
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
