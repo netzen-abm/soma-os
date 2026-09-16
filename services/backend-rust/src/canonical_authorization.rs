@@ -7,6 +7,7 @@
 
 use crate::health_state_evidence_link::AuthorizedHealthStateEvidenceLinkContext;
 use crate::health_state_intervention::AuthorizedInterventionContext;
+use crate::health_state_measurement::AuthorizedMeasurementContext;
 use crate::health_state_repository::AuthorizedHealthStateAccessContext;
 use crate::longitudinal_context::AuthorizedLongitudinalContextAccessContext;
 use crate::protected_db_context::AuthorizedProtectedDbContext;
@@ -110,6 +111,21 @@ pub trait CanonicalAuthorizationBoundary {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
                 AuthorizedInterventionContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+            }
+            decision => Err(decision),
+        }
+    }
+
+    /// Mint a measurement context only from an authoritative ALLOW and a
+    /// structurally valid governed request. This does not validate clinical
+    /// appropriateness or authorize an intervention.
+    fn authorize_measurement_context(
+        &self,
+        request: &AuthorizationRequest,
+    ) -> Result<AuthorizedMeasurementContext, AuthorizationDecision> {
+        match self.authorize(request) {
+            AuthorizationDecision::Allow => {
+                AuthorizedMeasurementContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -274,5 +290,26 @@ mod tests {
         let mut request = request();
         request.data_domain = "".into();
         assert_eq!(AllowBoundary.authorize_intervention_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn measurement_context_requires_authoritative_allow() {
+        let mut request = request();
+        request.principal_ref = "person-1".into();
+        request.capability_id = "health.measurement.write".into();
+        request.resource_type = "health_state_measurement".into();
+        request.resource_id = "measurement-1".into();
+        request.action = "write".into();
+        let context = AllowBoundary.authorize_measurement_context(&request).unwrap();
+        assert_eq!(context.subject_ref(), "person-1");
+        assert_eq!(context.resource_type(), "health_state_measurement");
+        assert_eq!(DenyBoundary.authorize_measurement_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn malformed_allow_cannot_mint_measurement_context() {
+        let mut request = request();
+        request.data_domain = "".into();
+        assert_eq!(AllowBoundary.authorize_measurement_context(&request), Err(AuthorizationDecision::Deny));
     }
 }

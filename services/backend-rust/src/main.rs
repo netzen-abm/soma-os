@@ -20,6 +20,7 @@ mod db_layer;
 mod device_sync;
 mod health_state_evidence_link;
 mod health_state_intervention;
+mod health_state_measurement;
 mod health_state_repository;
 mod key_restoration;
 mod legacy_promotion_preflight;
