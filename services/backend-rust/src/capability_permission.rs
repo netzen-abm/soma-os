@@ -6,6 +6,8 @@
 //! as the governed purpose completes, and must require a fresh authorization
 //! decision before the next activation.
 
+use crate::canonical_authorization::AuthorizationDecision;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PermissionState {
     Active,
@@ -23,13 +25,17 @@ pub struct EphemeralPermissionLease {
 }
 
 impl EphemeralPermissionLease {
+    /// Activate only after the canonical authorization boundary has returned ALLOW.
+    /// Deny, consent, human-review, and degrade states cannot mint a lease.
     pub fn activate(
+        decision: AuthorizationDecision,
         capability_id: String,
         resource_type: String,
         purpose: String,
         expires_at_epoch_seconds: u64,
     ) -> Result<Self, &'static str> {
-        if capability_id.trim().is_empty()
+        if !decision.allows_protected_execution()
+            || capability_id.trim().is_empty()
             || resource_type.trim().is_empty()
             || purpose.trim().is_empty()
             || expires_at_epoch_seconds == 0
@@ -50,7 +56,8 @@ impl EphemeralPermissionLease {
         self.state == PermissionState::Active && now_epoch_seconds < self.expires_at_epoch_seconds
     }
 
-    /// Release immediately when the authorized purpose is complete.
+    /// Release immediately when the authorized purpose is complete, cancelled,
+    /// failed, or authorization/consent is withdrawn.
     pub fn release(&mut self) {
         self.state = PermissionState::Released;
     }
@@ -81,16 +88,44 @@ impl EphemeralPermissionLease {
 
 #[cfg(test)]
 mod tests {
-    use super::{EphemeralPermissionLease, PermissionState};
+    use super::{AuthorizationDecision, EphemeralPermissionLease, PermissionState};
 
     fn lease() -> EphemeralPermissionLease {
         EphemeralPermissionLease::activate(
+            AuthorizationDecision::Allow,
             "health.camera.capture".into(),
             "camera".into(),
             "capture_one_measurement".into(),
             100,
         )
         .unwrap()
+    }
+
+    #[test]
+    fn permission_requires_canonical_allow() {
+        for decision in [
+            AuthorizationDecision::Deny,
+            AuthorizationDecision::RequireConsent,
+            AuthorizationDecision::RequireHumanReview,
+            AuthorizationDecision::Degrade,
+        ] {
+            assert!(EphemeralPermissionLease::activate(
+                decision,
+                "health.camera.capture".into(),
+                "camera".into(),
+                "capture".into(),
+                100,
+            )
+            .is_err());
+        }
+        assert!(EphemeralPermissionLease::activate(
+            AuthorizationDecision::Allow,
+            "health.camera.capture".into(),
+            "camera".into(),
+            "capture".into(),
+            100,
+        )
+        .is_ok());
     }
 
     #[test]
@@ -120,9 +155,9 @@ mod tests {
 
     #[test]
     fn invalid_permission_lease_is_rejected() {
-        assert!(EphemeralPermissionLease::activate("".into(), "camera".into(), "capture".into(), 100).is_err());
-        assert!(EphemeralPermissionLease::activate("health.camera.capture".into(), "".into(), "capture".into(), 100).is_err());
-        assert!(EphemeralPermissionLease::activate("health.camera.capture".into(), "camera".into(), "".into(), 100).is_err());
-        assert!(EphemeralPermissionLease::activate("health.camera.capture".into(), "camera".into(), "capture".into(), 0).is_err());
+        assert!(EphemeralPermissionLease::activate(AuthorizationDecision::Allow, "".into(), "camera".into(), "capture".into(), 100).is_err());
+        assert!(EphemeralPermissionLease::activate(AuthorizationDecision::Allow, "health.camera.capture".into(), "".into(), "capture".into(), 100).is_err());
+        assert!(EphemeralPermissionLease::activate(AuthorizationDecision::Allow, "health.camera.capture".into(), "camera".into(), "".into(), 100).is_err());
+        assert!(EphemeralPermissionLease::activate(AuthorizationDecision::Allow, "health.camera.capture".into(), "camera".into(), "capture".into(), 0).is_err());
     }
 }
