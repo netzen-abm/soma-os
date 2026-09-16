@@ -72,9 +72,7 @@ pub struct AuthorizedMeasurementContext {
 }
 
 impl AuthorizedMeasurementContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, MeasurementError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, MeasurementError> {
         let values = [
             &request.principal_ref,
             &request.capability_id,
