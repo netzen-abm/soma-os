@@ -61,7 +61,8 @@ pub trait CanonicalAuthorizationBoundary {
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedProtectedDbContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+                AuthorizedProtectedDbContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -72,8 +73,10 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedHealthStateEvidenceLinkContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(request)
-                .map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -83,8 +86,10 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedHealthStateAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedHealthStateAccessContext::from_authorized_request(request)
-                .map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedHealthStateAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -94,8 +99,10 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedLongitudinalContextAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
-                .map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -106,7 +113,8 @@ pub trait CanonicalAuthorizationBoundary {
     ) -> Result<AuthorizedInterventionContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedInterventionContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+                AuthorizedInterventionContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -118,7 +126,8 @@ pub trait CanonicalAuthorizationBoundary {
     ) -> Result<AuthorizedMeasurementContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedMeasurementContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+                AuthorizedMeasurementContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -183,6 +192,9 @@ mod tests {
         assert_eq!(context.action(), "read");
         assert_eq!(context.tenant_id(), "tenant-1");
         assert_eq!(context.data_domain(), "personal_health");
-        assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            DenyBoundary.authorize_protected_context(&request()),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 }
