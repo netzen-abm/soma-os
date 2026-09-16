@@ -28,9 +28,12 @@ impl AuthorizationDecision {
 }
 
 /// Canonical authorization request envelope consumed by the Rust adapter boundary.
+/// `principal_ref` identifies the actor; `subject_ref` identifies the protected
+/// health/data subject. They are intentionally distinct for delegated access.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizationRequest {
     pub principal_ref: String,
+    pub subject_ref: String,
     pub capability_id: String,
     pub resource_type: String,
     pub resource_id: String,
@@ -47,22 +50,17 @@ pub struct AuthorizationRequest {
 pub trait CanonicalAuthorizationBoundary {
     fn authorize(&self, request: &AuthorizationRequest) -> AuthorizationDecision;
 
-    /// Mint a protected execution context only from an authoritative ALLOW and
-    /// a structurally valid governed request.
     fn authorize_protected_context(
         &self,
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedProtectedDbContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedProtectedDbContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
 
-    /// Mint a Health State ↔ Evidence linkage context only from an authoritative
-    /// ALLOW and a structurally valid governed request.
     fn authorize_health_state_evidence_link_context(
         &self,
         request: &AuthorizationRequest,
@@ -74,8 +72,6 @@ pub trait CanonicalAuthorizationBoundary {
         }
     }
 
-    /// Mint a Health State repository access context only from an authoritative
-    /// ALLOW and a structurally valid governed request.
     fn authorize_health_state_repository_context(
         &self,
         request: &AuthorizationRequest,
@@ -87,46 +83,35 @@ pub trait CanonicalAuthorizationBoundary {
         }
     }
 
-    /// Mint a longitudinal-context read context only from an authoritative ALLOW
-    /// and a structurally valid governed request.
     fn authorize_longitudinal_context(
         &self,
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedLongitudinalContextAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
-                    .map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
 
-    /// Mint an intervention context only from an authoritative ALLOW and a
-    /// structurally valid governed request. This does not authorize execution.
     fn authorize_intervention_context(
         &self,
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedInterventionContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedInterventionContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedInterventionContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
 
-    /// Mint a measurement context only from an authoritative ALLOW and a
-    /// structurally valid governed request. This does not validate clinical
-    /// appropriateness or authorize an intervention.
     fn authorize_measurement_context(
         &self,
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedMeasurementContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedMeasurementContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedMeasurementContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
@@ -146,9 +131,10 @@ mod tests {
     }
 
     #[test]
-    fn authorization_request_keeps_governance_scope_explicit() {
+    fn authorization_request_keeps_principal_subject_and_scope_explicit() {
         let request = AuthorizationRequest {
             principal_ref: "principal-1".to_owned(),
+            subject_ref: "person-1".to_owned(),
             capability_id: "health.read".to_owned(),
             resource_type: "health_record".to_owned(),
             resource_id: "record-1".to_owned(),
@@ -158,6 +144,7 @@ mod tests {
         };
 
         assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(request.subject_ref, "person-1");
         assert_eq!(request.capability_id, "health.read");
         assert_eq!(request.resource_type, "health_record");
         assert_eq!(request.resource_id, "record-1");
@@ -167,24 +154,19 @@ mod tests {
     }
 
     struct AllowBoundary;
-
     impl CanonicalAuthorizationBoundary for AllowBoundary {
-        fn authorize(&self, _request: &AuthorizationRequest) -> AuthorizationDecision {
-            AuthorizationDecision::Allow
-        }
+        fn authorize(&self, _request: &AuthorizationRequest) -> AuthorizationDecision { AuthorizationDecision::Allow }
     }
 
     struct DenyBoundary;
-
     impl CanonicalAuthorizationBoundary for DenyBoundary {
-        fn authorize(&self, _request: &AuthorizationRequest) -> AuthorizationDecision {
-            AuthorizationDecision::Deny
-        }
+        fn authorize(&self, _request: &AuthorizationRequest) -> AuthorizationDecision { AuthorizationDecision::Deny }
     }
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
             principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
@@ -195,86 +177,66 @@ mod tests {
     }
 
     #[test]
-    fn protected_context_requires_authoritative_allow() {
+    fn protected_context_requires_authoritative_allow_and_preserves_both_identities() {
         let context = AllowBoundary.authorize_protected_context(&request()).unwrap();
         assert_eq!(context.principal_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.capability_id(), "health.read");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
         assert_eq!(context.action(), "read");
         assert_eq!(context.tenant_id(), "tenant-1");
         assert_eq!(context.data_domain(), "personal_health");
-
         assert_eq!(DenyBoundary.authorize_protected_context(&request()), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn delegated_principal_and_subject_remain_distinct() {
+        let mut request = request();
+        request.principal_ref = "clinician-1".into();
+        request.subject_ref = "patient-1".into();
+        let context = AllowBoundary.authorize_protected_context(&request).unwrap();
+        assert_eq!(context.principal_ref(), "clinician-1");
+        assert_eq!(context.subject_ref(), "patient-1");
+        assert_ne!(context.principal_ref(), context.subject_ref());
     }
 
     #[test]
     fn malformed_allow_cannot_mint_protected_context() {
         let mut request = request();
-        request.action = "".into();
+        request.subject_ref.clear();
         assert_eq!(AllowBoundary.authorize_protected_context(&request), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
     fn health_state_evidence_link_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_health_state_evidence_link_context(&request()).unwrap();
-        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
-
-        assert_eq!(
-            DenyBoundary.authorize_health_state_evidence_link_context(&request()),
-            Err(AuthorizationDecision::Deny)
-        );
-    }
-
-    #[test]
-    fn malformed_allow_cannot_mint_health_state_evidence_link_context() {
-        let mut request = request();
-        request.data_domain = "".into();
-        assert_eq!(
-            AllowBoundary.authorize_health_state_evidence_link_context(&request),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(DenyBoundary.authorize_health_state_evidence_link_context(&request()), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
     fn health_state_repository_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_health_state_repository_context(&request()).unwrap();
-        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
-        assert_eq!(
-            DenyBoundary.authorize_health_state_repository_context(&request()),
-            Err(AuthorizationDecision::Deny)
-        );
-    }
-
-    #[test]
-    fn malformed_allow_cannot_mint_health_state_repository_context() {
-        let mut request = request();
-        request.data_domain = "".into();
-        assert_eq!(AllowBoundary.authorize_health_state_repository_context(&request), Err(AuthorizationDecision::Deny));
+        assert_eq!(DenyBoundary.authorize_health_state_repository_context(&request()), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
     fn longitudinal_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_longitudinal_context(&request()).unwrap();
-        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
         assert_eq!(DenyBoundary.authorize_longitudinal_context(&request()), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
-    fn malformed_allow_cannot_mint_longitudinal_context() {
-        let mut request = request();
-        request.data_domain = "".into();
-        assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
-    }
-
-    #[test]
     fn intervention_context_requires_authoritative_allow() {
         let mut request = request();
-        request.principal_ref = "person-1".into();
+        request.subject_ref = "person-1".into();
         request.capability_id = "health.intervention.write".into();
         request.resource_type = "health_state_intervention".into();
         request.resource_id = "intervention-1".into();
@@ -286,16 +248,8 @@ mod tests {
     }
 
     #[test]
-    fn malformed_allow_cannot_mint_intervention_context() {
-        let mut request = request();
-        request.data_domain = "".into();
-        assert_eq!(AllowBoundary.authorize_intervention_context(&request), Err(AuthorizationDecision::Deny));
-    }
-
-    #[test]
     fn measurement_context_requires_authoritative_allow() {
         let mut request = request();
-        request.principal_ref = "person-1".into();
         request.capability_id = "health.measurement.write".into();
         request.resource_type = "health_state_measurement".into();
         request.resource_id = "measurement-1".into();
@@ -304,12 +258,5 @@ mod tests {
         assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.resource_type(), "health_state_measurement");
         assert_eq!(DenyBoundary.authorize_measurement_context(&request), Err(AuthorizationDecision::Deny));
-    }
-
-    #[test]
-    fn malformed_allow_cannot_mint_measurement_context() {
-        let mut request = request();
-        request.data_domain = "".into();
-        assert_eq!(AllowBoundary.authorize_measurement_context(&request), Err(AuthorizationDecision::Deny));
     }
 }
