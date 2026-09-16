@@ -1,3 +1,4 @@
+# Temporary bounded migration; removes itself after validation.
 name: One-shot Authorization Cleanup
 
 on:
