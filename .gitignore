@@ -2,14 +2,57 @@
 .env
 .env*.local
 secret.key
+*.key
 *.pem
+*.p12
+*.pfx
+credentials.json
+credentials*.json
+secrets/
+.secrets/
 
 # Rust / Dioxus / WASM Compilation Output
 /target
 dist/
 *.wasm
 
+# Local Health Vault / Protected Runtime Artifacts
+*.bundle
+*.bundle.tmp-*
+.vault/
+health-vault/
+local-health-vault/
+
+# Local Databases / Runtime Persistence
+*.db
+*.sqlite
+*.sqlite3
+
 # System and Cache Files
 .DS_Store
+Thumbs.db
+Desktop.ini
 node_modules/
 .cargo/config.toml
+
+# Runtime Logs / Temporary Files
+*.log
+logs/
+tmp/
+temp/
+
+# Coverage / Profiling
+coverage/
+*.profraw
+*.profdata
+
+# IDE / Editor State
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test / Runtime Generated Output
+test-output/
+test-results/
+artifacts/
