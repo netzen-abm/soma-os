@@ -4,9 +4,7 @@
 //! does not itself establish efficacy, causality, clinical significance, or an
 //! adaptation decision.
 
-use crate::canonical_authorization::{
-    AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary,
-};
+use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 use thiserror::Error;
 
 const SCHEMA_VERSION: &str = "1.0.0";
@@ -95,9 +93,7 @@ pub struct AuthorizedOutcomeContext {
 }
 
 impl AuthorizedOutcomeContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, OutcomeError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, OutcomeError> {
         let values = [
             &request.principal_ref,
             &request.capability_id,
@@ -107,9 +103,7 @@ impl AuthorizedOutcomeContext {
             &request.tenant_id,
             &request.data_domain,
         ];
-        if values.iter().any(|value| {
-            value.trim().is_empty() || value.chars().any(char::is_control)
-        }) {
+        if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(OutcomeError::InvalidAuthorizationContext);
         }
         Ok(Self {
@@ -169,8 +163,7 @@ impl OutcomeAuthorizationBoundary {
     ) -> Result<AuthorizedOutcomeContext, AuthorizationDecision> {
         match boundary.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedOutcomeContext::from_authorized_request(request)
-                    .map_err(|_| AuthorizationDecision::Deny)
+                AuthorizedOutcomeContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
@@ -180,10 +173,7 @@ impl OutcomeAuthorizationBoundary {
 pub struct OutcomeBoundary;
 
 impl OutcomeBoundary {
-    pub fn validate(
-        outcome: &Outcome,
-        context: &AuthorizedOutcomeContext,
-    ) -> Result<(), OutcomeError> {
+    pub fn validate(outcome: &Outcome, context: &AuthorizedOutcomeContext) -> Result<(), OutcomeError> {
         outcome.validate()?;
         if outcome.subject_ref != context.subject_ref() {
             return Err(OutcomeError::SubjectMismatch);
@@ -268,29 +258,20 @@ mod tests {
     fn subject_mismatch_is_rejected() {
         let mut candidate = outcome();
         candidate.subject_ref = "person-2".into();
-        assert_eq!(
-            OutcomeBoundary::validate(&candidate, &context()),
-            Err(OutcomeError::SubjectMismatch)
-        );
+        assert_eq!(OutcomeBoundary::validate(&candidate, &context()), Err(OutcomeError::SubjectMismatch));
     }
 
     #[test]
     fn missing_measurement_reference_is_rejected() {
         let mut candidate = outcome();
         candidate.measurement_ref.clear();
-        assert_eq!(
-            OutcomeBoundary::validate(&candidate, &context()),
-            Err(OutcomeError::InvalidOutcome)
-        );
+        assert_eq!(OutcomeBoundary::validate(&candidate, &context()), Err(OutcomeError::InvalidOutcome));
     }
 
     #[test]
     fn references_reject_control_characters() {
         let mut candidate = outcome();
         candidate.baseline_ref = Some("bad\nref".into());
-        assert_eq!(
-            OutcomeBoundary::validate(&candidate, &context()),
-            Err(OutcomeError::InvalidReference)
-        );
+        assert_eq!(OutcomeBoundary::validate(&candidate, &context()), Err(OutcomeError::InvalidReference));
     }
 }
