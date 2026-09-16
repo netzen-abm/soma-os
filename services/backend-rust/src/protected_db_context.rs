@@ -1,16 +1,11 @@
 use sqlx::{postgres::Postgres, PgPool, Transaction};
 
-/// Canonical database service identity expected by the protected persistence adapter.
 pub const TRUSTED_PERSISTENCE_DB_ROLE: &str = "somaos_persistence";
 
-/// Protected persistence scope that has crossed the canonical authorization boundary.
-///
-/// The fields are intentionally private. External callers cannot construct this type
-/// from arbitrary tenant/data-domain strings; the canonical authorization boundary
-/// mints it only after an authoritative `ALLOW` decision and request validation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedProtectedDbContext {
     principal_ref: String,
+    subject_ref: String,
     capability_id: String,
     resource_type: String,
     resource_id: String,
@@ -25,6 +20,7 @@ impl AuthorizedProtectedDbContext {
     ) -> Result<Self, &'static str> {
         let fields = [
             request.principal_ref.as_str(),
+            request.subject_ref.as_str(),
             request.capability_id.as_str(),
             request.resource_type.as_str(),
             request.resource_id.as_str(),
@@ -38,9 +34,9 @@ impl AuthorizedProtectedDbContext {
         if fields.iter().any(|field| field.chars().any(char::is_control)) {
             return Err("protected authorization request contains control characters");
         }
-
         Ok(Self {
             principal_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             capability_id: request.capability_id.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
@@ -50,54 +46,25 @@ impl AuthorizedProtectedDbContext {
         })
     }
 
-    pub fn principal_ref(&self) -> &str {
-        &self.principal_ref
-    }
-
-    pub fn capability_id(&self) -> &str {
-        &self.capability_id
-    }
-
-    pub fn resource_type(&self) -> &str {
-        &self.resource_type
-    }
-
-    pub fn resource_id(&self) -> &str {
-        &self.resource_id
-    }
-
-    pub fn action(&self) -> &str {
-        &self.action
-    }
-
-    pub fn tenant_id(&self) -> &str {
-        &self.tenant_id
-    }
-
-    pub fn data_domain(&self) -> &str {
-        &self.data_domain
-    }
+    pub fn principal_ref(&self) -> &str { &self.principal_ref }
+    pub fn subject_ref(&self) -> &str { &self.subject_ref }
+    pub fn capability_id(&self) -> &str { &self.capability_id }
+    pub fn resource_type(&self) -> &str { &self.resource_type }
+    pub fn resource_id(&self) -> &str { &self.resource_id }
+    pub fn action(&self) -> &str { &self.action }
+    pub fn tenant_id(&self) -> &str { &self.tenant_id }
+    pub fn data_domain(&self) -> &str { &self.data_domain }
 }
 
-/// Begin a PostgreSQL transaction and establish protected scope through the
-/// dedicated persistence database identity boundary.
-///
-/// This function accepts only an authorization-bound context. It therefore cannot
-/// be used as the authorization decision point and cannot mint its own scope.
-/// Production deployments must connect with a LOGIN role that is explicitly
-/// granted membership in `somaos_persistence`, then this adapter switches into
-/// that NOLOGIN role for the transaction.
 pub async fn begin_protected_transaction<'a>(
     pool: &'a PgPool,
     context: &AuthorizedProtectedDbContext,
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
-
     if let Err(error) = sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut *tx).await {
         let _ = tx.rollback().await;
         return Err(error);
     }
-
     if let Err(error) = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
         .bind(context.tenant_id())
         .bind(context.data_domain())
@@ -107,7 +74,6 @@ pub async fn begin_protected_transaction<'a>(
         let _ = tx.rollback().await;
         return Err(error);
     }
-
     Ok(tx)
 }
 
@@ -116,14 +82,13 @@ mod tests {
     use super::{AuthorizedProtectedDbContext, TRUSTED_PERSISTENCE_DB_ROLE};
 
     #[test]
-    fn canonical_persistence_role_is_explicit() {
-        assert_eq!(TRUSTED_PERSISTENCE_DB_ROLE, "somaos_persistence");
-    }
+    fn canonical_persistence_role_is_explicit() { assert_eq!(TRUSTED_PERSISTENCE_DB_ROLE, "somaos_persistence"); }
 
     #[test]
-    fn context_preserves_authorized_request_scope_read_only() {
+    fn context_preserves_principal_subject_and_scope_read_only() {
         let request = crate::canonical_authorization::AuthorizationRequest {
             principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
@@ -133,6 +98,7 @@ mod tests {
         };
         let context = AuthorizedProtectedDbContext::from_authorized_request(&request).unwrap();
         assert_eq!(context.principal_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.capability_id(), "health.read");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
@@ -142,19 +108,26 @@ mod tests {
     }
 
     #[test]
-    fn rejects_empty_or_control_character_scope() {
-        let mut request = crate::canonical_authorization::AuthorizationRequest {
-            principal_ref: "principal-1".into(),
-            capability_id: "health.read".into(),
-            resource_type: "health_record".into(),
-            resource_id: "record-1".into(),
-            action: "read".into(),
-            tenant_id: "tenant-a".into(),
+    fn delegated_principal_and_subject_remain_distinct() {
+        let request = crate::canonical_authorization::AuthorizationRequest {
+            principal_ref: "clinician-1".into(), subject_ref: "patient-1".into(),
+            capability_id: "health.read".into(), resource_type: "health_record".into(),
+            resource_id: "record-1".into(), action: "read".into(), tenant_id: "tenant-a".into(),
             data_domain: "personal-health".into(),
         };
-        request.action.clear();
-        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
-        request.action = "read\n".into();
-        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
+        let context = AuthorizedProtectedDbContext::from_authorized_request(&request).unwrap();
+        assert_eq!(context.principal_ref(), "clinician-1");
+        assert_eq!(context.subject_ref(), "patient-1");
+    }
+
+    #[test]
+    fn rejects_empty_or_control_character_scope() {
+        let mut request = crate::canonical_authorization::AuthorizationRequest {
+            principal_ref: "principal-1".into(), subject_ref: "person-1".into(), capability_id: "health.read".into(),
+            resource_type: "health_record".into(), resource_id: "record-1".into(), action: "read".into(),
+            tenant_id: "tenant-a".into(), data_domain: "personal-health".into(),
+        };
+        request.action.clear(); assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
+        request.action = "read\n".into(); assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
     }
 }
