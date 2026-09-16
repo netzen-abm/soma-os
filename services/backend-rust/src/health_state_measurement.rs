@@ -47,7 +47,11 @@ impl MeasurementPlan {
         if self.schema_version != SCHEMA_VERSION {
             return Err(MeasurementError::InvalidMeasurementPlan);
         }
-        for value in [self.unit.as_ref(), self.baseline_ref.as_ref(), self.uncertainty_method.as_ref(), self.actor_ref.as_ref()].into_iter().flatten() {
+        for value in
+            [self.unit.as_ref(), self.baseline_ref.as_ref(), self.uncertainty_method.as_ref(), self.actor_ref.as_ref()]
+                .into_iter()
+                .flatten()
+        {
             if value.trim().is_empty() || value.chars().any(char::is_control) {
                 return Err(MeasurementError::InvalidMeasurementPlan);
             }
@@ -68,7 +72,9 @@ pub struct AuthorizedMeasurementContext {
 }
 
 impl AuthorizedMeasurementContext {
-    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, MeasurementError> {
+    pub(crate) fn from_authorized_request(
+        request: &AuthorizationRequest,
+    ) -> Result<Self, MeasurementError> {
         let values = [
             &request.principal_ref,
             &request.capability_id,
@@ -92,13 +98,27 @@ impl AuthorizedMeasurementContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn tenant_id(&self) -> &str { &self.tenant_id }
-    pub fn data_domain(&self) -> &str { &self.data_domain }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+    pub fn tenant_id(&self) -> &str {
+        &self.tenant_id
+    }
+    pub fn data_domain(&self) -> &str {
+        &self.data_domain
+    }
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -118,10 +138,7 @@ pub enum MeasurementError {
 pub struct MeasurementBoundary;
 
 impl MeasurementBoundary {
-    pub fn validate(
-        plan: &MeasurementPlan,
-        context: &AuthorizedMeasurementContext,
-    ) -> Result<(), MeasurementError> {
+    pub fn validate(plan: &MeasurementPlan, context: &AuthorizedMeasurementContext) -> Result<(), MeasurementError> {
         plan.validate()?;
         if plan.subject_ref != context.subject_ref() {
             return Err(MeasurementError::SubjectMismatch);
@@ -181,10 +198,7 @@ mod tests {
     fn subject_mismatch_is_rejected() {
         let mut candidate = plan();
         candidate.subject_ref = "person-2".into();
-        assert_eq!(
-            MeasurementBoundary::validate(&candidate, &context()),
-            Err(MeasurementError::SubjectMismatch)
-        );
+        assert_eq!(MeasurementBoundary::validate(&candidate, &context()), Err(MeasurementError::SubjectMismatch));
     }
 
     #[test]
