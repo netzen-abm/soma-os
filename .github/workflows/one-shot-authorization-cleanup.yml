@@ -22,193 +22,88 @@ jobs:
         run: |
           from pathlib import Path
           import re
-
           root = Path('services/backend-rust/src')
-
-          # 1. Canonical request contract: actor and authorized subject are distinct.
           p = root / 'canonical_authorization.rs'
           s = p.read_text()
-          s = s.replace(
-              '    pub principal_ref: String,\n    pub capability_id:',
-              '    pub principal_ref: String,\n    pub subject_ref: String,\n    pub capability_id:',
-              1,
-          )
-          s = re.sub(
-              r'(\n\s*principal_ref:\s*([^\n]+),\n)(\s*capability_id:)',
-              lambda m: m.group(1) + m.group(1).split('principal_ref:')[0] + 'subject_ref: ' + m.group(2) + ',\n' + m.group(3),
-              s,
-          )
-          s = s.replace(
-              '        assert_eq!(request.principal_ref, "principal-1");\n',
-              '        assert_eq!(request.principal_ref, "principal-1");\n        assert_eq!(request.subject_ref, "person-1");\n',
-              1,
-          )
+          if 'pub subject_ref: String,' not in s:
+              s = s.replace('    pub principal_ref: String,\n    pub capability_id:', '    pub principal_ref: String,\n    pub subject_ref: String,\n    pub capability_id:', 1)
+          s = re.sub(r'(\n(?P<indent>\s*)principal_ref:\s*(?P<expr>[^\n]+),\n)(?P=indent)capability_id:', lambda m: m.group(1) + m.group('indent') + 'subject_ref: ' + m.group('expr') + ',\n' + m.group('indent') + 'capability_id:', s)
           p.write_text(s)
 
-          # 2. Every AuthorizationRequest literal carries an explicit subject.
           for p in root.glob('*.rs'):
               if p.name == 'canonical_authorization.rs':
                   continue
               s = p.read_text()
               if 'AuthorizationRequest' not in s:
                   continue
-              updated = re.sub(
-                  r'(\n(?P<indent>\s*)principal_ref:\s*(?P<expr>[^\n]+),\n)(?P=indent)capability_id:',
-                  lambda m: m.group(1) + m.group('indent') + 'subject_ref: ' + m.group('expr') + ',\n' + m.group('indent') + 'capability_id:',
-                  s,
-              )
-              p.write_text(updated)
+              s = re.sub(r'(\n(?P<indent>\s*)principal_ref:\s*(?P<expr>[^\n]+),\n)(?P=indent)capability_id:', lambda m: m.group(1) + m.group('indent') + 'subject_ref: ' + m.group('expr') + ',\n' + m.group('indent') + 'capability_id:', s)
+              p.write_text(s)
 
-          # 3. Authorized health contexts preserve both actor and target subject.
-          context_files = (
-              'health_state_evidence_link.rs',
-              'health_state_intervention.rs',
-              'health_state_measurement.rs',
-              'health_state_outcome.rs',
-              'health_state_repository.rs',
-              'longitudinal_context.rs',
-              'longitudinal_observation_repository.rs',
-          )
-          for name in context_files:
+          for name in ('health_state_evidence_link.rs','health_state_intervention.rs','health_state_measurement.rs','health_state_outcome.rs','health_state_repository.rs','longitudinal_context.rs','longitudinal_observation_repository.rs'):
               p = root / name
               s = p.read_text()
               if 'principal_ref: String,' not in s:
-                  s = re.sub(
-                      r'(pub struct Authorized\w+ \{\n)(\s*)(subject_ref:)',
-                      r'\1\2principal_ref: String,\n\2\3',
-                      s,
-                      count=1,
-                  )
-              s = s.replace(
-                  'Ok(Self {\n            subject_ref:',
-                  'Ok(Self {\n            principal_ref: request.principal_ref.clone(),\n            subject_ref:',
-                  1,
-              )
-              s = s.replace(
-                  'subject_ref: request.principal_ref.clone()',
-                  'subject_ref: request.subject_ref.clone()',
-              )
+                  s = re.sub(r'(pub struct Authorized\w+ \{\n)(\s*)(subject_ref:)', r'\1\2principal_ref: String,\n\2\3', s, count=1)
+              s = s.replace('Ok(Self {\n            subject_ref:', 'Ok(Self {\n            principal_ref: request.principal_ref.clone(),\n            subject_ref:', 1)
+              s = s.replace('subject_ref: request.principal_ref.clone()', 'subject_ref: request.subject_ref.clone()')
               if 'pub fn principal_ref(&self)' not in s and 'pub fn subject_ref(&self)' in s:
-                  s = s.replace(
-                      '    pub fn subject_ref(&self)',
-                      '    pub fn principal_ref(&self) -> &str {\n        &self.principal_ref\n    }\n\n    pub fn subject_ref(&self)',
-                      1,
-                  )
+                  s = s.replace('    pub fn subject_ref(&self)', '    pub fn principal_ref(&self) -> &str {\n        &self.principal_ref\n    }\n\n    pub fn subject_ref(&self)', 1)
               p.write_text(s)
 
-          # 4. Protected DB context preserves actor identity as well.
           p = root / 'protected_db_context.rs'
           s = p.read_text()
           if 'principal_ref: String,' not in s:
-              s = re.sub(
-                  r'(pub struct AuthorizedProtectedDbContext \{\n)(\s*)(subject_ref:)',
-                  r'\1\2principal_ref: String,\n\2\3',
-                  s,
-                  count=1,
-              )
-          s = s.replace(
-              'Ok(Self {\n            subject_ref:',
-              'Ok(Self {\n            principal_ref: request.principal_ref.clone(),\n            subject_ref:',
-              1,
-          )
-          s = s.replace(
-              'subject_ref: request.principal_ref.clone()',
-              'subject_ref: request.subject_ref.clone()',
-          )
+              s = re.sub(r'(pub struct AuthorizedProtectedDbContext \{\n)(\s*)(subject_ref:)', r'\1\2principal_ref: String,\n\2\3', s, count=1)
+          s = s.replace('Ok(Self {\n            subject_ref:', 'Ok(Self {\n            principal_ref: request.principal_ref.clone(),\n            subject_ref:', 1)
+          s = s.replace('subject_ref: request.principal_ref.clone()', 'subject_ref: request.subject_ref.clone()')
           if 'pub fn principal_ref(&self)' not in s and 'pub fn subject_ref(&self)' in s:
-              s = s.replace(
-                  '    pub fn subject_ref(&self)',
-                  '    pub fn principal_ref(&self) -> &str {\n        &self.principal_ref\n    }\n\n    pub fn subject_ref(&self)',
-                  1,
-              )
+              s = s.replace('    pub fn subject_ref(&self)', '    pub fn principal_ref(&self) -> &str {\n        &self.principal_ref\n    }\n\n    pub fn subject_ref(&self)', 1)
           p.write_text(s)
 
-          # 5. Shared vault context carries actor + subject. Existing fixtures are
-          # self-subject fixtures, so their principal and subject are identical.
           p = root / 'local_health_vault_storage.rs'
           s = p.read_text()
-          s = s.replace(
-              'pub struct AuthorizationContext {\n    pub subject_ref:',
-              'pub struct AuthorizationContext {\n    pub principal_ref: String,\n    pub subject_ref:',
-              1,
-          )
-          s = re.sub(
-              r'(AuthorizationContext \{\n)(\s*)(subject_ref:)',
-              r'\1\2principal_ref: "person-1".into(),\n\2\3',
-              s,
-          )
+          if 'pub principal_ref: String,' not in s:
+              s = s.replace('pub struct AuthorizationContext {\n    pub subject_ref:', 'pub struct AuthorizationContext {\n    pub principal_ref: String,\n    pub subject_ref:', 1)
+          s = re.sub(r'(AuthorizationContext \{\n)(\s*)(subject_ref:)', r'\1\2principal_ref: "person-1".into(),\n\2\3', s)
           p.write_text(s)
 
-          # 6. Repository adapters pass actor + subject into the vault.
-          for name in ('health_state_repository.rs', 'local_longitudinal_observation_repository.rs'):
+          for name in ('health_state_repository.rs','local_longitudinal_observation_repository.rs'):
               p = root / name
-              s = p.read_text()
-              s = s.replace(
-                  'AuthorizationContext {\n            subject_ref:',
-                  'AuthorizationContext {\n            principal_ref: context.principal_ref().to_owned(),\n            subject_ref:',
-                  1,
-              )
+              s = p.read_text().replace('AuthorizationContext {\n            subject_ref:', 'AuthorizationContext {\n            principal_ref: context.principal_ref().to_owned(),\n            subject_ref:', 1)
               p.write_text(s)
 
-          # 7. PHR fixtures use the shared actor/subject context explicitly.
           p = root / 'personal_health_record_repository.rs'
           s = p.read_text()
-          s = re.sub(
-              r'(AuthorizationContext \{\n)(\s*)(subject_ref: "person-1"\.into\(\),)',
-              r'\1\2principal_ref: "person-1".into(),\n\2\3',
-              s,
-          )
+          s = re.sub(r'(AuthorizationContext \{\n)(\s*)(subject_ref: "person-1"\.into\(\),)', r'\1\2principal_ref: "person-1".into(),\n\2\3', s)
           p.write_text(s)
 
-          # 8. Vault adapter authorizes the principal and binds the target subject separately.
           p = root / 'canonical_vault_authorizer.rs'
-          s = p.read_text()
-          s = s.replace(
-              'principal_ref: context.subject_ref.clone(),',
-              'principal_ref: context.principal_ref.clone(),',
-          )
-          s = s.replace(
-              '            principal_ref: context.principal_ref.clone(),\n            capability_id:',
-              '            principal_ref: context.principal_ref.clone(),\n            subject_ref: context.subject_ref.clone(),\n            capability_id:',
-          )
-          s = re.sub(
-              r'(AuthorizationContext \{\n)(\s*)(subject_ref: "person-1"\.into\(\),)',
-              r'\1\2principal_ref: "person-1".into(),\n\2\3',
-              s,
-          )
+          s = p.read_text().replace('principal_ref: context.subject_ref.clone(),','principal_ref: context.principal_ref.clone(),')
+          s = s.replace('            principal_ref: context.principal_ref.clone(),\n            capability_id:', '            principal_ref: context.principal_ref.clone(),\n            subject_ref: context.subject_ref.clone(),\n            capability_id:', 1)
+          s = re.sub(r'(AuthorizationContext \{\n)(\s*)(subject_ref: "person-1"\.into\(\),)', r'\1\2principal_ref: "person-1".into(),\n\2\3', s)
           p.write_text(s)
 
-          # 9. Structural guard: no old subject-as-principal substitution remains.
-          bad = []
           for p in root.glob('*.rs'):
               text = p.read_text()
-              if 'principal_ref: context.subject_ref.clone()' in text:
-                  bad.append(f'{p}: principal/subject substitution')
-              if 'subject_ref: request.principal_ref.clone()' in text:
-                  bad.append(f'{p}: subject sourced from principal')
-          if bad:
-              raise SystemExit('\n'.join(bad))
-
-          print('minimal authorization migration complete')
+              if 'principal_ref: context.subject_ref.clone()' in text or 'subject_ref: request.principal_ref.clone()' in text:
+                  raise SystemExit(f'authorization substitution remains in {p}')
+          print('migration complete')
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           components: rustfmt
-      - name: Format and compile
+      - name: Validate backend
         working-directory: services/backend-rust
         run: |
           cargo fmt --all -- --check
           cargo check --all-targets
-      - name: Run backend tests
-        working-directory: services/backend-rust
-        run: cargo test --all-targets
-      - name: Remove one-shot repair workflow and commit source changes
+          cargo test --all-targets
+      - name: Remove migration workflow and commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/one-shot-authorization-cleanup.yml
           git add services/backend-rust/src
           git diff --check
-          git diff --stat
           git commit -m 'security: preserve canonical actor and subject boundary'
           git push origin HEAD:feat/canonical-principal-subject-scope-v4-clean
