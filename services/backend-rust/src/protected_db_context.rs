@@ -1,3 +1,122 @@
+use sqlx::{postgres::Postgres, PgPool, Transaction};
+
+/// Canonical database service identity expected by the protected persistence adapter.
+pub const TRUSTED_PERSISTENCE_DB_ROLE: &str = "somaos_persistence";
+
+/// Protected persistence scope that has crossed the canonical authorization boundary.
+///
+/// The fields are intentionally private. External callers cannot construct this type
+/// from arbitrary tenant/data-domain strings; the canonical authorization boundary
+/// mints it only after an authoritative `ALLOW` decision and request validation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuthorizedProtectedDbContext {
+    principal_ref: String,
+    subject_ref: String,
+    capability_id: String,
+    resource_type: String,
+    resource_id: String,
+    action: String,
+    tenant_id: String,
+    data_domain: String,
+}
+
+impl AuthorizedProtectedDbContext {
+    pub(crate) fn from_authorized_request(
+        request: &crate::canonical_authorization::AuthorizationRequest,
+    ) -> Result<Self, &'static str> {
+        let fields = [
+            request.principal_ref.as_str(),
+            request.subject_ref.as_str(),
+            request.capability_id.as_str(),
+            request.resource_type.as_str(),
+            request.resource_id.as_str(),
+            request.action.as_str(),
+            request.tenant_id.as_str(),
+            request.data_domain.as_str(),
+        ];
+        if fields.iter().any(|field| field.trim().is_empty()) {
+            return Err("protected authorization request contains an empty field");
+        }
+        if fields.iter().any(|field| field.chars().any(char::is_control)) {
+            return Err("protected authorization request contains control characters");
+        }
+
+        Ok(Self {
+            principal_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
+            capability_id: request.capability_id.clone(),
+            resource_type: request.resource_type.clone(),
+            resource_id: request.resource_id.clone(),
+            action: request.action.clone(),
+            tenant_id: request.tenant_id.clone(),
+            data_domain: request.data_domain.clone(),
+        })
+    }
+
+    pub fn principal_ref(&self) -> &str {
+        &self.principal_ref
+    }
+
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+
+    pub fn action(&self) -> &str {
+        &self.action
+    }
+
+    pub fn tenant_id(&self) -> &str {
+        &self.tenant_id
+    }
+
+    pub fn data_domain(&self) -> &str {
+        &self.data_domain
+    }
+}
+
+/// Begin a PostgreSQL transaction and establish protected scope through the
+/// dedicated persistence database identity boundary.
+///
+/// This function accepts only an authorization-bound context. It therefore cannot
+/// be used as the authorization decision point and cannot mint its own scope.
+/// Production deployments must connect with a LOGIN role that is explicitly
+/// granted membership in `somaos_persistence`, then this adapter switches into
+/// that NOLOGIN role for the transaction.
+pub async fn begin_protected_transaction<'a>(
+    pool: &'a PgPool,
+    context: &AuthorizedProtectedDbContext,
+) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+
+    if let Err(error) = sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut *tx).await {
+        let _ = tx.rollback().await;
+        return Err(error);
+    }
+
+    if let Err(error) = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
+        .bind(context.tenant_id())
+        .bind(context.data_domain())
+        .execute(&mut *tx)
+        .await
+    {
+        let _ = tx.rollback().await;
+        return Err(error);
+    }
+
+    Ok(tx)
+}
 
 #[cfg(test)]
 mod tests {
