@@ -30,6 +30,7 @@ impl AuthorizedLongitudinalContextAccessContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, LongitudinalContextError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -40,9 +41,8 @@ impl AuthorizedLongitudinalContextAccessContext {
         if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(LongitudinalContextError::AuthorizationDenied);
         }
-
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             scope: format!("{}:{}", request.tenant_id, request.data_domain),
             capability_id: request.capability_id.clone(),
             resource_type: request.resource_type.clone(),
@@ -54,23 +54,18 @@ impl AuthorizedLongitudinalContextAccessContext {
     pub fn subject_ref(&self) -> &str {
         &self.subject_ref
     }
-
     pub fn scope(&self) -> &str {
         &self.scope
     }
-
     pub fn capability_id(&self) -> &str {
         &self.capability_id
     }
-
     pub fn resource_type(&self) -> &str {
         &self.resource_type
     }
-
     pub fn resource_id(&self) -> &str {
         &self.resource_id
     }
-
     pub fn action(&self) -> &str {
         &self.action
     }
@@ -109,19 +104,16 @@ impl LongitudinalContextAssembly {
         evidence_links: Vec<HealthStateEvidenceLink>,
     ) -> Result<GovernedLongitudinalContext, LongitudinalContextError> {
         let subject = context.subject_ref();
-
         if health_state_timeline.iter().any(|entry| entry.subject_ref != subject)
             || observation_timeline.iter().any(|entry| entry.subject_ref != subject)
         {
             return Err(LongitudinalContextError::SubjectMismatch);
         }
-
         if evidence_links.iter().any(|link| {
             link.health_state_ref.trim().is_empty() || link.evidence_ref.trim().is_empty() || link.id.trim().is_empty()
         }) {
             return Err(LongitudinalContextError::InvalidEvidenceLink);
         }
-
         health_state_timeline.sort_by(|left, right| {
             left.effective_time
                 .cmp(&right.effective_time)
@@ -138,7 +130,6 @@ impl LongitudinalContextAssembly {
             .then_with(|| left.recorded_at.cmp(&right.recorded_at))
             .then_with(|| left.observation_id.cmp(&right.observation_id))
         });
-
         Ok(GovernedLongitudinalContext {
             subject_ref: subject.to_owned(),
             health_state_timeline,
@@ -155,7 +146,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.context.read".into(),
             resource_type: "longitudinal_context".into(),
             resource_id: "person-1".into(),
@@ -197,7 +189,7 @@ mod tests {
             provenance: LinkProvenance {
                 method: "human-curated".into(),
                 created_at: Some("2026-09-02T00:00:00Z".into()),
-                actor_ref: Some("person-1".into()),
+                actor_ref: Some("principal-1".into()),
             },
             context: None,
             uncertainty: Some(LinkUncertainty::Reported),

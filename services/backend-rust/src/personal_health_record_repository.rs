@@ -238,6 +238,7 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
+            principal_ref: "person-1".into(),
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
@@ -263,10 +264,12 @@ mod tests {
         let root = root();
         let (repository, calls) = repository(&root);
         let owner = AuthorizationContext {
+            principal_ref: "person-1".into(),
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
         let other = AuthorizationContext {
+            principal_ref: "person-2".into(),
             subject_ref: "person-2".into(),
             scope: "self".into(),
         };
@@ -285,6 +288,7 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
+            principal_ref: "person-1".into(),
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
@@ -304,6 +308,7 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
+            principal_ref: "person-1".into(),
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
@@ -316,6 +321,7 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
+            principal_ref: "person-1".into(),
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };
@@ -338,6 +344,7 @@ mod tests {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
+            principal_ref: "person-1".into(),
             subject_ref: "person-1".into(),
             scope: "self".into(),
         };

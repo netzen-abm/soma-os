@@ -16,6 +16,7 @@ use crate::canonical_authorization::AuthorizationRequest;
 /// only after an authoritative `ALLOW` decision and request validation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedObservationAccessContext {
+    principal_ref: String,
     subject_ref: String,
     scope: String,
     capability_id: String,
@@ -28,6 +29,7 @@ impl AuthorizedObservationAccessContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, ObservationRepositoryError> {
         if [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -42,13 +44,18 @@ impl AuthorizedObservationAccessContext {
         }
 
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            principal_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             scope: format!("{}:{}", request.tenant_id, request.data_domain),
             capability_id: request.capability_id.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
             action: request.action.clone(),
         })
+    }
+
+    pub fn principal_ref(&self) -> &str {
+        &self.principal_ref
     }
 
     pub fn subject_ref(&self) -> &str {
@@ -180,7 +187,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),

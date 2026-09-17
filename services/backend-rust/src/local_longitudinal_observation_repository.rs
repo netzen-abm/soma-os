@@ -36,6 +36,7 @@ where
 
     fn vault_context(context: &AuthorizedObservationAccessContext) -> AuthorizationContext {
         AuthorizationContext {
+            principal_ref: context.principal_ref().to_owned(),
             subject_ref: context.subject_ref().to_owned(),
             scope: context.scope().to_owned(),
         }
@@ -205,7 +206,8 @@ mod tests {
 
     fn context() -> AuthorizedObservationAccessContext {
         AuthorizedObservationAccessContext::from_authorized_request(&AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),

@@ -28,9 +28,15 @@ impl AuthorizationDecision {
 }
 
 /// Canonical authorization request envelope consumed by the Rust adapter boundary.
+///
+/// `principal_ref` identifies the actor making the request. `subject_ref` identifies
+/// the health/data subject on whose behalf the protected operation is performed.
+/// They are intentionally distinct so delegated access cannot collapse actor and
+/// subject identity.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizationRequest {
     pub principal_ref: String,
+    pub subject_ref: String,
     pub capability_id: String,
     pub resource_type: String,
     pub resource_id: String,
@@ -149,6 +155,7 @@ mod tests {
     fn authorization_request_keeps_governance_scope_explicit() {
         let request = AuthorizationRequest {
             principal_ref: "principal-1".to_owned(),
+            subject_ref: "person-1".to_owned(),
             capability_id: "health.read".to_owned(),
             resource_type: "health_record".to_owned(),
             resource_id: "record-1".to_owned(),
@@ -158,6 +165,7 @@ mod tests {
         };
 
         assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(request.subject_ref, "person-1");
         assert_eq!(request.capability_id, "health.read");
         assert_eq!(request.resource_type, "health_record");
         assert_eq!(request.resource_id, "record-1");
@@ -185,6 +193,7 @@ mod tests {
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
             principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
@@ -198,6 +207,7 @@ mod tests {
     fn protected_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_protected_context(&request()).unwrap();
         assert_eq!(context.principal_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.capability_id(), "health.read");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
@@ -218,7 +228,7 @@ mod tests {
     #[test]
     fn health_state_evidence_link_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_health_state_evidence_link_context(&request()).unwrap();
-        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
 
@@ -241,7 +251,7 @@ mod tests {
     #[test]
     fn health_state_repository_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_health_state_repository_context(&request()).unwrap();
-        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
         assert_eq!(
             DenyBoundary.authorize_health_state_repository_context(&request()),
@@ -259,7 +269,7 @@ mod tests {
     #[test]
     fn longitudinal_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_longitudinal_context(&request()).unwrap();
-        assert_eq!(context.subject_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
         assert_eq!(DenyBoundary.authorize_longitudinal_context(&request()), Err(AuthorizationDecision::Deny));
     }
@@ -275,6 +285,7 @@ mod tests {
     fn intervention_context_requires_authoritative_allow() {
         let mut request = request();
         request.principal_ref = "person-1".into();
+        request.subject_ref = "person-1".into();
         request.capability_id = "health.intervention.write".into();
         request.resource_type = "health_state_intervention".into();
         request.resource_id = "intervention-1".into();
@@ -296,6 +307,7 @@ mod tests {
     fn measurement_context_requires_authoritative_allow() {
         let mut request = request();
         request.principal_ref = "person-1".into();
+        request.subject_ref = "person-1".into();
         request.capability_id = "health.measurement.write".into();
         request.resource_type = "health_state_measurement".into();
         request.resource_id = "measurement-1".into();

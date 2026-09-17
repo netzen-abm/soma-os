@@ -96,6 +96,7 @@ impl AuthorizedOutcomeContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, OutcomeError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -107,7 +108,7 @@ impl AuthorizedOutcomeContext {
             return Err(OutcomeError::InvalidAuthorizationContext);
         }
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
             capability_id: request.capability_id.clone(),
@@ -120,21 +121,27 @@ impl AuthorizedOutcomeContext {
     pub fn subject_ref(&self) -> &str {
         &self.subject_ref
     }
+
     pub fn tenant_id(&self) -> &str {
         &self.tenant_id
     }
+
     pub fn data_domain(&self) -> &str {
         &self.data_domain
     }
+
     pub fn capability_id(&self) -> &str {
         &self.capability_id
     }
+
     pub fn resource_type(&self) -> &str {
         &self.resource_type
     }
+
     pub fn resource_id(&self) -> &str {
         &self.resource_id
     }
+
     pub fn action(&self) -> &str {
         &self.action
     }
@@ -204,7 +211,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.outcome.write".into(),
             resource_type: "health_state_outcome".into(),
             resource_id: "outcome-1".into(),
@@ -237,7 +245,7 @@ mod tests {
             rationale: "Defined result over a bounded observation window".into(),
             source_ref: "observation:response-1".into(),
             recorded_at: "2026-09-30T00:00:00Z".into(),
-            actor_ref: Some("person-1".into()),
+            actor_ref: Some("principal-1".into()),
         }
     }
 
@@ -252,6 +260,14 @@ mod tests {
             OutcomeAuthorizationBoundary::authorize(&DenyBoundary, &request()),
             Err(AuthorizationDecision::Deny)
         );
+    }
+
+    #[test]
+    fn delegated_actor_does_not_become_subject() {
+        let request = request();
+        let context = AuthorizedOutcomeContext::from_authorized_request(&request).unwrap();
+        assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
     }
 
     #[test]

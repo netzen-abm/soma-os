@@ -85,6 +85,7 @@ impl AuthorizedHealthStateEvidenceLinkContext {
     ) -> Result<Self, HealthStateEvidenceLinkError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -97,7 +98,7 @@ impl AuthorizedHealthStateEvidenceLinkContext {
         }
 
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
             capability_id: request.capability_id.clone(),
@@ -110,27 +111,21 @@ impl AuthorizedHealthStateEvidenceLinkContext {
     pub fn subject_ref(&self) -> &str {
         &self.subject_ref
     }
-
     pub fn tenant_id(&self) -> &str {
         &self.tenant_id
     }
-
     pub fn data_domain(&self) -> &str {
         &self.data_domain
     }
-
     pub fn capability_id(&self) -> &str {
         &self.capability_id
     }
-
     pub fn resource_type(&self) -> &str {
         &self.resource_type
     }
-
     pub fn resource_id(&self) -> &str {
         &self.resource_id
     }
-
     pub fn action(&self) -> &str {
         &self.action
     }
@@ -195,7 +190,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.evidence.link".into(),
             resource_type: "health_state_evidence_link".into(),
             resource_id: "link-1".into(),
@@ -219,7 +215,7 @@ mod tests {
             provenance: LinkProvenance {
                 method: "human-curated".into(),
                 created_at: Some("2026-09-14T05:00:00Z".into()),
-                actor_ref: Some("person-1".into()),
+                actor_ref: Some("principal-1".into()),
             },
             context: None,
             uncertainty: Some(LinkUncertainty::Reported),
@@ -264,6 +260,14 @@ mod tests {
             AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&request),
             Err(HealthStateEvidenceLinkError::InvalidAuthorizationContext)
         );
+    }
+
+    #[test]
+    fn delegated_actor_does_not_become_subject() {
+        let request = request();
+        let context = AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&request).unwrap();
+        assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
     }
 
     #[test]

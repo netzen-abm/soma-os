@@ -85,6 +85,7 @@ impl AuthorizedInterventionContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, InterventionIntentError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -96,7 +97,7 @@ impl AuthorizedInterventionContext {
             return Err(InterventionIntentError::InvalidAuthorizationContext);
         }
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
             capability_id: request.capability_id.clone(),
@@ -141,8 +142,6 @@ pub enum InterventionIntentError {
     SubjectMismatch,
 }
 
-/// Canonical boundary for validating an intervention intent before any later
-/// execution or experiment workflow consumes it.
 pub struct InterventionIntentBoundary;
 
 impl InterventionIntentBoundary {
@@ -164,7 +163,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.intervention.write".into(),
             resource_type: "health_state_intervention".into(),
             resource_id: "intervention-1".into(),
@@ -194,13 +194,21 @@ mod tests {
             planned_start: Some("2026-09-20T00:00:00Z".into()),
             planned_end: Some("2026-10-04T00:00:00Z".into()),
             created_at: "2026-09-15T00:00:00Z".into(),
-            actor_ref: Some("person-1".into()),
+            actor_ref: Some("principal-1".into()),
         }
     }
 
     #[test]
     fn valid_intent_crosses_validation_boundary() {
         assert!(InterventionIntentBoundary::validate(&intent(), &context()).is_ok());
+    }
+
+    #[test]
+    fn delegated_actor_does_not_become_subject() {
+        let request = request();
+        let context = AuthorizedInterventionContext::from_authorized_request(&request).unwrap();
+        assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
     }
 
     #[test]
