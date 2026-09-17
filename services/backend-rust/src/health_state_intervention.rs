@@ -85,6 +85,7 @@ impl AuthorizedInterventionContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, InterventionIntentError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -96,7 +97,7 @@ impl AuthorizedInterventionContext {
             return Err(InterventionIntentError::InvalidAuthorizationContext);
         }
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
             capability_id: request.capability_id.clone(),
@@ -106,27 +107,13 @@ impl AuthorizedInterventionContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str {
-        &self.subject_ref
-    }
-    pub fn tenant_id(&self) -> &str {
-        &self.tenant_id
-    }
-    pub fn data_domain(&self) -> &str {
-        &self.data_domain
-    }
-    pub fn capability_id(&self) -> &str {
-        &self.capability_id
-    }
-    pub fn resource_type(&self) -> &str {
-        &self.resource_type
-    }
-    pub fn resource_id(&self) -> &str {
-        &self.resource_id
-    }
-    pub fn action(&self) -> &str {
-        &self.action
-    }
+    pub fn subject_ref(&self) -> &str { &self.subject_ref }
+    pub fn tenant_id(&self) -> &str { &self.tenant_id }
+    pub fn data_domain(&self) -> &str { &self.data_domain }
+    pub fn capability_id(&self) -> &str { &self.capability_id }
+    pub fn resource_type(&self) -> &str { &self.resource_type }
+    pub fn resource_id(&self) -> &str { &self.resource_id }
+    pub fn action(&self) -> &str { &self.action }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -141,8 +128,6 @@ pub enum InterventionIntentError {
     SubjectMismatch,
 }
 
-/// Canonical boundary for validating an intervention intent before any later
-/// execution or experiment workflow consumes it.
 pub struct InterventionIntentBoundary;
 
 impl InterventionIntentBoundary {
@@ -164,7 +149,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.intervention.write".into(),
             resource_type: "health_state_intervention".into(),
             resource_id: "intervention-1".into(),
@@ -194,7 +180,7 @@ mod tests {
             planned_start: Some("2026-09-20T00:00:00Z".into()),
             planned_end: Some("2026-10-04T00:00:00Z".into()),
             created_at: "2026-09-15T00:00:00Z".into(),
-            actor_ref: Some("person-1".into()),
+            actor_ref: Some("principal-1".into()),
         }
     }
 
@@ -204,32 +190,31 @@ mod tests {
     }
 
     #[test]
+    fn delegated_actor_does_not_become_subject() {
+        let request = request();
+        let context = AuthorizedInterventionContext::from_authorized_request(&request).unwrap();
+        assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
+    }
+
+    #[test]
     fn subject_mismatch_is_rejected() {
         let mut candidate = intent();
         candidate.subject_ref = "person-2".into();
-        assert_eq!(
-            InterventionIntentBoundary::validate(&candidate, &context()),
-            Err(InterventionIntentError::SubjectMismatch)
-        );
+        assert_eq!(InterventionIntentBoundary::validate(&candidate, &context()), Err(InterventionIntentError::SubjectMismatch));
     }
 
     #[test]
     fn empty_intended_change_is_rejected() {
         let mut candidate = intent();
         candidate.intended_change.clear();
-        assert_eq!(
-            InterventionIntentBoundary::validate(&candidate, &context()),
-            Err(InterventionIntentError::InvalidIntent)
-        );
+        assert_eq!(InterventionIntentBoundary::validate(&candidate, &context()), Err(InterventionIntentError::InvalidIntent));
     }
 
     #[test]
     fn references_reject_control_characters() {
         let mut candidate = intent();
         candidate.evidence_refs.push("bad\nref".into());
-        assert_eq!(
-            InterventionIntentBoundary::validate(&candidate, &context()),
-            Err(InterventionIntentError::InvalidReference)
-        );
+        assert_eq!(InterventionIntentBoundary::validate(&candidate, &context()), Err(InterventionIntentError::InvalidReference));
     }
 }
