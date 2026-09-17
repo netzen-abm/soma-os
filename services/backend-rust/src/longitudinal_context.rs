@@ -11,11 +11,6 @@ use crate::health_state_repository::HealthStateTimelineEntry;
 use crate::longitudinal_observation_repository::ObservationTimelineEntry;
 use thiserror::Error;
 
-/// Authorization-bound context for reading a longitudinal context projection.
-///
-/// The context is minted only by the canonical authorization boundary after an
-/// authoritative ALLOW decision. Callers cannot construct repository authority
-/// from arbitrary subject or scope strings.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedLongitudinalContextAccessContext {
     subject_ref: String,
@@ -30,6 +25,7 @@ impl AuthorizedLongitudinalContextAccessContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, LongitudinalContextError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -40,9 +36,8 @@ impl AuthorizedLongitudinalContextAccessContext {
         if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(LongitudinalContextError::AuthorizationDenied);
         }
-
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             scope: format!("{}:{}", request.tenant_id, request.data_domain),
             capability_id: request.capability_id.clone(),
             resource_type: request.resource_type.clone(),
@@ -51,35 +46,14 @@ impl AuthorizedLongitudinalContextAccessContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str {
-        &self.subject_ref
-    }
-
-    pub fn scope(&self) -> &str {
-        &self.scope
-    }
-
-    pub fn capability_id(&self) -> &str {
-        &self.capability_id
-    }
-
-    pub fn resource_type(&self) -> &str {
-        &self.resource_type
-    }
-
-    pub fn resource_id(&self) -> &str {
-        &self.resource_id
-    }
-
-    pub fn action(&self) -> &str {
-        &self.action
-    }
+    pub fn subject_ref(&self) -> &str { &self.subject_ref }
+    pub fn scope(&self) -> &str { &self.scope }
+    pub fn capability_id(&self) -> &str { &self.capability_id }
+    pub fn resource_type(&self) -> &str { &self.resource_type }
+    pub fn resource_id(&self) -> &str { &self.resource_id }
+    pub fn action(&self) -> &str { &self.action }
 }
 
-/// Canonical read-only longitudinal context projection.
-///
-/// Evidence links are references only. Evidence Graph objects remain owned by the
-/// Evidence domain and are intentionally not copied or dereferenced here.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GovernedLongitudinalContext {
     pub subject_ref: String,
@@ -88,7 +62,7 @@ pub struct GovernedLongitudinalContext {
     pub evidence_links: Vec<HealthStateEvidenceLink>,
 }
 
-#[derive(Debug, Error, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum LongitudinalContextError {
     #[error("authorization denied")]
     AuthorizationDenied,
@@ -98,7 +72,6 @@ pub enum LongitudinalContextError {
     InvalidEvidenceLink,
 }
 
-/// Stateless assembly boundary. It has no persistence and performs no inference.
 pub struct LongitudinalContextAssembly;
 
 impl LongitudinalContextAssembly {
@@ -109,19 +82,16 @@ impl LongitudinalContextAssembly {
         evidence_links: Vec<HealthStateEvidenceLink>,
     ) -> Result<GovernedLongitudinalContext, LongitudinalContextError> {
         let subject = context.subject_ref();
-
         if health_state_timeline.iter().any(|entry| entry.subject_ref != subject)
             || observation_timeline.iter().any(|entry| entry.subject_ref != subject)
         {
             return Err(LongitudinalContextError::SubjectMismatch);
         }
-
         if evidence_links.iter().any(|link| {
             link.health_state_ref.trim().is_empty() || link.evidence_ref.trim().is_empty() || link.id.trim().is_empty()
         }) {
             return Err(LongitudinalContextError::InvalidEvidenceLink);
         }
-
         health_state_timeline.sort_by(|left, right| {
             left.effective_time
                 .cmp(&right.effective_time)
@@ -138,7 +108,6 @@ impl LongitudinalContextAssembly {
             .then_with(|| left.recorded_at.cmp(&right.recorded_at))
             .then_with(|| left.observation_id.cmp(&right.observation_id))
         });
-
         Ok(GovernedLongitudinalContext {
             subject_ref: subject.to_owned(),
             health_state_timeline,
@@ -155,7 +124,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.context.read".into(),
             resource_type: "longitudinal_context".into(),
             resource_id: "person-1".into(),
@@ -170,49 +140,25 @@ mod tests {
     }
 
     fn health_state_entry(id: &str, subject: &str) -> HealthStateTimelineEntry {
-        HealthStateTimelineEntry {
-            record_id: id.into(),
-            subject_ref: subject.into(),
-            effective_time: Some("2026-09-01T00:00:00Z".into()),
-            recorded_at: "2026-09-01T01:00:00Z".into(),
-        }
+        HealthStateTimelineEntry { record_id: id.into(), subject_ref: subject.into(), effective_time: Some("2026-09-01T00:00:00Z".into()), recorded_at: "2026-09-01T01:00:00Z".into() }
     }
 
     fn observation_entry(id: &str, subject: &str) -> ObservationTimelineEntry {
-        ObservationTimelineEntry {
-            observation_id: id.into(),
-            subject_ref: subject.into(),
-            observed_at: None,
-            recorded_at: "2026-09-02T00:00:00Z".into(),
-        }
+        ObservationTimelineEntry { observation_id: id.into(), subject_ref: subject.into(), observed_at: None, recorded_at: "2026-09-02T00:00:00Z".into() }
     }
 
     fn link() -> HealthStateEvidenceLink {
         HealthStateEvidenceLink {
-            id: "link-1".into(),
-            schema_version: "1.0.0".into(),
-            health_state_ref: "hs-1".into(),
-            evidence_ref: "claim-1".into(),
+            id: "link-1".into(), schema_version: "1.0.0".into(), health_state_ref: "hs-1".into(), evidence_ref: "claim-1".into(),
             relationship: HealthStateEvidenceRelationship::EvidenceInformsHypothesis,
-            provenance: LinkProvenance {
-                method: "human-curated".into(),
-                created_at: Some("2026-09-02T00:00:00Z".into()),
-                actor_ref: Some("person-1".into()),
-            },
-            context: None,
-            uncertainty: Some(LinkUncertainty::Reported),
+            provenance: LinkProvenance { method: "human-curated".into(), created_at: Some("2026-09-02T00:00:00Z".into()), actor_ref: Some("principal-1".into()) },
+            context: None, uncertainty: Some(LinkUncertainty::Reported),
         }
     }
 
     #[test]
     fn assembly_is_read_only_and_preserves_evidence_references() {
-        let result = LongitudinalContextAssembly::assemble(
-            &context(),
-            vec![health_state_entry("hs-1", "person-1")],
-            vec![observation_entry("obs-1", "person-1")],
-            vec![link()],
-        )
-        .unwrap();
+        let result = LongitudinalContextAssembly::assemble(&context(), vec![health_state_entry("hs-1", "person-1")], vec![observation_entry("obs-1", "person-1")], vec![link()]).unwrap();
         assert_eq!(result.subject_ref, "person-1");
         assert_eq!(result.health_state_timeline.len(), 1);
         assert_eq!(result.observation_timeline.len(), 1);
@@ -221,36 +167,18 @@ mod tests {
 
     #[test]
     fn cross_subject_projection_is_rejected() {
-        assert_eq!(
-            LongitudinalContextAssembly::assemble(
-                &context(),
-                vec![health_state_entry("hs-1", "person-2")],
-                vec![],
-                vec![],
-            ),
-            Err(LongitudinalContextError::SubjectMismatch)
-        );
+        assert_eq!(LongitudinalContextAssembly::assemble(&context(), vec![health_state_entry("hs-1", "person-2")], vec![], vec![]), Err(LongitudinalContextError::SubjectMismatch));
     }
 
     #[test]
     fn malformed_evidence_reference_is_rejected() {
-        let mut candidate = link();
-        candidate.evidence_ref.clear();
-        assert_eq!(
-            LongitudinalContextAssembly::assemble(&context(), vec![], vec![], vec![candidate]),
-            Err(LongitudinalContextError::InvalidEvidenceLink)
-        );
+        let mut candidate = link(); candidate.evidence_ref.clear();
+        assert_eq!(LongitudinalContextAssembly::assemble(&context(), vec![], vec![], vec![candidate]), Err(LongitudinalContextError::InvalidEvidenceLink));
     }
 
     #[test]
     fn unknown_observation_time_remains_unknown() {
-        let result = LongitudinalContextAssembly::assemble(
-            &context(),
-            vec![],
-            vec![observation_entry("obs-1", "person-1")],
-            vec![],
-        )
-        .unwrap();
+        let result = LongitudinalContextAssembly::assemble(&context(), vec![], vec![observation_entry("obs-1", "person-1")], vec![]).unwrap();
         assert_eq!(result.observation_timeline[0].observed_at, None);
     }
 }
