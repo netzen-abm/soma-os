@@ -20,6 +20,7 @@ jobs:
         with:
           components: rustfmt
       - name: Format Rust
+        working-directory: services/backend-rust
         run: cargo fmt --all
       - name: Commit formatted sources
         run: |
