@@ -9,6 +9,13 @@ use crate::canonical_authorization::AuthorizationRequest;
 use crate::health_state_evidence_link::HealthStateEvidenceLink;
 use crate::health_state_repository::HealthStateTimelineEntry;
 use crate::longitudinal_observation_repository::ObservationTimelineEntry;
+use thiserror::Error;
+
+/// Authorization-bound context for reading a longitudinal context projection.
+///
+/// The context is minted only by the canonical authorization boundary after an
+/// authoritative ALLOW decision. Callers cannot construct repository authority
+/// from arbitrary subject or scope strings.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedLongitudinalContextAccessContext {
     subject_ref: String,
@@ -64,6 +71,10 @@ impl AuthorizedLongitudinalContextAccessContext {
     }
 }
 
+/// Canonical read-only longitudinal context projection.
+///
+/// Evidence links are references only. Evidence Graph objects remain owned by the
+/// Evidence domain and are intentionally not copied or dereferenced here.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GovernedLongitudinalContext {
     pub subject_ref: String,
@@ -72,7 +83,7 @@ pub struct GovernedLongitudinalContext {
     pub evidence_links: Vec<HealthStateEvidenceLink>,
 }
 
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum LongitudinalContextError {
     #[error("authorization denied")]
     AuthorizationDenied,
@@ -82,6 +93,7 @@ pub enum LongitudinalContextError {
     InvalidEvidenceLink,
 }
 
+/// Stateless assembly boundary. It has no persistence and performs no inference.
 pub struct LongitudinalContextAssembly;
 
 impl LongitudinalContextAssembly {
@@ -206,7 +218,7 @@ mod tests {
                 &context(),
                 vec![health_state_entry("hs-1", "person-2")],
                 vec![],
-                vec![]
+                vec![],
             ),
             Err(LongitudinalContextError::SubjectMismatch)
         );
