@@ -107,13 +107,27 @@ impl AuthorizedInterventionContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn tenant_id(&self) -> &str { &self.tenant_id }
-    pub fn data_domain(&self) -> &str { &self.data_domain }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+    pub fn tenant_id(&self) -> &str {
+        &self.tenant_id
+    }
+    pub fn data_domain(&self) -> &str {
+        &self.data_domain
+    }
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -201,20 +215,29 @@ mod tests {
     fn subject_mismatch_is_rejected() {
         let mut candidate = intent();
         candidate.subject_ref = "person-2".into();
-        assert_eq!(InterventionIntentBoundary::validate(&candidate, &context()), Err(InterventionIntentError::SubjectMismatch));
+        assert_eq!(
+            InterventionIntentBoundary::validate(&candidate, &context()),
+            Err(InterventionIntentError::SubjectMismatch)
+        );
     }
 
     #[test]
     fn empty_intended_change_is_rejected() {
         let mut candidate = intent();
         candidate.intended_change.clear();
-        assert_eq!(InterventionIntentBoundary::validate(&candidate, &context()), Err(InterventionIntentError::InvalidIntent));
+        assert_eq!(
+            InterventionIntentBoundary::validate(&candidate, &context()),
+            Err(InterventionIntentError::InvalidIntent)
+        );
     }
 
     #[test]
     fn references_reject_control_characters() {
         let mut candidate = intent();
         candidate.evidence_refs.push("bad\nref".into());
-        assert_eq!(InterventionIntentBoundary::validate(&candidate, &context()), Err(InterventionIntentError::InvalidReference));
+        assert_eq!(
+            InterventionIntentBoundary::validate(&candidate, &context()),
+            Err(InterventionIntentError::InvalidReference)
+        );
     }
 }

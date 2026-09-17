@@ -46,12 +46,24 @@ impl AuthorizedLongitudinalContextAccessContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn scope(&self) -> &str { &self.scope }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+    pub fn scope(&self) -> &str {
+        &self.scope
+    }
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -140,25 +152,49 @@ mod tests {
     }
 
     fn health_state_entry(id: &str, subject: &str) -> HealthStateTimelineEntry {
-        HealthStateTimelineEntry { record_id: id.into(), subject_ref: subject.into(), effective_time: Some("2026-09-01T00:00:00Z".into()), recorded_at: "2026-09-01T01:00:00Z".into() }
+        HealthStateTimelineEntry {
+            record_id: id.into(),
+            subject_ref: subject.into(),
+            effective_time: Some("2026-09-01T00:00:00Z".into()),
+            recorded_at: "2026-09-01T01:00:00Z".into(),
+        }
     }
 
     fn observation_entry(id: &str, subject: &str) -> ObservationTimelineEntry {
-        ObservationTimelineEntry { observation_id: id.into(), subject_ref: subject.into(), observed_at: None, recorded_at: "2026-09-02T00:00:00Z".into() }
+        ObservationTimelineEntry {
+            observation_id: id.into(),
+            subject_ref: subject.into(),
+            observed_at: None,
+            recorded_at: "2026-09-02T00:00:00Z".into(),
+        }
     }
 
     fn link() -> HealthStateEvidenceLink {
         HealthStateEvidenceLink {
-            id: "link-1".into(), schema_version: "1.0.0".into(), health_state_ref: "hs-1".into(), evidence_ref: "claim-1".into(),
+            id: "link-1".into(),
+            schema_version: "1.0.0".into(),
+            health_state_ref: "hs-1".into(),
+            evidence_ref: "claim-1".into(),
             relationship: HealthStateEvidenceRelationship::EvidenceInformsHypothesis,
-            provenance: LinkProvenance { method: "human-curated".into(), created_at: Some("2026-09-02T00:00:00Z".into()), actor_ref: Some("principal-1".into()) },
-            context: None, uncertainty: Some(LinkUncertainty::Reported),
+            provenance: LinkProvenance {
+                method: "human-curated".into(),
+                created_at: Some("2026-09-02T00:00:00Z".into()),
+                actor_ref: Some("principal-1".into()),
+            },
+            context: None,
+            uncertainty: Some(LinkUncertainty::Reported),
         }
     }
 
     #[test]
     fn assembly_is_read_only_and_preserves_evidence_references() {
-        let result = LongitudinalContextAssembly::assemble(&context(), vec![health_state_entry("hs-1", "person-1")], vec![observation_entry("obs-1", "person-1")], vec![link()]).unwrap();
+        let result = LongitudinalContextAssembly::assemble(
+            &context(),
+            vec![health_state_entry("hs-1", "person-1")],
+            vec![observation_entry("obs-1", "person-1")],
+            vec![link()],
+        )
+        .unwrap();
         assert_eq!(result.subject_ref, "person-1");
         assert_eq!(result.health_state_timeline.len(), 1);
         assert_eq!(result.observation_timeline.len(), 1);
@@ -167,18 +203,36 @@ mod tests {
 
     #[test]
     fn cross_subject_projection_is_rejected() {
-        assert_eq!(LongitudinalContextAssembly::assemble(&context(), vec![health_state_entry("hs-1", "person-2")], vec![], vec![]), Err(LongitudinalContextError::SubjectMismatch));
+        assert_eq!(
+            LongitudinalContextAssembly::assemble(
+                &context(),
+                vec![health_state_entry("hs-1", "person-2")],
+                vec![],
+                vec![]
+            ),
+            Err(LongitudinalContextError::SubjectMismatch)
+        );
     }
 
     #[test]
     fn malformed_evidence_reference_is_rejected() {
-        let mut candidate = link(); candidate.evidence_ref.clear();
-        assert_eq!(LongitudinalContextAssembly::assemble(&context(), vec![], vec![], vec![candidate]), Err(LongitudinalContextError::InvalidEvidenceLink));
+        let mut candidate = link();
+        candidate.evidence_ref.clear();
+        assert_eq!(
+            LongitudinalContextAssembly::assemble(&context(), vec![], vec![], vec![candidate]),
+            Err(LongitudinalContextError::InvalidEvidenceLink)
+        );
     }
 
     #[test]
     fn unknown_observation_time_remains_unknown() {
-        let result = LongitudinalContextAssembly::assemble(&context(), vec![], vec![observation_entry("obs-1", "person-1")], vec![]).unwrap();
+        let result = LongitudinalContextAssembly::assemble(
+            &context(),
+            vec![],
+            vec![observation_entry("obs-1", "person-1")],
+            vec![],
+        )
+        .unwrap();
         assert_eq!(result.observation_timeline[0].observed_at, None);
     }
 }

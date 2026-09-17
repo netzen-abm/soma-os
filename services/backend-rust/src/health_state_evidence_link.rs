@@ -108,13 +108,27 @@ impl AuthorizedHealthStateEvidenceLinkContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn tenant_id(&self) -> &str { &self.tenant_id }
-    pub fn data_domain(&self) -> &str { &self.data_domain }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+    pub fn tenant_id(&self) -> &str {
+        &self.tenant_id
+    }
+    pub fn data_domain(&self) -> &str {
+        &self.data_domain
+    }
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]

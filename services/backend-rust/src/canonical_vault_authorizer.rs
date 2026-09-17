@@ -6,9 +6,7 @@
 //! translates the vault operation into the canonical request envelope and
 //! preserves the existing subject-scope precondition before protected execution.
 
-use crate::canonical_authorization::{
-    AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary,
-};
+use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 use crate::local_health_vault_storage::{AuthorizationContext, VaultAction, VaultAuthorizer};
 
 const RESOURCE_TYPE: &str = "health_vault_record";
@@ -37,12 +35,7 @@ impl<B> VaultAuthorizer for CanonicalVaultAuthorizer<B>
 where
     B: CanonicalAuthorizationBoundary,
 {
-    fn authorize(
-        &self,
-        context: &AuthorizationContext,
-        record_id: &str,
-        action: VaultAction,
-    ) -> bool {
+    fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
         if context.principal_ref.trim().is_empty()
             || context.subject_ref.trim().is_empty()
             || context.scope.trim().is_empty()
@@ -61,10 +54,7 @@ where
             data_domain: DATA_DOMAIN.to_owned(),
         };
 
-        matches!(
-            self.boundary.authorize(&request),
-            AuthorizationDecision::Allow
-        )
+        matches!(self.boundary.authorize(&request), AuthorizationDecision::Allow)
     }
 }
 
