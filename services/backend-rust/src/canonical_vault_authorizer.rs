@@ -6,7 +6,9 @@
 //! translates the vault operation into the canonical request envelope and
 //! preserves the existing subject-scope precondition before protected execution.
 
-use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
+use crate::canonical_authorization::{
+    AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary,
+};
 use crate::local_health_vault_storage::{AuthorizationContext, VaultAction, VaultAuthorizer};
 
 const RESOURCE_TYPE: &str = "health_vault_record";
@@ -24,7 +26,10 @@ pub struct CanonicalVaultAuthorizer<B> {
 
 impl<B> CanonicalVaultAuthorizer<B> {
     pub fn new(boundary: B, tenant_id: impl Into<String>) -> Self {
-        Self { boundary, tenant_id: tenant_id.into() }
+        Self {
+            boundary,
+            tenant_id: tenant_id.into(),
+        }
     }
 }
 
@@ -32,8 +37,16 @@ impl<B> VaultAuthorizer for CanonicalVaultAuthorizer<B>
 where
     B: CanonicalAuthorizationBoundary,
 {
-    fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
-        if context.principal_ref.trim().is_empty() || context.subject_ref.trim().is_empty() || context.scope.trim().is_empty() {
+    fn authorize(
+        &self,
+        context: &AuthorizationContext,
+        record_id: &str,
+        action: VaultAction,
+    ) -> bool {
+        if context.principal_ref.trim().is_empty()
+            || context.subject_ref.trim().is_empty()
+            || context.scope.trim().is_empty()
+        {
             return false;
         }
 
@@ -48,7 +61,10 @@ where
             data_domain: DATA_DOMAIN.to_owned(),
         };
 
-        matches!(self.boundary.authorize(&request), AuthorizationDecision::Allow)
+        matches!(
+            self.boundary.authorize(&request),
+            AuthorizationDecision::Allow
+        )
     }
 }
 
@@ -99,19 +115,33 @@ mod tests {
 
     #[test]
     fn only_canonical_allow_authorizes_vault_execution() {
-        for decision in [AuthorizationDecision::Deny, AuthorizationDecision::RequireConsent, AuthorizationDecision::RequireHumanReview, AuthorizationDecision::Degrade] {
-            let boundary = RecordingBoundary { decision, request: RefCell::new(None) };
+        for decision in [
+            AuthorizationDecision::Deny,
+            AuthorizationDecision::RequireConsent,
+            AuthorizationDecision::RequireHumanReview,
+            AuthorizationDecision::Degrade,
+        ] {
+            let boundary = RecordingBoundary {
+                decision,
+                request: RefCell::new(None),
+            };
             let authorizer = CanonicalVaultAuthorizer::new(boundary, "tenant-1");
             assert!(!authorizer.authorize(&context(), "record-1", VaultAction::Read));
         }
-        let boundary = RecordingBoundary { decision: AuthorizationDecision::Allow, request: RefCell::new(None) };
+        let boundary = RecordingBoundary {
+            decision: AuthorizationDecision::Allow,
+            request: RefCell::new(None),
+        };
         let authorizer = CanonicalVaultAuthorizer::new(boundary, "tenant-1");
         assert!(authorizer.authorize(&context(), "record-1", VaultAction::Read));
     }
 
     #[test]
     fn delegated_vault_request_preserves_actor_and_subject() {
-        let boundary = RecordingBoundary { decision: AuthorizationDecision::Allow, request: RefCell::new(None) };
+        let boundary = RecordingBoundary {
+            decision: AuthorizationDecision::Allow,
+            request: RefCell::new(None),
+        };
         let authorizer = CanonicalVaultAuthorizer::new(boundary, "tenant-1");
         assert!(authorizer.authorize(&context(), "record-1", VaultAction::Tombstone));
         let request = authorizer.boundary.request.borrow();
@@ -129,9 +159,16 @@ mod tests {
 
     #[test]
     fn empty_identity_scope_fails_closed_before_policy_evaluation() {
-        let boundary = RecordingBoundary { decision: AuthorizationDecision::Allow, request: RefCell::new(None) };
+        let boundary = RecordingBoundary {
+            decision: AuthorizationDecision::Allow,
+            request: RefCell::new(None),
+        };
         let authorizer = CanonicalVaultAuthorizer::new(boundary, "tenant-1");
-        let context = AuthorizationContext { principal_ref: "clinician-1".into(), subject_ref: "person-1".into(), scope: "".into() };
+        let context = AuthorizationContext {
+            principal_ref: "clinician-1".into(),
+            subject_ref: "person-1".into(),
+            scope: "".into(),
+        };
         assert!(!authorizer.authorize(&context, "record-1", VaultAction::Read));
         assert!(authorizer.boundary.request.borrow().is_none());
     }
