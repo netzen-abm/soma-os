@@ -9,8 +9,6 @@ use crate::canonical_authorization::AuthorizationRequest;
 use crate::health_state_evidence_link::HealthStateEvidenceLink;
 use crate::health_state_repository::HealthStateTimelineEntry;
 use crate::longitudinal_observation_repository::ObservationTimelineEntry;
-use thiserror::Error;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedLongitudinalContextAccessContext {
     subject_ref: String,

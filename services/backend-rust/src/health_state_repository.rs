@@ -26,6 +26,7 @@ const ALLOWED_ENTITY_TYPES: [&str; 8] =
 /// this context only after an authoritative `ALLOW` decision.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedHealthStateAccessContext {
+    principal_ref: String,
     subject_ref: String,
     scope: String,
     capability_id: String,
@@ -38,6 +39,7 @@ impl AuthorizedHealthStateAccessContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, HealthStateRepositoryError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -50,13 +52,18 @@ impl AuthorizedHealthStateAccessContext {
         }
 
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            principal_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             scope: format!("{}:{}", request.tenant_id, request.data_domain),
             capability_id: request.capability_id.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
             action: request.action.clone(),
         })
+    }
+
+    pub fn principal_ref(&self) -> &str {
+        &self.principal_ref
     }
 
     pub fn subject_ref(&self) -> &str {
@@ -188,6 +195,7 @@ where
 
     fn vault_context(context: &AuthorizedHealthStateAccessContext) -> AuthorizationContext {
         AuthorizationContext {
+            principal_ref: context.principal_ref().to_owned(),
             subject_ref: context.subject_ref().to_owned(),
             scope: context.scope().to_owned(),
         }
@@ -362,7 +370,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.state.write".into(),
             resource_type: "health_state".into(),
             resource_id: "record-1".into(),

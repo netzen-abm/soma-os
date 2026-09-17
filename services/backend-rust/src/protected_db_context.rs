@@ -11,6 +11,7 @@ pub const TRUSTED_PERSISTENCE_DB_ROLE: &str = "somaos_persistence";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedProtectedDbContext {
     principal_ref: String,
+    subject_ref: String,
     capability_id: String,
     resource_type: String,
     resource_id: String,
@@ -25,6 +26,7 @@ impl AuthorizedProtectedDbContext {
     ) -> Result<Self, &'static str> {
         let fields = [
             request.principal_ref.as_str(),
+            request.subject_ref.as_str(),
             request.capability_id.as_str(),
             request.resource_type.as_str(),
             request.resource_id.as_str(),
@@ -41,6 +43,7 @@ impl AuthorizedProtectedDbContext {
 
         Ok(Self {
             principal_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             capability_id: request.capability_id.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
@@ -52,6 +55,10 @@ impl AuthorizedProtectedDbContext {
 
     pub fn principal_ref(&self) -> &str {
         &self.principal_ref
+    }
+
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
     }
 
     pub fn capability_id(&self) -> &str {
@@ -124,7 +131,8 @@ mod tests {
     fn context_preserves_authorized_request_scope_read_only() {
         let request = crate::canonical_authorization::AuthorizationRequest {
             principal_ref: "principal-1".into(),
-            capability_id: "health.read".into(),
+            subject_ref: "person-1".into(),
+            capability_id: "health.read".into()
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
             action: "read".into(),
@@ -145,7 +153,8 @@ mod tests {
     fn rejects_empty_or_control_character_scope() {
         let mut request = crate::canonical_authorization::AuthorizationRequest {
             principal_ref: "principal-1".into(),
-            capability_id: "health.read".into(),
+            subject_ref: "person-1".into(),
+            capability_id: "health.read".into()
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
             action: "read".into(),
