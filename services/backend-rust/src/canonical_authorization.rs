@@ -60,7 +60,9 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedProtectedDbContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedProtectedDbContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedProtectedDbContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -92,8 +94,10 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedLongitudinalContextAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
-                .map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedLongitudinalContextAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -103,7 +107,9 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedInterventionContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedInterventionContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedInterventionContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
@@ -113,7 +119,9 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedMeasurementContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => AuthorizedMeasurementContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny),
+            AuthorizationDecision::Allow => {
+                AuthorizedMeasurementContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+            }
             decision => Err(decision),
         }
     }
