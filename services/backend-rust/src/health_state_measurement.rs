@@ -47,10 +47,14 @@ impl MeasurementPlan {
         if self.schema_version != SCHEMA_VERSION {
             return Err(MeasurementError::InvalidMeasurementPlan);
         }
-        for value in
-            [self.unit.as_ref(), self.baseline_ref.as_ref(), self.uncertainty_method.as_ref(), self.actor_ref.as_ref()]
-                .into_iter()
-                .flatten()
+        for value in [
+            self.unit.as_deref(),
+            self.baseline_ref.as_deref(),
+            self.uncertainty_method.as_deref(),
+            self.actor_ref.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
         {
             if value.trim().is_empty() || value.chars().any(char::is_control) {
                 return Err(MeasurementError::InvalidMeasurementPlan);
@@ -75,6 +79,7 @@ impl AuthorizedMeasurementContext {
     pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, MeasurementError> {
         let values = [
             &request.principal_ref,
+            &request.subject_ref,
             &request.capability_id,
             &request.resource_type,
             &request.resource_id,
@@ -86,7 +91,7 @@ impl AuthorizedMeasurementContext {
             return Err(MeasurementError::InvalidAuthorizationContext);
         }
         Ok(Self {
-            subject_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
             capability_id: request.capability_id.clone(),
@@ -96,27 +101,13 @@ impl AuthorizedMeasurementContext {
         })
     }
 
-    pub fn subject_ref(&self) -> &str {
-        &self.subject_ref
-    }
-    pub fn tenant_id(&self) -> &str {
-        &self.tenant_id
-    }
-    pub fn data_domain(&self) -> &str {
-        &self.data_domain
-    }
-    pub fn capability_id(&self) -> &str {
-        &self.capability_id
-    }
-    pub fn resource_type(&self) -> &str {
-        &self.resource_type
-    }
-    pub fn resource_id(&self) -> &str {
-        &self.resource_id
-    }
-    pub fn action(&self) -> &str {
-        &self.action
-    }
+    pub fn subject_ref(&self) -> &str { &self.subject_ref }
+    pub fn tenant_id(&self) -> &str { &self.tenant_id }
+    pub fn data_domain(&self) -> &str { &self.data_domain }
+    pub fn capability_id(&self) -> &str { &self.capability_id }
+    pub fn resource_type(&self) -> &str { &self.resource_type }
+    pub fn resource_id(&self) -> &str { &self.resource_id }
+    pub fn action(&self) -> &str { &self.action }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -131,8 +122,6 @@ pub enum MeasurementError {
     MissingInterventionReference,
 }
 
-/// Canonical boundary for validating a measurement plan before a future
-/// measurement workflow records observations or derives outcomes.
 pub struct MeasurementBoundary;
 
 impl MeasurementBoundary {
@@ -154,7 +143,8 @@ mod tests {
 
     fn request() -> AuthorizationRequest {
         AuthorizationRequest {
-            principal_ref: "person-1".into(),
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
             capability_id: "health.measurement.write".into(),
             resource_type: "health_state_measurement".into(),
             resource_id: "measurement-1".into(),
@@ -183,13 +173,21 @@ mod tests {
             uncertainty_method: Some("reported_uncertainty".into()),
             rationale: "Measure the predefined response metric during the intervention window".into(),
             created_at: "2026-09-16T00:00:00Z".into(),
-            actor_ref: Some("person-1".into()),
+            actor_ref: Some("principal-1".into()),
         }
     }
 
     #[test]
     fn valid_measurement_plan_crosses_boundary() {
         assert!(MeasurementBoundary::validate(&plan(), &context()).is_ok());
+    }
+
+    #[test]
+    fn delegated_actor_does_not_become_subject() {
+        let request = request();
+        let context = AuthorizedMeasurementContext::from_authorized_request(&request).unwrap();
+        assert_eq!(request.principal_ref, "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
     }
 
     #[test]
@@ -203,19 +201,13 @@ mod tests {
     fn missing_intervention_reference_is_rejected() {
         let mut candidate = plan();
         candidate.intervention_ref.clear();
-        assert_eq!(
-            MeasurementBoundary::validate(&candidate, &context()),
-            Err(MeasurementError::InvalidMeasurementPlan)
-        );
+        assert_eq!(MeasurementBoundary::validate(&candidate, &context()), Err(MeasurementError::InvalidMeasurementPlan));
     }
 
     #[test]
     fn measurement_fields_reject_control_characters() {
         let mut candidate = plan();
         candidate.metric = "sleep\nduration".into();
-        assert_eq!(
-            MeasurementBoundary::validate(&candidate, &context()),
-            Err(MeasurementError::InvalidMeasurementPlan)
-        );
+        assert_eq!(MeasurementBoundary::validate(&candidate, &context()), Err(MeasurementError::InvalidMeasurementPlan));
     }
 }
