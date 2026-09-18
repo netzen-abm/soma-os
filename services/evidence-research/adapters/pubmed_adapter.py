@@ -106,9 +106,9 @@ class PubMedAdapter:
             raise PubMedProviderError("Invalid PubMed ESearch response") from exc
         if not ids:
             return []
-        return self._fetch(ids)
+        return self._fetch(ids, query)
 
-    def _fetch(self, ids: list[str]) -> list[SearchResult]:
+    def _fetch(self, ids: list[str], query: Optional[NormalizedResearchQuery] = None) -> list[SearchResult]:
         raw = self._request(
             "efetch.fcgi",
             {"db": "pubmed", "id": ",".join(ids), "retmode": "xml"},
@@ -140,6 +140,8 @@ class PubMedAdapter:
                 provider_id=self.provider_id,
                 provider_record_id=pmid,
                 title=title,
+                source_class=query.source_class if query else "biomedical_literature",
+                geography=query.geography if query else "global",
                 publication_year=year,
                 source_url=verification_url,
                 verification_url=verification_url,
