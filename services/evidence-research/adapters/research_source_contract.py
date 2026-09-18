@@ -36,6 +36,29 @@ class ResearchQuery:
 
 
 @dataclass(frozen=True)
+class ResearchAccessLocation:
+    """Canonical access-location record resolved for a scholarly work."""
+
+    provider_id: str
+    work_identifier: str
+    url: str
+    location_type: str
+    is_open_access: bool
+    license_if_reported: Optional[str] = None
+    version: Optional[str] = None
+    source: Optional[ExternalKnowledgeSource] = None
+
+    def __post_init__(self) -> None:
+        if not self.provider_id.strip():
+            raise ValueError("provider_id is required")
+        if not self.work_identifier.strip():
+            raise ValueError("work_identifier is required")
+        if not self.url.strip():
+            raise ValueError("url is required")
+        if not self.location_type.strip():
+            raise ValueError("location_type is required")
+
+
 class ResearchRecord:
     """Canonical source-derived scholarly record awaiting assessment."""
 
