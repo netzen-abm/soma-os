@@ -2,7 +2,7 @@
 
 ## Status
 
-Design contract. This document defines the shared research-source boundary before provider-specific implementation.
+Design contract. Provider implementations exist; this contract is now the canonical convergence boundary for them.
 
 ## Purpose
 
@@ -381,7 +381,7 @@ Audit records should minimize sensitive query content and should not become a co
 
 ## Initial implementation boundary
 
-This contract deliberately does **not** implement provider clients yet.
+This contract does not require new provider clients. Existing PubMed and OpenAlex implementations are being converged onto the boundary.
 
 The first implementation should establish:
 
