@@ -32,7 +32,7 @@ Normalized source-linked result
 
 ## Query construction
 
-The adapter receives a normalized research query from the SOMA core engine. It must not construct a query from personal health information, names, contact information, user identifiers, or medical records.
+The adapter receives the canonical `ResearchQuery` from `services/evidence-research/adapters/research_source_contract.py` via the SOMA research orchestration boundary. It must not construct a query from personal health information, names, contact information, user identifiers, or medical records.
 
 ## Provider-neutral result
 

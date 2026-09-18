@@ -8,40 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol, Sequence
 
+from research_source_contract import ResearchQuery, ResearchRecord
 
-@dataclass(frozen=True)
-class ResearchQuery:
-    """Normalized query compatible with the current research adapters."""
+ProviderResult = ResearchRecord
 
-    query_id: str
-    terms: str
-    source_class: str
-    geography: str = "global"
-    retmax: int = 20
-
-    def __post_init__(self) -> None:
-        if not self.query_id:
-            raise ValueError("query_id is required")
-        if not self.terms.strip():
-            raise ValueError("terms are required")
-        if not self.source_class:
-            raise ValueError("source_class is required")
-        if self.retmax <= 0:
-            raise ValueError("retmax must be positive")
-
-
-@dataclass(frozen=True)
-class ProviderResult:
-    provider_id: str
-    provider_record_id: str
-    title: str
-    source_class: str
-    geography: str
-    source_url: str
-    verification_url: str
-    publication_year: int | None = None
-    abstract_or_summary: str | None = None
-    identifiers: tuple[str, ...] = ()
 
 
 class ResearchAdapter(Protocol):
@@ -106,6 +76,7 @@ class MultiSourceOrchestrator:
             publication_year=getattr(result, "publication_year", None),
             abstract_or_summary=getattr(result, "abstract_or_summary", None),
             identifiers=identifiers,
+            source=getattr(result, "source", None),
         )
 
     @staticmethod

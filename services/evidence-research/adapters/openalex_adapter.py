@@ -11,36 +11,20 @@ import json
 import os
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
 from external_knowledge_source import ExternalKnowledgeSource
+from research_source_contract import NormalizedResearchQuery, ResearchRecord
 
 BASE_URL = "https://api.openalex.org/"
 
 
-@dataclass(frozen=True)
-class NormalizedResearchQuery:
-    query_id: str
-    terms: str
-    retmax: int = 20
-
-
-@dataclass(frozen=True)
-class SearchResult:
-    provider_id: str
-    provider_record_id: str
-    title: str
-    publication_year: Optional[int]
-    source_url: str
-    verification_url: str
-    abstract_or_summary: Optional[str]
-    source: ExternalKnowledgeSource
-
-
 class OpenAlexProviderError(RuntimeError):
     """A provider/network failure; never interpret this as no evidence."""
+
+
+SearchResult = ResearchRecord
 
 
 class OpenAlexAdapter:
@@ -106,7 +90,7 @@ class OpenAlexAdapter:
         results = payload.get("results")
         if not isinstance(results, list):
             raise OpenAlexProviderError("Invalid OpenAlex works response")
-        return [self._to_result(record) for record in results if isinstance(record, dict)]
+        return [self._to_result(record, query) for record in results if isinstance(record, dict)]
 
     def fetch(self, record_id: str) -> SearchResult:
         if not record_id:
@@ -121,7 +105,7 @@ class OpenAlexAdapter:
         )
         return self._to_result(record)
 
-    def _to_result(self, record: dict) -> SearchResult:
+    def _to_result(self, record: dict, query: Optional[NormalizedResearchQuery] = None) -> SearchResult:
         provider_record_id = str(record.get("id") or "").strip()
         if not provider_record_id:
             raise OpenAlexProviderError("OpenAlex record has no stable identifier")
@@ -150,6 +134,8 @@ class OpenAlexAdapter:
             provider_id=self.provider_id,
             provider_record_id=provider_record_id,
             title=title,
+            source_class=query.source_class if query else "biomedical_literature",
+            geography=query.geography if query else "global",
             publication_year=publication_year,
             source_url=provider_record_id,
             verification_url=verification_url,
