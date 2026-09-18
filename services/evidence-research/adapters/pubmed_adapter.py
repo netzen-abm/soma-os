@@ -13,36 +13,20 @@ import time
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
 from external_knowledge_source import ExternalKnowledgeSource
+from research_source_contract import NormalizedResearchQuery, ResearchRecord
 
 BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
 
-@dataclass(frozen=True)
-class NormalizedResearchQuery:
-    query_id: str
-    terms: str
-    retmax: int = 20
-
-
-@dataclass(frozen=True)
-class SearchResult:
-    provider_id: str
-    provider_record_id: str
-    title: str
-    publication_year: Optional[int]
-    source_url: str
-    verification_url: str
-    abstract_or_summary: Optional[str]
-    source: ExternalKnowledgeSource
-
-
 class PubMedProviderError(RuntimeError):
     """A provider/network failure; never interpret this as no evidence."""
+
+
+SearchResult = ResearchRecord
 
 
 class PubMedAdapter:
