@@ -14,32 +14,33 @@ ResearchProviderAdapter
   verification_url(record_id: ProviderRecordId) -> URL
 ```
 
-## NormalizedResearchQuery
+## Canonical normalized query/result
+
+`services/evidence-research/adapters/research_source_contract.py` is the canonical query/result boundary. Provider adapters MUST import `ResearchQuery` and `ResearchRecord` from that module rather than defining competing normalized models.
 
 ```yaml
-query_id: string
-terms: []
-indication: string|null
-components: []
-outcomes: []
-study_types: []
-publication_start: date|null
-publication_end: date|null
-language: string|null
+ResearchQuery:
+  query_id: string
+  terms: string
+  source_class: string
+  geography: string
+  retmax: integer
+
+ResearchRecord:
+  provider_id: string
+  provider_record_id: string
+  title: string
+  source_class: string
+  geography: string
+  source_url: string
+  verification_url: string
+  publication_year: integer|null
+  abstract_or_summary: string|null
+  identifiers: []
+  source: ExternalKnowledgeSource|null
 ```
 
-## SearchResult
-
-```yaml
-provider_id: string
-provider_record_id: string
-title: string
-publication_year: integer|null
-study_type_hint: string|null
-abstract_or_summary: string|null
-source_url: string
-verification_url: string
-```
+`ProviderResult` in the orchestrator is a compatibility alias to `ResearchRecord`; it is not a second result model.
 
 ## Adapter rules
 
