@@ -5,6 +5,7 @@ or efficacy judgments. Assessment belongs to the core evidence layer.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Protocol, Sequence
 
 from research_source_contract import ResearchQuery, ResearchRecord
@@ -59,7 +60,7 @@ class MultiSourceOrchestrator:
         if not provider_id or not provider_record_id:
             raise ValueError("adapter result must contain provider identity")
 
-        identifiers = tuple
+        identifiers = tuple(
             identifier
             for identifier in (provider_record_id, *getattr(result, "identifiers", ()))
             if isinstance(identifier, str) and identifier.strip()
