@@ -22,6 +22,13 @@ class PolicyKernelTests(unittest.TestCase):
         result = self.kernel.evaluate(self.request)
         self.assertEqual(result.decision, Decision.ALLOW)
 
+    def test_subject_bound_grant_requires_exact_subject(self):
+        grants = {("person-1", "person", "health.read", "health_record", "r-1", "read", "subject-1"): True}
+        request = PolicyRequest("person-1", "person", "health.read", "health_record", "r-1", "read", {}, "subject-1")
+        kernel = PolicyKernel({"capabilities": [{"id": "health.read", "principal_types": ["person"]}]}, grants)
+        self.assertEqual(kernel.evaluate(request).decision, Decision.ALLOW)
+        self.assertEqual(kernel.evaluate(PolicyRequest("person-1", "person", "health.read", "health_record", "r-1", "read", {}, "subject-2")).reason_code, "authorization_required")
+
     def test_different_resource_id_fails_closed(self):
         result = self.kernel.evaluate(self._with_request(resource_id="source-2"))
         self.assertEqual(result.reason_code, "authorization_required")
