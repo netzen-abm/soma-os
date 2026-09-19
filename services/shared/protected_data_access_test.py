@@ -35,7 +35,7 @@ def identity(tenant: str = "tenant-a", domain: str = "personal-health") -> dict[
 
 
 def request(ctx: dict[str, object], resource_id: str = "r-1") -> ProtectedDataRequest:
-    return ProtectedDataRequest(ctx, "health.read", "health_record", resource_id, "read", "tenant-a", "personal-health")
+    return ProtectedDataRequest(ctx, "health.read", "health_record", resource_id, "read", "tenant-a", "personal-health", "person-1")
 
 
 def kernel() -> PolicyKernel:
