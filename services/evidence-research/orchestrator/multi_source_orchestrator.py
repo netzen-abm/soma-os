@@ -49,7 +49,7 @@ def attach_access_locations(
     doi = _doi_from_record(record)
     if not doi:
         return record
-    locations = tuple(resolver.resolve(doi))
+    locations = tuple(record.access_locations) + tuple(resolver.resolve(doi))
     return ResearchRecord(
         provider_id=record.provider_id,
         provider_record_id=record.provider_record_id,
