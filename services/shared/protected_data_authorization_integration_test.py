@@ -40,7 +40,7 @@ def identity() -> dict[str, object]:
 
 
 def request(ctx: dict[str, object], resource_id: str = "r-1") -> ProtectedDataRequest:
-    return ProtectedDataRequest(ctx, "health.read", "health_record", resource_id, "read", "tenant-a", "health", "person-1")
+    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", resource_type="health_record", resource_id=resource_id, action="read", target_tenant_id="tenant-a", target_data_domain="health", subject_ref="person-1")
 
 
 def kernel() -> PolicyKernel:

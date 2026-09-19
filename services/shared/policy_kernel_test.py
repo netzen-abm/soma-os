@@ -15,7 +15,7 @@ class PolicyKernelTests(unittest.TestCase):
         self.kernel = PolicyKernel.from_registry_file(REGISTRY, GRANTS)
         self.request = PolicyRequest(
             principal_id="agent-1", principal_type="agent", capability_id="evidence.research",
-            resource_type="research-source", resource_id="source-1", action="read", context={},
+            resource_type="research-source", resource_id="source-1", action="read", context={}, subject_ref=None,
         )
 
     def test_registered_capability_uses_resource_instance_grant(self):
@@ -24,10 +24,10 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_subject_bound_grant_requires_exact_subject(self):
         grants = {("person-1", "person", "health.read", "health_record", "r-1", "read", "subject-1"): True}
-        request = PolicyRequest("person-1", "person", "health.read", "health_record", "r-1", "read", {}, "subject-1")
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-1")
         kernel = PolicyKernel({"capabilities": [{"id": "health.read", "principal_types": ["person"]}]}, grants)
         self.assertEqual(kernel.evaluate(request).decision, Decision.ALLOW)
-        self.assertEqual(kernel.evaluate(PolicyRequest("person-1", "person", "health.read", "health_record", "r-1", "read", {}, "subject-2")).reason_code, "authorization_required")
+        self.assertEqual(kernel.evaluate(PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-2")).reason_code, "authorization_required")
 
     def test_different_resource_id_fails_closed(self):
         result = self.kernel.evaluate(self._with_request(resource_id="source-2"))
@@ -96,7 +96,7 @@ class PolicyKernelTests(unittest.TestCase):
                 "requires_durable_identity": True,
             },
         }
-        request = PolicyRequest("person-1", "person", "remote.sync", "vault", "v1", "read", {})
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="remote.sync", resource_type="vault", resource_id="v1", action="read", context={}, subject_ref=None)
         grants = {("person-1", "person", "remote.sync", "vault", "v1", "read"): True}
         kernel = PolicyKernel({"capabilities": [capability]}, grants)
         anonymous = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "anonymous_local", "assurance_level": "LOW"}
@@ -105,7 +105,7 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_durable_identity_requirement_cannot_be_satisfied_by_anonymous(self):
         capability = {"id": "share.vault", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": True}}
-        request = PolicyRequest("person-1", "person", "share.vault", "vault", "v1", "share", {})
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="share.vault", resource_type="vault", resource_id="v1", action="share", context={}, subject_ref=None)
         kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "share.vault", "vault", "v1", "share"): True})
         anonymous = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "anonymous_local", "assurance_level": "LOW"}
         result = kernel.evaluate(request, identity_context=anonymous)
@@ -113,7 +113,7 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_insufficient_assurance_fails_closed(self):
         capability = {"id": "high.assurance", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "HIGH", "requires_durable_identity": False}}
-        request = PolicyRequest("person-1", "person", "high.assurance", "resource", "r1", "read", {})
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="high.assurance", resource_type="resource", resource_id="r1", action="read", context={}, subject_ref=None)
         kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "high.assurance", "resource", "r1", "read"): True})
         account = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "authenticated_account", "assurance_level": "SUBSTANTIAL"}
         result = kernel.evaluate(request, identity_context=account)
@@ -129,7 +129,7 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_malformed_identity_requirements_fail_closed(self):
         capability = {"id": "broken", "principal_types": ["person"], "identity_requirements": {"allowed_identity_modes": ["authenticated_account"]}}
-        request = PolicyRequest("person-1", "person", "broken", "resource", "r1", "read", {})
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="broken", resource_type="resource", resource_id="r1", action="read", context={}, subject_ref=None)
         kernel = PolicyKernel({"capabilities": [capability]}, {})
         result = kernel.evaluate(request, identity_context={})
         self.assertEqual(result.reason_code, "invalid_identity_requirements")
