@@ -41,6 +41,14 @@ source_classes:
       role: WHO publications and technical evidence
       verification: https://iris.who.int/
 
+  open_access_resolution:
+    - id: unpaywall
+      geography: global
+      authority: Unpaywall
+      access: public_with_email_requirement
+      role: open-access location resolution by DOI
+      verification: https://unpaywall.org/
+
   systematic_reviews_and_evidence_synthesis:
     - id: cochrane
       geography: global

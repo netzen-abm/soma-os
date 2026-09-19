@@ -1,7 +1,7 @@
-"""Canonical normalized research-source query and result contracts for SOMA.
+"""Canonical normalized research-source query, result, and access contracts for SOMA.
 
 Provider adapters and orchestration consume these shared types. Provider-specific
-modules must not define competing normalized query/result models.
+modules must not define competing normalized query/result/access models.
 """
 
 from __future__ import annotations
@@ -36,6 +36,30 @@ class ResearchQuery:
 
 
 @dataclass(frozen=True)
+class ResearchAccessLocation:
+    """Provider-derived access location; not an evidence-quality judgment."""
+
+    location_id: str
+    source_id: str
+    url: str
+    location_type: str
+    is_open_access: Optional[bool]
+    license_if_reported: Optional[str]
+    version_label: Optional[str] = None
+    retrieved_at: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if not self.location_id.strip():
+            raise ValueError("location_id is required")
+        if not self.source_id.strip():
+            raise ValueError("source_id is required")
+        if not self.url.strip():
+            raise ValueError("url is required")
+        if not self.location_type.strip():
+            raise ValueError("location_type is required")
+
+
+@dataclass(frozen=True)
 class ResearchRecord:
     """Canonical source-derived scholarly record awaiting assessment."""
 
@@ -50,6 +74,7 @@ class ResearchRecord:
     abstract_or_summary: Optional[str] = None
     identifiers: tuple[str, ...] = ()
     source: Optional[ExternalKnowledgeSource] = None
+    access_locations: tuple[ResearchAccessLocation, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.provider_id.strip():
@@ -68,7 +93,8 @@ class ResearchRecord:
             raise ValueError("publication_year is invalid")
 
 
-# Compatibility alias: adapters may expose SearchResult without defining
-# another result contract. New integrations should use ResearchRecord.
+# Compatibility aliases: existing adapters may expose these names without
+# defining competing normalized contracts. New integrations should use the
+# canonical types above.
 SearchResult = ResearchRecord
 NormalizedResearchQuery = ResearchQuery
