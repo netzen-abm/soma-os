@@ -140,9 +140,8 @@ class OpenAlexAdapter:
             source_url=provider_record_id,
             verification_url=verification_url,
             abstract_or_summary=abstract,
-            identifiers=tuple(
-                [f"doi:{doi[len("https://doi.org/"):]}" if doi.startswith("https://doi.org/") else f"doi:{doi}"]
-                if doi else []
+            identifiers=(
+                (f"doi:{doi.removeprefix("https://doi.org/")}",) if doi else ()
             ),
             source=source_contract,
         )
