@@ -1,9 +1,10 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "1.0.0",
   "capabilities": [
     {
       "id": "evidence.research",
       "version": "0.1.0",
+      "domain": "evidence",
       "status": "implemented",
       "maturity": "validated",
       "principal_types": ["agent"],
@@ -15,6 +16,7 @@
     {
       "id": "evidence.cross_paradigm",
       "version": "0.1.0",
+      "domain": "evidence",
       "status": "architecture",
       "maturity": "development",
       "principal_types": ["agent"],
@@ -26,6 +28,7 @@
     {
       "id": "research.contribution",
       "version": "0.1.0",
+      "domain": "research",
       "status": "architecture",
       "maturity": "development",
       "principal_types": ["agent"],
@@ -37,6 +40,7 @@
     {
       "id": "evidence.migration",
       "version": "0.1.0",
+      "domain": "data",
       "status": "implemented",
       "maturity": "validated",
       "principal_types": ["agent"],
@@ -48,6 +52,7 @@
     {
       "id": "agent.platform",
       "version": "0.1.0",
+      "domain": "intelligence",
       "status": "architecture",
       "maturity": "development",
       "principal_types": ["agent"],
@@ -59,6 +64,7 @@
     {
       "id": "protocol.mcp",
       "version": "0.1.0",
+      "domain": "transport",
       "status": "adapter-boundary",
       "maturity": "development",
       "principal_types": ["agent"],
@@ -70,6 +76,7 @@
     {
       "id": "protocol.nostr",
       "version": "0.1.0",
+      "domain": "transport",
       "status": "adapter-boundary",
       "maturity": "development",
       "principal_types": ["agent"],
@@ -81,6 +88,7 @@
     {
       "id": "protocol.web3",
       "version": "0.1.0",
+      "domain": "transport",
       "status": "adapter-boundary",
       "maturity": "planned",
       "principal_types": ["agent"],
@@ -92,6 +100,7 @@
     {
       "id": "identity.decentralized",
       "version": "0.1.0",
+      "domain": "security",
       "status": "adapter-boundary",
       "maturity": "planned",
       "principal_types": ["agent"],
@@ -103,6 +112,7 @@
     {
       "id": "storage.content-addressed",
       "version": "0.1.0",
+      "domain": "data",
       "status": "adapter-boundary",
       "maturity": "planned",
       "principal_types": ["agent"],
@@ -114,6 +124,7 @@
     {
       "id": "intelligence.ai",
       "version": "0.1.0",
+      "domain": "intelligence",
       "status": "optional",
       "maturity": "development",
       "principal_types": ["agent"],
