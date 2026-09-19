@@ -14,6 +14,58 @@ ProviderResult = ResearchRecord
 
 
 
+class ResearchAccessResolver(Protocol):
+    provider_id: str
+
+    def resolve(self, doi: str) -> Sequence[Any]:
+        """Resolve provider-reported access locations for a stable work identifier."""
+        ...
+
+
+def _doi_from_record(record: ResearchRecord) -> str | None:
+    """Return a normalized DOI identifier when the canonical record contains one."""
+    for identifier in record.identifiers:
+        value = identifier.strip()
+        lowered = value.lower()
+        if lowered.startswith("doi:"):
+            return value[4:].strip()
+        if lowered.startswith("https://doi.org/"):
+            return value[len("https://doi.org/"):].strip().strip("/")
+        if lowered.startswith("http://doi.org/"):
+            return value[len("http://doi.org/"):].strip().strip("/")
+    return None
+
+
+def attach_access_locations(
+    record: ResearchRecord,
+    resolver: ResearchAccessResolver,
+) -> ResearchRecord:
+    """Attach provider-derived access locations without changing evidence state.
+
+    This composition boundary is intentionally separate from retrieval and
+    evidence assessment. A resolver failure must be handled by the governing
+    orchestration layer; it must never be represented as evidence absence.
+    """
+    doi = _doi_from_record(record)
+    if not doi:
+        return record
+    locations = tuple(resolver.resolve(doi))
+    return ResearchRecord(
+        provider_id=record.provider_id,
+        provider_record_id=record.provider_record_id,
+        title=record.title,
+        source_class=record.source_class,
+        geography=record.geography,
+        source_url=record.source_url,
+        verification_url=record.verification_url,
+        publication_year=record.publication_year,
+        abstract_or_summary=record.abstract_or_summary,
+        identifiers=record.identifiers,
+        source=record.source,
+        access_locations=locations,
+    )
+
+
 class ResearchAdapter(Protocol):
     provider_id: str
 
