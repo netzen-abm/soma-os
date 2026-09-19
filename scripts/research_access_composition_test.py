@@ -71,7 +71,7 @@ def test_records_without_doi_are_left_unchanged() -> None:
     assert enriched == record
 
 
-def test_existing_access_locations_are_replaced_by_fresh_resolution() -> None:
+def test_existing_access_locations_are_preserved_and_fresh_resolution_appends() -> None:
     existing = ResearchAccessLocation(
         location_id="old",
         source_id="unpaywall",
@@ -92,4 +92,4 @@ def test_existing_access_locations_are_replaced_by_fresh_resolution() -> None:
         access_locations=(existing,),
     )
     enriched = attach_access_locations(record, FakeResolver())
-    assert enriched.access_locations[0].location_id != "old"
+    assert {location.location_id for location in enriched.access_locations} == {"old", "unpaywall:10.1000/example:0"}

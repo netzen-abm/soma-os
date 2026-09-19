@@ -23,7 +23,7 @@ def test_pubmed_source_contract_is_valid_and_provider_scoped() -> None:
     source.validate()
     assert source.source_id == "pubmed"
     assert source.provider == "NCBI PubMed"
-    assert source.identifier_systems == ("PMID",)
+    assert source.identifier_systems == ("PMID", "DOI")
     assert source.quality_status == "NOT_ASSESSED"
     assert source.verification_status == "SOURCE_VERIFIED"
     assert source.source_version is None

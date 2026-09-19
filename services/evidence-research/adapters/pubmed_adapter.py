@@ -64,7 +64,7 @@ class PubMedAdapter:
             retrieved_at=datetime.now(timezone.utc),
             published_at=None,
             entity_types=("biomedical_literature_record",),
-            identifier_systems=("PMID",),
+            identifier_systems=("PMID", "DOI"),
             units=(),
             temporal_model="PUBLICATION_YEAR_OR_PROVIDER_DATE",
             verification_status="SOURCE_VERIFIED",
