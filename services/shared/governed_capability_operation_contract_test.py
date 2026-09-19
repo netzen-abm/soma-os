@@ -76,7 +76,7 @@ class GovernedCapabilityOperationContractTests(unittest.TestCase):
         cls.schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
     def base_operation(self):
-        return {"operation_id": "op-001", "schema_version": "1.0.0", "status": "REQUESTED", "principal_ref": "principal-001", "identity_context_ref": "identity-001", "capability_id": "health.timeline.read", "capability_version": "1.0.0", "action": "read", "resource_type": "health_observation", "purpose": "personal_health_management", "requested_at": "2026-09-11T08:00:00Z"}
+        return {"operation_id": "op-001", "schema_version": "1.0.0", "status": "REQUESTED", "principal_ref": "principal-001", "identity_context_ref": "identity-001", "subject_ref": "subject-001", "capability_id": "health.timeline.read", "capability_version": "1.0.0", "action": "read", "resource_type": "health_observation", "purpose": "personal_health_management", "requested_at": "2026-09-11T08:00:00Z"}
 
     def policy(self, decision="ALLOW"):
         return {"decision": decision, "policy_version": "0.4.0", "decision_ref": "policy-001"}
