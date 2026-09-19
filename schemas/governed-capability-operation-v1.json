@@ -5,7 +5,7 @@
   "description": "Provider-neutral operation envelope composing SOMA identity, capability, policy, protected-data, execution, result, provenance, and audit references.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["operation_id", "schema_version", "status", "principal_ref", "identity_context_ref", "capability_id", "capability_version", "action", "resource_type", "purpose", "requested_at"],
+  "required": ["operation_id", "schema_version", "status", "principal_ref", "identity_context_ref", "subject_ref", "capability_id, "capability_version", "action", "resource_type", "purpose", "requested_at"],
   "properties": {
     "operation_id": {"type": "string", "minLength": 1},
     "correlation_id": {"type": "string", "minLength": 1},
