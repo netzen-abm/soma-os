@@ -136,6 +136,11 @@ class PubMedAdapter:
             if not pmid:
                 continue
             verification_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+            doi_values = [
+                value.text.strip()
+                for value in article.findall(".//ArticleIdList/ArticleId[@IdType=\"doi\"]")
+                if value.text and value.text.strip()
+            ]
             results.append(SearchResult(
                 provider_id=self.provider_id,
                 provider_record_id=pmid,
@@ -146,6 +151,7 @@ class PubMedAdapter:
                 source_url=verification_url,
                 verification_url=verification_url,
                 abstract_or_summary=" ".join(abstract_parts) or None,
+                identifiers=tuple(f"doi:{value}" for value in doi_values),
                 source=source_contract.with_record(
                     source_record_id=pmid,
                     source_url=verification_url,
