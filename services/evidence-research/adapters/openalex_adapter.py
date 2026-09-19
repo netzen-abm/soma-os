@@ -141,8 +141,8 @@ class OpenAlexAdapter:
             verification_url=verification_url,
             abstract_or_summary=abstract,
             identifiers=(
-                (f"doi:{doi.removeprefix("https://doi.org/")}",) if doi else ()
-            ),
+            ("doi:" + doi.removeprefix("https://doi.org/"),) if doi else ()
+        ),
             source=source_contract,
         )
 
