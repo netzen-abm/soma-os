@@ -17,7 +17,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-        cls.grant = ("principal-001", "person", "health.timeline.read", "health_observation", "observation-001", "read")
+        cls.grant = ("principal-001", "person", "subject-001", "health.timeline.read", "health_observation", "observation-001", "read")
         cls.kernel = PolicyKernel(cls.registry, {cls.grant: True})
         cls.boundary = AuthorizationPolicyDecisionBoundary(cls.kernel)
         cls.now = datetime(2026, 9, 12, 8, 0, tzinfo=timezone.utc)
@@ -49,6 +49,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
         value = {
             "principal_id": "principal-001",
             "principal_type": "person",
+            "subject_ref": "subject-001",
             "capability_id": "health.timeline.read",
             "resource_type": "health_observation",
             "resource_id": "observation-001",
