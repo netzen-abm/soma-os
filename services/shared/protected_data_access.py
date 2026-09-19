@@ -17,6 +17,7 @@ class ProtectedDataRequest:
     action: str
     target_tenant_id: str
     target_data_domain: str
+    subject_ref: str
 
 class ProtectedDataAdapter(Protocol):
     def read(self, request: ProtectedDataRequest) -> object: ...
@@ -41,6 +42,7 @@ class ProtectedDataAccess:
             principal_id=principal_id, principal_type=principal_type,
             capability_id=request.capability_id, resource_type=request.resource_type,
             resource_id=request.resource_id, action=request.action, context={},
+            subject_ref=request.subject_ref,
         )
         return self._decision_boundary.authorize(
             request_id=f"protected-data:{request.resource_type}:{request.resource_id}:{request.action}",
@@ -82,5 +84,5 @@ def _valid_request(request: ProtectedDataRequest) -> bool:
         return False
     return all(isinstance(value, str) and value.strip() for value in (
         request.capability_id, request.resource_type, request.resource_id,
-        request.action, request.target_tenant_id, request.target_data_domain,
+        request.action, request.target_tenant_id, request.target_data_domain, request.subject_ref,
     ))

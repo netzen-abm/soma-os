@@ -50,6 +50,7 @@ class AuthorizationPolicyDecisionBoundaryContractTests(unittest.TestCase):
             "request_id": "req-001",
             "principal_id": "principal-001",
             "principal_type": "person",
+            "subject_ref": "subject-001",
             "capability_id": "health.timeline.read",
             "resource_type": "health_observation",
             "resource_id": "observation-001",

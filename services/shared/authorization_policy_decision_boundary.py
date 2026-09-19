@@ -14,6 +14,7 @@ class AuthorizationDecision:
     request_id: str
     principal_id: str
     principal_type: str
+    subject_ref: str | None
     capability_id: str
     resource_type: str
     resource_id: str
@@ -56,7 +57,8 @@ class AuthorizationPolicyDecisionBoundary:
             reason_code = enforcement.reason_code
         return AuthorizationDecision(
             request_id=request_id, principal_id=request.principal_id,
-            principal_type=request.principal_type, capability_id=request.capability_id,
+            principal_type=request.principal_type, subject_ref=request.subject_ref,
+            capability_id=request.capability_id,
             resource_type=request.resource_type, resource_id=request.resource_id,
             action=request.action, tenant_scope_binding=_required_string(target_tenant, "target_tenant"),
             data_domain_scope_binding=_required_string(target_data_domain, "target_data_domain"),
