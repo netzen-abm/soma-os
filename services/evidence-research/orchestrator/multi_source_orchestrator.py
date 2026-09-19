@@ -99,8 +99,13 @@ class OrchestrationResult:
 class MultiSourceOrchestrator:
     """Run routed research searches and deduplicate underlying studies."""
 
-    def __init__(self, adapters: dict[str, ResearchAdapter]) -> None:
+    def __init__(
+        self,
+        adapters: dict[str, ResearchAdapter],
+        access_resolvers: dict[str, ResearchAccessResolver] | None = None,
+    ) -> None:
         self.adapters = adapters
+        self.access_resolvers = access_resolvers or {}
 
     @staticmethod
     def _normalize_result(
@@ -129,6 +134,7 @@ class MultiSourceOrchestrator:
             abstract_or_summary=getattr(result, "abstract_or_summary", None),
             identifiers=identifiers,
             source=getattr(result, "source", None),
+            access_locations=tuple(getattr(result, "access_locations", ())),
         )
 
     @staticmethod
@@ -178,6 +184,14 @@ class MultiSourceOrchestrator:
                         provider_status[provider_id] = "COMPLETED_WITH_RESULTS"
                         for raw_result in found:
                             normalized = self._normalize_result(raw_result, query)
+                            doi = _doi_from_record(normalized)
+                            if doi and self.access_resolvers:
+                                for resolver_id, resolver in self.access_resolvers.items():
+                                    try:
+                                        normalized = attach_access_locations(normalized, resolver)
+                                        provider_status[f"access:{resolver_id}"] = "COMPLETED_WITH_RESULTS" if normalized.access_locations else "COMPLETED_NO_RESULTS"
+                                    except Exception:
+                                        provider_status[f"access:{resolver_id}"] = "PROVIDER_UNAVAILABLE"
                             unique.setdefault(self._dedupe_key(normalized), normalized)
                     except Exception:
                         provider_status[provider_id] = "PROVIDER_UNAVAILABLE"
