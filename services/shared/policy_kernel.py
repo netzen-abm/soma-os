@@ -22,6 +22,7 @@ class PolicyRequest:
     resource_id: str
     action: str
     context: Mapping[str, str]
+    subject_ref: str | None = None
 
 
 @dataclass(frozen=True)
@@ -32,7 +33,7 @@ class PolicyDecision:
 
 
 POLICY_VERSION = "0.4.0"
-GrantKey = tuple[str, str, str, str, str, str]
+GrantKey = tuple[str, str, str, str, str, str, str | None]
 _ASSURANCE_RANK = {"LOW": 0, "SUBSTANTIAL": 1, "HIGH": 2}
 
 
@@ -84,9 +85,14 @@ class PolicyKernel:
             request.resource_type,
             request.resource_id,
             request.action,
+            request.subject_ref,
         )
         if self._grants.get(grant_key) is not True:
-            return self._deny("authorization_required")
+            legacy_key = grant_key[:6]
+            if request.subject_ref is None and self._grants.get(legacy_key) is True:
+                pass
+            else:
+                return self._deny("authorization_required")
 
         if request.context.get("degrade") == "true":
             return PolicyDecision(Decision.DEGRADE, POLICY_VERSION, "degraded_execution_required")
@@ -173,7 +179,9 @@ class PolicyKernel:
             request.principal_id, request.principal_type, request.capability_id,
             request.resource_type, request.resource_id, request.action,
         )
-        return all(isinstance(value, str) and bool(value.strip()) for value in fields)
+        if not all(isinstance(value, str) and bool(value.strip()) for value in fields):
+            return False
+        return request.subject_ref is None or (isinstance(request.subject_ref, str) and bool(request.subject_ref.strip()))
 
     @staticmethod
     def _deny(reason_code: str) -> PolicyDecision:
