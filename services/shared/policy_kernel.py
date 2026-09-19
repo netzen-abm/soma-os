@@ -17,6 +17,7 @@ class Decision(str, Enum):
 class PolicyRequest:
     principal_id: str
     principal_type: str
+    subject_ref: str
     capability_id: str
     resource_type: str
     resource_id: str
@@ -32,7 +33,7 @@ class PolicyDecision:
 
 
 POLICY_VERSION = "0.4.0"
-GrantKey = tuple[str, str, str, str, str, str]
+GrantKey = tuple[str, str, str, str, str, str, str]
 _ASSURANCE_RANK = {"LOW": 0, "SUBSTANTIAL": 1, "HIGH": 2}
 
 
@@ -170,7 +171,7 @@ class PolicyKernel:
         if not isinstance(request.context, Mapping):
             return False
         fields = (
-            request.principal_id, request.principal_type, request.capability_id,
+            request.principal_id, request.principal_type, request.subject_ref, request.capability_id,
             request.resource_type, request.resource_id, request.action,
         )
         return all(isinstance(value, str) and bool(value.strip()) for value in fields)
