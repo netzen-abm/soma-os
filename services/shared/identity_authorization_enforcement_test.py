@@ -9,7 +9,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
     def setUp(self):
         self.registry = {
             "capabilities": [
-                {"id": "health.read", "principal_types": ["person", "agent", "service"]}
+                {"id": "health.read", "version": "1.0.0", "principal_types": ["person", "agent", "service"]}
             ]
         }
         self.principal = ("p-1", "person", "health.read", "record", "r-1", "read", "p-1")
