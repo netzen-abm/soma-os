@@ -66,6 +66,19 @@ def audit_control_plane_wiring(all_files: list[pathlib.Path]) -> list[str]:
                 "services/backend-rust/src/main.rs: legacy_promotion module is wired into the application runtime"
             )
 
+    # The legacy SomaDatabaseManager is retained for tests/archival evidence but
+    # must not be wired into the production runtime. New protected persistence must
+    # use the canonical authorization-bound provider path.
+    if main_rs.exists():
+        main_lines = main_text.splitlines()
+        for index, line in enumerate(main_lines):
+            if re.search(r"^\\s*mod\\s+db_layer\\s*;", line):
+                previous = main_lines[index - 1].strip() if index else ""
+                if previous != "#[cfg(test)]":
+                    findings.append(
+                        "services/backend-rust/src/main.rs: legacy db_layer module must be test-only"
+                    )
+
     # Control-plane implementations may instantiate their own executors.
     # What is forbidden is application/runtime construction outside those
     # explicitly classified migration/control-plane modules.
