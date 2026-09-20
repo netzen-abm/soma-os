@@ -139,6 +139,7 @@ mod tests {
             subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
             capability_version: "1.0.0".into(),
+            capability_version: "1.0.0".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
             action: "read".into(),
