@@ -14,7 +14,7 @@ class PolicyKernelTests(unittest.TestCase):
     def setUp(self):
         self.kernel = PolicyKernel.from_registry_file(REGISTRY, GRANTS)
         self.request = PolicyRequest(
-            principal_id="person-1", principal_type="person", capability_id="evidence.research",
+            principal_id="person-1", principal_type="person", capability_id="evidence.research", capability_version="0.1.0",
             resource_type="research-source", resource_id="source-1", action="read", context={}, subject_ref=None,
         )
 
@@ -41,10 +41,10 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_subject_bound_grant_requires_exact_subject(self):
         grants = {("person-1", "person", "health.read", "health_record", "r-1", "read", "subject-1"): True}
-        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-1")
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-1")
         kernel = PolicyKernel({"capabilities": [{"id": "health.read", "principal_types": ["person"]}]}, grants)
         self.assertEqual(kernel.evaluate(request).decision, Decision.ALLOW)
-        self.assertEqual(kernel.evaluate(PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-2")).reason_code, "authorization_required")
+        self.assertEqual(kernel.evaluate(PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-2")).reason_code, "authorization_required")
 
     def test_different_resource_id_fails_closed(self):
         result = self._evaluate(self._with_request(resource_id="source-2"))
