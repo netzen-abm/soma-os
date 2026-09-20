@@ -45,7 +45,7 @@ def request(ctx: dict[str, object], resource_id: str = "r-1") -> ProtectedDataRe
 
 def kernel() -> PolicyKernel:
     grants: dict[GrantKey, bool] = {("person-1", "person", "health.read", "health_record", "r-1", "read", "person-1"): True}
-    return PolicyKernel({"capabilities": [{"id": "health.read", "principal_types": ["person"]}]}, grants)
+    return PolicyKernel({"capabilities": [{"id": "health.read", "version": "1.0.0", "principal_types": ["person"]}]}, grants)
 
 
 def test_allow_is_the_only_state_that_reaches_adapter() -> None:
