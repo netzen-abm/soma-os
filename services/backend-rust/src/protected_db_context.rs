@@ -175,5 +175,8 @@ mod tests {
         assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
         request.action = "read\n".into();
         assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
+        request.action = "read".into();
+        request.capability_version.clear();
+        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
     }
 }
