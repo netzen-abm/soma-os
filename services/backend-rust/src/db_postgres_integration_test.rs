@@ -11,6 +11,8 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../../../database/migrations/0008_legacy_data_promotion_events.sql"),
     include_str!("../../../database/migrations/0009_legacy_promotion_executor.sql"),
     include_str!("../../../database/migrations/0010_legacy_promotion_preflight.sql"),
+    include_str!("../../../database/migrations/0012_legacy_promotion_executor_privilege_isolation.sql"),
+    include_str!("../../../database/migrations/0013_legacy_preflight_privilege_isolation.sql"),
 ];
 
 static PREPARED: OnceCell<()> = OnceCell::const_new();
@@ -51,6 +53,44 @@ async fn assume_persistence_role(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>)
         .execute(&mut **tx)
         .await
         .expect("PostgreSQL integration test connection must be able to SET ROLE somaos_persistence");
+}
+
+#[tokio::test]
+async fn application_persistence_role_cannot_execute_legacy_control_plane_functions() {
+    let Some(pool) = test_pool().await else {
+        return;
+    };
+    prepare(&pool).await;
+
+    let persistence_preflight = sqlx::query_scalar::<_, bool>(
+        "SELECT has_function_privilege('somaos_persistence', 'public.soma_legacy_promotion_preflight()', 'EXECUTE')",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let persistence_promotion = sqlx::query_scalar::<_, bool>(
+        "SELECT has_function_privilege('somaos_persistence', 'public.soma_apply_legacy_promotion(INTEGER, BIGINT, TEXT, TEXT, TEXT)', 'EXECUTE')",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let migrator_preflight = sqlx::query_scalar::<_, bool>(
+        "SELECT has_function_privilege('somaos_migrator', 'public.soma_legacy_promotion_preflight()', 'EXECUTE')",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let executor_promotion = sqlx::query_scalar::<_, bool>(
+        "SELECT has_function_privilege('somaos_legacy_promotion_executor', 'public.soma_apply_legacy_promotion(INTEGER, BIGINT, TEXT, TEXT, TEXT)', 'EXECUTE')",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    assert!(!persistence_preflight);
+    assert!(!persistence_promotion);
+    assert!(migrator_preflight);
+    assert!(executor_promotion);
 }
 
 #[tokio::test]
