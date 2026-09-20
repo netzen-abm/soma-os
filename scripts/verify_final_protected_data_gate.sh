@@ -49,7 +49,8 @@ for migration in \
   database/migrations/0007_protected_data_rls_constraints.sql \
   database/migrations/0008_legacy_data_promotion_events.sql \
   database/migrations/0009_legacy_promotion_executor.sql \
-  database/migrations/0010_legacy_promotion_preflight.sql; do
+  database/migrations/0010_legacy_promotion_preflight.sql \
+  database/migrations/0012_legacy_promotion_executor_privilege_isolation.sql; do
   "${psql_cmd[@]}" -f "$migration"
 done
 
@@ -109,6 +110,8 @@ DECLARE
     constraint_valid BOOLEAN;
     persistence_can_execute BOOLEAN;
     migrator_can_execute BOOLEAN;
+    persistence_can_execute_promotion BOOLEAN;
+    executor_can_execute_promotion BOOLEAN;
 BEGIN
     SELECT is_nullable INTO tenant_nullable
       FROM information_schema.columns
@@ -135,6 +138,16 @@ BEGIN
         'public.soma_legacy_promotion_preflight()',
         'EXECUTE'
     ) INTO migrator_can_execute;
+    SELECT has_function_privilege(
+        'somaos_persistence',
+        'public.soma_apply_legacy_promotion(INTEGER, BIGINT, TEXT, TEXT, TEXT)',
+        'EXECUTE'
+    ) INTO persistence_can_execute_promotion;
+    SELECT has_function_privilege(
+        'somaos_legacy_promotion_executor',
+        'public.soma_apply_legacy_promotion(INTEGER, BIGINT, TEXT, TEXT, TEXT)',
+        'EXECUTE'
+    ) INTO executor_can_execute_promotion;
 
     IF tenant_nullable <> 'NO' OR domain_nullable <> 'NO' OR NOT COALESCE(constraint_valid, FALSE) THEN
         RAISE EXCEPTION 'final protected-data schema state is incomplete';
@@ -142,6 +155,10 @@ BEGIN
 
     IF persistence_can_execute OR NOT migrator_can_execute THEN
         RAISE EXCEPTION 'legacy preflight privilege boundary is incorrect';
+    END IF;
+
+    IF persistence_can_execute_promotion OR NOT executor_can_execute_promotion THEN
+        RAISE EXCEPTION 'legacy promotion executor privilege boundary is incorrect';
     END IF;
 END
 $$;
@@ -161,4 +178,4 @@ END
 $$;
 SQL
 
-echo "PASS: final protected-data NOT NULL gate and preflight privilege isolation are enforced"
+echo "PASS: final protected-data NOT NULL gate, legacy preflight isolation, and legacy promotion executor isolation are enforced"
