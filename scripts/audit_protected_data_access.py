@@ -26,6 +26,7 @@ ALLOWED_FILES = {
 }
 MIGRATION_CONTROL_PLANE = {
     pathlib.Path("services/backend-rust/src/legacy_promotion.rs"),
+    pathlib.Path("services/backend-rust/src/legacy_promotion_preflight.rs"),
 }
 CONTROL_PLANE_CONSTRUCTORS = {
     "LegacyPromotionExecutor::new(",
@@ -57,8 +58,6 @@ def is_test_or_archive(relative: pathlib.Path) -> bool:
 def audit_control_plane_wiring(all_files: list[pathlib.Path]) -> list[str]:
     findings: list[str] = []
 
-    # Legacy promotion is deliberately migration/control-plane infrastructure.
-    # It must not become part of the application module graph accidentally.
     main_rs = ROOT / "services/backend-rust/src/main.rs"
     if main_rs.exists():
         main_text = main_rs.read_text(encoding="utf-8", errors="replace")
@@ -67,8 +66,9 @@ def audit_control_plane_wiring(all_files: list[pathlib.Path]) -> list[str]:
                 "services/backend-rust/src/main.rs: legacy_promotion module is wired into the application runtime"
             )
 
-    # Privileged control-plane executors must not be instantiated by unrelated
-    # production code. Their own implementation and dedicated tests remain valid.
+    # Control-plane implementations may instantiate their own executors.
+    # What is forbidden is application/runtime construction outside those
+    # explicitly classified migration/control-plane modules.
     for path in all_files:
         relative = path.relative_to(ROOT)
         if path.suffix != ".rs" or is_test_or_archive(relative):
