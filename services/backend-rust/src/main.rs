@@ -3,7 +3,6 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
-use sqlx::postgres::PgPoolOptions;
 use std::{env, sync::Arc};
 use tokio::net::TcpListener;
 
