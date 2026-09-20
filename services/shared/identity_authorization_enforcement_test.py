@@ -12,7 +12,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
                 {"id": "health.read", "principal_types": ["person", "agent", "service"]}
             ]
         }
-        self.principal = ("p-1", "person", "health.read", "record", "r-1", "read")
+        self.principal = ("p-1", "person", "health.read", "record", "r-1", "read", "p-1")
         self.kernel = PolicyKernel(self.registry, {self.principal: True})
         self.context = self._context("authenticated_account")
 
@@ -40,10 +40,19 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
     def request(self, **overrides):
         values = dict(
             principal_id="p-1", principal_type="person", capability_id="health.read",
-            resource_type="record", resource_id="r-1", action="read", context={}
+            resource_type="record", resource_id="r-1", action="read", context={}, subject_ref="p-1"
         )
         values.update(overrides)
-        return PolicyRequest(**values)
+        return PolicyRequest(
+            principal_id=values["principal_id"],
+            principal_type=values["principal_type"],
+            capability_id=values["capability_id"],
+            resource_type=values["resource_type"],
+            resource_id=values["resource_id"],
+            action=values["action"],
+            context=values["context"],
+            subject_ref=values["subject_ref"],
+        )
 
     def evaluate(self, context=None, tenant="tenant-a", domain="health", request=None, metadata=None, now=None):
         return enforce_authorized_operation(
