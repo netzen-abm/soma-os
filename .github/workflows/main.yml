@@ -155,6 +155,9 @@ jobs:
       - name: Audit database runtime credential separation
         run: python scripts/audit_database_runtime_credentials.py
 
+      - name: Audit capability registry convergence
+        run: python scripts/audit_capability_registry_convergence.py
+
   postgres-security-integration:
     name: PostgreSQL protected-data isolation tests
     needs: code-audit
