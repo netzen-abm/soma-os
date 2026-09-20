@@ -40,7 +40,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
     def request(self, **overrides):
         values = dict(
             principal_id="p-1", principal_type="person", capability_id="health.read",
-            resource_type="record", resource_id="r-1", action="read", context={}, subject_ref=None
+            resource_type="record", resource_id="r-1", action="read", context={}, subject_ref="p-1"
         )
         values.update(overrides)
         return PolicyRequest(**values)
