@@ -12,7 +12,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
                 {"id": "health.read", "principal_types": ["person", "agent", "service"]}
             ]
         }
-        self.principal = ("p-1", "person", "health.read", "record", "r-1", "read")
+        self.principal = ("p-1", "person", "health.read", "record", "r-1", "read", "p-1")
         self.kernel = PolicyKernel(self.registry, {self.principal: True})
         self.context = self._context("authenticated_account")
 
