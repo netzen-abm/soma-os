@@ -96,12 +96,19 @@ COMMIT;
 SQL
 "${psql_cmd[@]}" -f database/migrations/0011_final_protected_data_not_null_gate.sql
 
+# Apply the post-gate privilege hardening. The application persistence role
+# must lose access to the global SECURITY DEFINER preflight; the migration role
+# retains the capability needed for migration/control-plane verification.
+"${psql_cmd[@]}" -f database/migrations/0013_legacy_preflight_privilege_isolation.sql
+
 "${psql_cmd[@]}" <<'SQL'
 DO $$
 DECLARE
     tenant_nullable TEXT;
     domain_nullable TEXT;
     constraint_valid BOOLEAN;
+    persistence_can_execute BOOLEAN;
+    migrator_can_execute BOOLEAN;
 BEGIN
     SELECT is_nullable INTO tenant_nullable
       FROM information_schema.columns
@@ -118,8 +125,23 @@ BEGIN
      WHERE conrelid = 'public.anonymized_user_vitals'::regclass
        AND conname = 'anonymized_user_vitals_protected_scope_required';
 
+    SELECT has_function_privilege(
+        'somaos_persistence',
+        'public.soma_legacy_promotion_preflight()',
+        'EXECUTE'
+    ) INTO persistence_can_execute;
+    SELECT has_function_privilege(
+        'somaos_migrator',
+        'public.soma_legacy_promotion_preflight()',
+        'EXECUTE'
+    ) INTO migrator_can_execute;
+
     IF tenant_nullable <> 'NO' OR domain_nullable <> 'NO' OR NOT COALESCE(constraint_valid, FALSE) THEN
         RAISE EXCEPTION 'final protected-data schema state is incomplete';
+    END IF;
+
+    IF persistence_can_execute OR NOT migrator_can_execute THEN
+        RAISE EXCEPTION 'legacy preflight privilege boundary is incorrect';
     END IF;
 END
 $$;
@@ -139,4 +161,4 @@ END
 $$;
 SQL
 
-echo "PASS: final protected-data NOT NULL gate is enforced"
+echo "PASS: final protected-data NOT NULL gate and preflight privilege isolation are enforced"
