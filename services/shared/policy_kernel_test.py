@@ -76,7 +76,7 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_invalid_capability_principal_types_fail_closed(self):
         kernel = PolicyKernel({"capabilities": [{"id": "broken.capability", "version": "1.0.0"}]}, {})
-        result = kernel.evaluate(self._with_request(capability_id="broken.capability"))
+        result = kernel.evaluate(self._with_request(capability_id="broken.capability", capability_version="1.0.0"))
         self.assertEqual(result.reason_code, "invalid_capability_principal_types")
 
     def test_missing_identity_fails_closed(self):
