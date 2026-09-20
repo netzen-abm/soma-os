@@ -39,6 +39,10 @@ class PolicyKernelTests(unittest.TestCase):
         result = self.kernel.evaluate(self.request, identity_context=identity)
         self.assertEqual(result.decision, Decision.ALLOW)
 
+    def test_capability_version_mismatch_fails_closed(self):
+        result = self._evaluate(self._with_request(capability_version="9.9.9"))
+        self.assertEqual(result.reason_code, "capability_version_mismatch")
+
     def test_subject_bound_grant_requires_exact_subject(self):
         grants = {("person-1", "person", "health.read", "health_record", "r-1", "read", "subject-1"): True}
         request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-1")
