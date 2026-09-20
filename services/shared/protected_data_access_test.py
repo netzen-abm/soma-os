@@ -35,7 +35,7 @@ def identity(tenant: str = "tenant-a", domain: str = "personal-health") -> dict[
 
 
 def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1") -> ProtectedDataRequest:
-    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", resource_type="health_record", resource_id=resource_id, action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
+    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
 
 
 def kernel() -> PolicyKernel:
@@ -93,7 +93,7 @@ def test_unverified_identity_never_reaches_adapter() -> None:
 
 def test_invalid_request_never_reaches_adapter() -> None:
     adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", resource_type="health_record", resource_id="", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1")
+    bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1")
     try: access.read(bad)
     except PermissionError as exc: assert str(exc) == "invalid_protected_data_request"
     else: raise AssertionError("expected denial")
