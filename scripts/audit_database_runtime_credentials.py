@@ -28,7 +28,7 @@ def main() -> int:
     findings: list[str] = []
 
     kernel_match = re.search(
-        r"(?ms)^  somaos-kernel:\\n.*?^  showcase-brochure:",
+        r"(?ms)^  somaos-kernel:\n.*?^  showcase-brochure:",
         text,
     )
     if not kernel_match:
@@ -44,12 +44,12 @@ def main() -> int:
                 findings.append(
                     f"docker-compose.yml: forbidden privileged database role appears in application runtime service: {role}"
                 )
-        if re.search(r"DATABASE_URL=.*postgres(?:ql)?://[^\\s}]+:[^\\s}@]+@", kernel):
+        if re.search(r"DATABASE_URL=.*postgres(?:ql)?://[^\s}]+:[^\s}@]+@", kernel):
             findings.append(
                 "docker-compose.yml: application DATABASE_URL contains a literal password"
             )
 
-    db_match = re.search(r"(?ms)^  somaos-db:\\n.*?^  somaos-kernel:", text)
+    db_match = re.search(r"(?ms)^  somaos-db:\n.*?^  somaos-kernel:", text)
     if not db_match:
         findings.append("docker-compose.yml: somaos-db service could not be located")
     else:
