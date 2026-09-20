@@ -43,7 +43,16 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
             resource_type="record", resource_id="r-1", action="read", context={}, subject_ref="p-1"
         )
         values.update(overrides)
-        return PolicyRequest(**values)
+        return PolicyRequest(
+            principal_id=values["principal_id"],
+            principal_type=values["principal_type"],
+            capability_id=values["capability_id"],
+            resource_type=values["resource_type"],
+            resource_id=values["resource_id"],
+            action=values["action"],
+            context=values["context"],
+            subject_ref=values["subject_ref"],
+        )
 
     def evaluate(self, context=None, tenant="tenant-a", domain="health", request=None, metadata=None, now=None):
         return enforce_authorized_operation(
