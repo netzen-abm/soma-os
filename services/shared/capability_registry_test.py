@@ -43,7 +43,8 @@ class CapabilityRegistryTests(unittest.TestCase):
             requirements = capability["identity_requirements"]
             for field in schema["$defs"]["identity_requirements"]["required"]:
                 self.assertIn(field, requirements, msg=f"missing identity requirement {field}: {capability.get('id')}")
-            self.assertTrue(requirements["applies_to_principal_types"])\n            self.assertEqual(set(requirements["applies_to_principal_types"]), set(capability["principal_types"]))
+            self.assertTrue(requirements["applies_to_principal_types"])
+            self.assertEqual(set(requirements["applies_to_principal_types"]), set(capability["principal_types"]))
             self.assertTrue(set(requirements["applies_to_principal_types"]).issubset(
                 {"person", "agent", "service", "application", "device"}
             ))
