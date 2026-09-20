@@ -14,6 +14,9 @@ REGISTRY = ROOT / "services/shared/capability_registry.json"
 MAPPING = ROOT / "schemas/evidence-canonical-mapping-v1.json"
 FIXTURES = ROOT / "scripts/fixtures/evidence_canonical_mapping_pilot.json"
 
+CANONICAL_REGISTRY_SCHEMA_VERSION = "1.0.0"
+VALID_PRINCIPAL_TYPES = {"person", "agent", "service", "application", "device"}
+
 REQUIRED_CAPABILITY_FIELDS = {
     "id", "version", "status", "maturity", "principal_types", "policy", "adapters", "surfaces"
 }
@@ -30,6 +33,8 @@ def main() -> int:
     if not REGISTRY.exists():
         fail(f"missing capability registry: {REGISTRY}")
     registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+    if registry.get("schema_version") != CANONICAL_REGISTRY_SCHEMA_VERSION:
+        fail("capability registry must use canonical schema version 1.0.0")
     capabilities = registry.get("capabilities")
     if not isinstance(capabilities, list) or not capabilities:
         fail("capability registry must contain a non-empty capabilities list")
@@ -42,6 +47,13 @@ def main() -> int:
         if cid in ids:
             fail(f"duplicate capability id: {cid}")
         ids.add(cid)
+        if not isinstance(capability["principal_types"], list) or not capability["principal_types"] or not set(capability["principal_types"]) <= VALID_PRINCIPAL_TYPES:
+            fail(f"capability has invalid principal_types: {cid}")
+        requirements = capability.get("identity_requirements")
+        if not isinstance(requirements, dict):
+            fail(f"capability has invalid identity_requirements: {cid}")
+        if requirements.get("applies_to_principal_types") != capability["principal_types"]:
+            fail(f"capability identity requirements must cover exactly its principal types: {cid}")
         if not capability["principal_types"]:
             fail(f"capability has empty principal_types: {cid}")
         if not isinstance(capability["policy"], list) or not capability["policy"]:

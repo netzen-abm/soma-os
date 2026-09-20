@@ -23,6 +23,18 @@ def iter_python_files():
 def has_subject_keyword(call: ast.Call) -> bool:
     return any(keyword.arg == "subject_ref" for keyword in call.keywords)
 
+def is_policy_request_call(node: ast.Call) -> bool:
+    return isinstance(node.func, ast.Name) and node.func.id == "PolicyRequest"
+
+def is_protected_data_request_call(node: ast.Call) -> bool:
+    return isinstance(node.func, ast.Name) and node.func.id == "ProtectedDataRequest"
+
+def is_known_non_protected_policy_test_fixture(path: Path, node: ast.Call) -> bool:
+    # PolicyRequest construction is itself a governed contract. Test fixtures
+    # must therefore carry the explicit subject field even when the test
+    # intentionally supplies None for a non-subject-bound capability.
+    return False
+
 def audit_python() -> None:
     policy_calls = protected_calls = 0
     for path in iter_python_files():
