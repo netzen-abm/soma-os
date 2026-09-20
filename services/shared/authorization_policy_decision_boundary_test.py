@@ -89,6 +89,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
         self.assertEqual(result.enforcement_version, "1.1.0")
         self.assertEqual(result.decision_time, "2026-09-12T08:00:00Z")
         self.assertEqual(result.subject_ref, "subject-001")
+        self.assertEqual(result.capability_version, "1.0.0")
 
     def test_wrong_principal_is_denied(self):
         result = self.authorize(request=self.request(principal_id="principal-evil"))
