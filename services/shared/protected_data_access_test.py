@@ -91,6 +91,15 @@ def test_unverified_identity_never_reaches_adapter() -> None:
     assert adapter.calls == 0
 
 
+def test_capability_version_mismatch_never_reaches_adapter() -> None:
+    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
+    bad = request(identity()); bad = ProtectedDataRequest(**{**bad.__dict__, "capability_version": "9.9.9"})
+    try: access.read(bad)
+    except PermissionError as exc: assert str(exc) == "policy_capability_version_mismatch"
+    else: raise AssertionError("expected denial")
+    assert adapter.calls == 0
+
+
 def test_invalid_request_never_reaches_adapter() -> None:
     adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
     bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1")
