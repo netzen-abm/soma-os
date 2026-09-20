@@ -109,6 +109,21 @@ pub trait CanonicalAuthorizationBoundary {
         }
     }
 
+    /// Mint a longitudinal observation repository access context only from an
+    /// authoritative ALLOW and a structurally valid governed request.
+    fn authorize_longitudinal_observation_context(
+        &self,
+        request: &AuthorizationRequest,
+    ) -> Result<crate::longitudinal_observation_repository::AuthorizedObservationAccessContext, AuthorizationDecision> {
+        match self.authorize(request) {
+            AuthorizationDecision::Allow => {
+                crate::longitudinal_observation_repository::AuthorizedObservationAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
+            }
+            decision => Err(decision),
+        }
+    }
+
     /// Mint an intervention context only from an authoritative ALLOW and a
     /// structurally valid governed request. This does not authorize execution.
     fn authorize_intervention_context(
@@ -284,6 +299,37 @@ mod tests {
         let mut request = request();
         request.data_domain = "".into();
         assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
+    }
+
+    #[test]
+    fn longitudinal_observation_context_requires_authoritative_allow() {
+        let mut request = request();
+        request.capability_id = "health.timeline.read".into();
+        request.resource_type = "health_observation".into();
+        request.resource_id = "observation-1".into();
+        request.action = "read".into();
+        let context = AllowBoundary.authorize_longitudinal_observation_context(&request).unwrap();
+        assert_eq!(context.subject_ref(), "person-1");
+        assert_eq!(context.capability_id(), "health.timeline.read");
+        assert_eq!(context.capability_version(), "1.0.0");
+        assert_eq!(context.resource_id(), "observation-1");
+        assert_eq!(
+            DenyBoundary.authorize_longitudinal_observation_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
+    }
+
+    #[test]
+    fn malformed_allow_cannot_mint_longitudinal_observation_context() {
+        let mut request = request();
+        request.capability_id = "health.timeline.read".into();
+        request.resource_type = "health_observation".into();
+        request.resource_id = "observation-1".into();
+        request.action = "".into();
+        assert_eq!(
+            AllowBoundary.authorize_longitudinal_observation_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 
     #[test]
