@@ -62,6 +62,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
             principal_type=value["principal_type"],
             subject_ref=value["subject_ref"],
             capability_id=value["capability_id"],
+            capability_version=value["capability_version"],
             resource_type=value["resource_type"],
             resource_id=value["resource_id"],
             action=value["action"],
