@@ -169,6 +169,7 @@ mod tests {
         assert_eq!(request.principal_ref, "principal-1");
         assert_eq!(request.subject_ref, "person-1");
         assert_eq!(request.capability_id, "health.read");
+        assert_eq!(request.capability_version, "1.0.0");
         assert_eq!(request.resource_type, "health_record");
         assert_eq!(request.resource_id, "record-1");
         assert_eq!(request.action, "read");
@@ -212,6 +213,7 @@ mod tests {
         assert_eq!(context.principal_ref(), "principal-1");
         assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.capability_id(), "health.read");
+        assert_eq!(context.capability_version(), "1.0.0");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
         assert_eq!(context.action(), "read");
