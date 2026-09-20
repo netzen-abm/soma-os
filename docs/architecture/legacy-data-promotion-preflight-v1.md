@@ -52,9 +52,9 @@ Migration `0010_legacy_promotion_preflight.sql` creates a dedicated `NOLOGIN`, `
 
 `public.soma_legacy_promotion_preflight()`
 
-The function uses a fixed `search_path = pg_catalog`, schema-qualified protected tables, and no mutation statements. Execution is revoked from `PUBLIC` and granted only to `somaos_persistence`.
+The function uses a fixed `search_path = pg_catalog`, schema-qualified protected tables, and no mutation statements. Execution is revoked from `PUBLIC` and, after the privilege-isolation migration, is granted only to the migration/control-plane identity. Ordinary application persistence does not retain `EXECUTE`.
 
-This is a verification capability, not an authorization mechanism. Invocation must remain behind the canonical identity → authorization → trusted persistence boundary.
+This is a verification capability, not an authorization mechanism. Invocation belongs to the migration/control-plane lifecycle and must not become an ordinary caller-facing protected-data API.
 
 ## Why a privileged read-only function is required
 
@@ -70,7 +70,7 @@ The Rust adapter exposes:
 - `LegacyPromotionPreflightExecutor::run()`
 - `LegacyPromotionPreflight::require_pass()`
 
-The adapter accepts no tenant, data-domain, hash, transport, model, agent, or caller scope. It is read-only and delegates verification to the canonical PostgreSQL function.
+The adapter is retained as migration/control-plane verification code and is excluded from the production application module graph. It accepts no tenant, data-domain, hash, transport, model, agent, or caller scope. It is read-only and delegates verification to the canonical PostgreSQL function.
 
 ## Final NOT NULL separation
 
@@ -96,10 +96,10 @@ The architecture remains:
 IdentityContext
   → Identity Authorization Enforcement
   → Policy Kernel
-  → ProtectedDataAccess / approved migration capability
-  → trusted persistence identity
+  → migration/control-plane authorization
+  → trusted migration identity
   → preflight verification
   → final schema gate
 ```
 
-The Policy Kernel remains the authorization authority. PostgreSQL RLS and constraints remain defense-in-depth. The preflight does not promote evidence, reinterpret classifications, or create authorization.
+The Policy Kernel remains the authorization authority for application capabilities. The preflight does not promote evidence, reinterpret classifications, or create authorization.
