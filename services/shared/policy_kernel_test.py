@@ -6,7 +6,7 @@ from policy_kernel import Decision, PolicyKernel, PolicyRequest
 
 REGISTRY = Path(__file__).with_name("capability_registry.json")
 GRANTS = {
-    ("agent-1", "agent", "evidence.research", "research-source", "source-1", "read"): True,
+    ("person-1", "person", "evidence.research", "research-source", "source-1", "read"): True,
 }
 
 
@@ -14,7 +14,7 @@ class PolicyKernelTests(unittest.TestCase):
     def setUp(self):
         self.kernel = PolicyKernel.from_registry_file(REGISTRY, GRANTS)
         self.request = PolicyRequest(
-            principal_id="agent-1", principal_type="agent", capability_id="evidence.research",
+            principal_id="person-1", principal_type="person", capability_id="evidence.research",
             resource_type="research-source", resource_id="source-1", action="read", context={}, subject_ref=None,
         )
 
@@ -34,11 +34,11 @@ class PolicyKernelTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "authorization_required")
 
     def test_different_identity_fails_closed(self):
-        result = self.kernel.evaluate(self._with_request(principal_id="agent-2"))
+        result = self.kernel.evaluate(self._with_request(principal_id="person-2"))
         self.assertEqual(result.reason_code, "authorization_required")
 
     def test_principal_type_mismatch_fails_closed(self):
-        result = self.kernel.evaluate(self._with_request(principal_type="user"))
+        result = self.kernel.evaluate(self._with_request(principal_type="agent"))
         self.assertEqual(result.reason_code, "principal_type_mismatch")
 
     def test_resource_type_is_part_of_grant(self):
