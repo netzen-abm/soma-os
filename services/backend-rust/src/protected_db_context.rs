@@ -13,6 +13,7 @@ pub struct AuthorizedProtectedDbContext {
     principal_ref: String,
     subject_ref: String,
     capability_id: String,
+    capability_version: String,
     resource_type: String,
     resource_id: String,
     action: String,
@@ -45,6 +46,7 @@ impl AuthorizedProtectedDbContext {
             principal_ref: request.principal_ref.clone(),
             subject_ref: request.subject_ref.clone(),
             capability_id: request.capability_id.clone(),
+            capability_version: request.capability_version.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
             action: request.action.clone(),
@@ -63,6 +65,9 @@ impl AuthorizedProtectedDbContext {
 
     pub fn capability_id(&self) -> &str {
         &self.capability_id
+    }
+    pub fn capability_version(&self) -> &str {
+        &self.capability_version
     }
 
     pub fn resource_type(&self) -> &str {
@@ -133,6 +138,7 @@ mod tests {
             principal_ref: "principal-1".into(),
             subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
+            capability_version: "1.0.0".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
             action: "read".into(),
@@ -155,6 +161,7 @@ mod tests {
         let mut request = crate::canonical_authorization::AuthorizationRequest {
             principal_ref: "principal-1".into(),
             subject_ref: "person-1".into(),
+            capability_version: "1.0.0".into(),
             capability_id: "health.read".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),

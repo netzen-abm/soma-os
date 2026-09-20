@@ -51,6 +51,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
             "principal_type": "person",
             "subject_ref": "subject-001",
             "capability_id": "health.timeline.read",
+            "capability_version": "1.0.0",
             "resource_type": "health_observation",
             "resource_id": "observation-001",
             "action": "read",
@@ -62,6 +63,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
             principal_type=value["principal_type"],
             subject_ref=value["subject_ref"],
             capability_id=value["capability_id"],
+            capability_version=value["capability_version"],
             resource_type=value["resource_type"],
             resource_id=value["resource_id"],
             action=value["action"],
@@ -87,6 +89,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
         self.assertEqual(result.enforcement_version, "1.1.0")
         self.assertEqual(result.decision_time, "2026-09-12T08:00:00Z")
         self.assertEqual(result.subject_ref, "subject-001")
+        self.assertEqual(result.capability_version, "1.0.0")
 
     def test_wrong_principal_is_denied(self):
         result = self.authorize(request=self.request(principal_id="principal-evil"))

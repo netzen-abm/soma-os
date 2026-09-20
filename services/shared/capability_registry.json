@@ -594,6 +594,142 @@
         "mobile",
         "future-client-surfaces"
       ]
+    },
+    {
+      "id": "health.vault.read",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance"
+      ],
+      "adapters": [
+        "health-vault"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.vault.write",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance"
+      ],
+      "adapters": [
+        "health-vault"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.vault.list",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance"
+      ],
+      "adapters": [
+        "health-vault"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.vault.tombstone",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance"
+      ],
+      "adapters": [
+        "health-vault"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
     }
   ]
 }

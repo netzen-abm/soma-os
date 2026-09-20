@@ -20,6 +20,7 @@ pub struct AuthorizedObservationAccessContext {
     subject_ref: String,
     scope: String,
     capability_id: String,
+    capability_version: String,
     resource_type: String,
     resource_id: String,
     action: String,
@@ -31,6 +32,7 @@ impl AuthorizedObservationAccessContext {
             &request.principal_ref,
             &request.subject_ref,
             &request.capability_id,
+            &request.capability_version,
             &request.resource_type,
             &request.resource_id,
             &request.action,
@@ -48,6 +50,7 @@ impl AuthorizedObservationAccessContext {
             subject_ref: request.subject_ref.clone(),
             scope: format!("{}:{}", request.tenant_id, request.data_domain),
             capability_id: request.capability_id.clone(),
+            capability_version: request.capability_version.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
             action: request.action.clone(),
@@ -68,6 +71,9 @@ impl AuthorizedObservationAccessContext {
 
     pub fn capability_id(&self) -> &str {
         &self.capability_id
+    }
+    pub fn capability_version(&self) -> &str {
+        &self.capability_version
     }
 
     pub fn resource_type(&self) -> &str {
@@ -190,6 +196,7 @@ mod tests {
             principal_ref: "principal-1".into(),
             subject_ref: "person-1".into(),
             capability_id: "health.read".into(),
+            capability_version: "1.0.0".into(),
             resource_type: "health_record".into(),
             resource_id: "record-1".into(),
             action: "read".into(),

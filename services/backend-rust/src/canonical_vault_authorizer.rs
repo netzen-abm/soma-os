@@ -47,6 +47,7 @@ where
             principal_ref: context.principal_ref.clone(),
             subject_ref: context.subject_ref.clone(),
             capability_id: capability_id(action).to_owned(),
+            capability_version: "1.0.0".to_owned(),
             resource_type: RESOURCE_TYPE.to_owned(),
             resource_id: record_id.to_owned(),
             action: action_name(action).to_owned(),

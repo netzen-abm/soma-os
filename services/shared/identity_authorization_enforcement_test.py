@@ -9,7 +9,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
     def setUp(self):
         self.registry = {
             "capabilities": [
-                {"id": "health.read", "principal_types": ["person", "agent", "service"]}
+                {"id": "health.read", "version": "1.0.0", "principal_types": ["person", "agent", "service"]}
             ]
         }
         self.principal = ("p-1", "person", "health.read", "record", "r-1", "read", "p-1")
@@ -39,7 +39,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
 
     def request(self, **overrides):
         values = dict(
-            principal_id="p-1", principal_type="person", capability_id="health.read",
+            principal_id="p-1", principal_type="person", capability_id="health.read", capability_version="1.0.0",
             resource_type="record", resource_id="r-1", action="read", context={}, subject_ref="p-1"
         )
         values.update(overrides)
@@ -47,6 +47,7 @@ class IdentityAuthorizationEnforcementTests(unittest.TestCase):
             principal_id=values["principal_id"],
             principal_type=values["principal_type"],
             capability_id=values["capability_id"],
+            capability_version=values["capability_version"],
             resource_type=values["resource_type"],
             resource_id=values["resource_id"],
             action=values["action"],

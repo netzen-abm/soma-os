@@ -76,6 +76,7 @@ pub struct AuthorizedInterventionContext {
     tenant_id: String,
     data_domain: String,
     capability_id: String,
+    capability_version: String,
     resource_type: String,
     resource_id: String,
     action: String,
@@ -87,6 +88,7 @@ impl AuthorizedInterventionContext {
             &request.principal_ref,
             &request.subject_ref,
             &request.capability_id,
+            &request.capability_version,
             &request.resource_type,
             &request.resource_id,
             &request.action,
@@ -101,6 +103,7 @@ impl AuthorizedInterventionContext {
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
             capability_id: request.capability_id.clone(),
+            capability_version: request.capability_version.clone(),
             resource_type: request.resource_type.clone(),
             resource_id: request.resource_id.clone(),
             action: request.action.clone(),
@@ -118,6 +121,9 @@ impl AuthorizedInterventionContext {
     }
     pub fn capability_id(&self) -> &str {
         &self.capability_id
+    }
+    pub fn capability_version(&self) -> &str {
+        &self.capability_version
     }
     pub fn resource_type(&self) -> &str {
         &self.resource_type
@@ -166,6 +172,7 @@ mod tests {
             principal_ref: "principal-1".into(),
             subject_ref: "person-1".into(),
             capability_id: "health.intervention.write".into(),
+            capability_version: "1.0.0".into(),
             resource_type: "health_state_intervention".into(),
             resource_id: "intervention-1".into(),
             action: "write".into(),
