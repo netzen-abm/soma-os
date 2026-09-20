@@ -141,8 +141,8 @@ class PolicyKernelTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "insufficient_identity_assurance")
 
     def test_valid_authenticated_account_satisfies_declared_requirement(self):
-        capability = {"id": "remote.sync", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": True}}
-        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="remote.sync", resource_type="vault", resource_id="v1", action="read", context={}, subject_ref="person-1")
+        capability = {"id": "remote.sync", "version": "1.0.0", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": True}}
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="remote.sync", capability_version="1.0.0", resource_type="vault", resource_id="v1", action="read", context={}, subject_ref="person-1")
         kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "remote.sync", "vault", "v1", "read", "person-1"): True})
         account = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "authenticated_account", "assurance_level": "LOW"}
         result = kernel.evaluate(request, identity_context=account)
