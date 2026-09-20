@@ -57,7 +57,16 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
             "context": {},
         }
         value.update(overrides)
-        return PolicyRequest(**value)
+        return PolicyRequest(
+            principal_id=value["principal_id"],
+            principal_type=value["principal_type"],
+            subject_ref=value["subject_ref"],
+            capability_id=value["capability_id"],
+            resource_type=value["resource_type"],
+            resource_id=value["resource_id"],
+            action=value["action"],
+            context=value["context"],
+        )
 
     def authorize(self, *, request=None, **kwargs):
         return self.boundary.authorize(
