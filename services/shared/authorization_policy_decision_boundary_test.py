@@ -51,6 +51,7 @@ class AuthorizationPolicyDecisionBoundaryTests(unittest.TestCase):
             "principal_type": "person",
             "subject_ref": "subject-001",
             "capability_id": "health.timeline.read",
+            "capability_version": "1.0.0",
             "resource_type": "health_observation",
             "resource_id": "observation-001",
             "action": "read",
