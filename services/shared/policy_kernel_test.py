@@ -121,7 +121,7 @@ class PolicyKernelTests(unittest.TestCase):
 
     def test_valid_authenticated_account_satisfies_declared_requirement(self):
         capability = {"id": "remote.sync", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": True}}
-        request = PolicyRequest("person-1", "person", "remote.sync", "vault", "v1", "read", {})
+        request = PolicyRequest("person-1", "person", "remote.sync", "vault", "v1", "read", {}, "person-1")
         kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "remote.sync", "vault", "v1", "read"): True})
         account = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "authenticated_account", "assurance_level": "LOW"}
         result = kernel.evaluate(request, identity_context=account)
