@@ -1,4 +1,3 @@
-# File Path: ./docker-compose.yml
 version: '3.8'
 
 services:
@@ -6,8 +5,10 @@ services:
     image: postgres:15-alpine
     container_name: somaos_postgres_node
     environment:
-      POSTGRES_USER: somaos_vault_admin
-      POSTGRES_PASSWORD: secret_zk_infrastructure_password_9988
+      # Local bootstrap/admin credential only. Do not reuse it as the application
+      # runtime credential. Supply it through the environment or a secret file.
+      POSTGRES_USER: ${SOMA_DB_BOOTSTRAP_USER:-somaos_bootstrap}
+      POSTGRES_PASSWORD: ${SOMA_DB_BOOTSTRAP_PASSWORD:?SOMA_DB_BOOTSTRAP_PASSWORD must be set}
       POSTGRES_DB: somaos_vitals_persistence
     volumes:
       - postgres_sovereign_data:/var/lib/postgresql/data
@@ -17,7 +18,7 @@ services:
     networks:
       - somaos-isolated-mesh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U somaos_vault_admin -d somaos_vitals_persistence"]
+      test: ["CMD-SHELL", "pg_isready -U ${SOMA_DB_BOOTSTRAP_USER:-somaos_bootstrap} -d somaos_vitals_persistence"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,10 +31,12 @@ services:
     ports:
       - "8080:8080" # Maps outer gateway routing ports to handle Telegram/WhatsApp webhooks
     environment:
-      - DATABASE_URL=postgres://somaos_vault_admin:secret_zk_infrastructure_password_9988@somaos-db:5432/somaos_vitals_persistence
+      # The application must use the separately provisioned application LOGIN
+      # credential. Never point DATABASE_URL at the bootstrap/admin credential.
+      - DATABASE_URL=${SOMA_APP_DATABASE_URL:?SOMA_APP_DATABASE_URL must be set}
       - RUST_LOG=info
-      - META_WHATSAPP_TOKEN=your_meta_token_here
-      - META_PHONE_ID=your_phone_id_here
+      - META_WHATSAPP_TOKEN=${META_WHATSAPP_TOKEN:?META_WHATSAPP_TOKEN must be set}
+      - META_PHONE_ID=${META_PHONE_ID:?META_PHONE_ID must be set}
     restart: unless-stopped
     depends_on:
       somaos-db:
