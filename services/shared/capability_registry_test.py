@@ -1,15 +1,19 @@
 import json
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent
 REGISTRY = ROOT / "capability_registry.json"
+SCHEMA = ROOT.parents[1] / "schemas" / "capability-registry-v1.json"
 
 
 class CapabilityRegistryTests(unittest.TestCase):
     def load_registry(self):
         return json.loads(REGISTRY.read_text(encoding="utf-8"))
+
+    def load_schema(self):
+        return json.loads(SCHEMA.read_text(encoding="utf-8"))
 
     def test_registry_is_valid_and_unique(self):
         data = self.load_registry()
@@ -18,6 +22,31 @@ class CapabilityRegistryTests(unittest.TestCase):
 
         self.assertTrue(ids)
         self.assertEqual(len(ids), len(set(ids)))
+
+    def test_registry_uses_canonical_schema_version(self):
+        data = self.load_registry()
+        schema = self.load_schema()
+        self.assertEqual(data["schema_version"], schema["properties"]["schema_version"]["const"])
+
+    def test_registry_entries_satisfy_schema_required_fields(self):
+        data = self.load_registry()
+        schema = self.load_schema()
+        capability_schema = schema["$defs"]["capability"]
+
+        for capability in data["capabilities"]:
+            for field in capability_schema["required"]:
+                self.assertIn(field, capability, msg=f"missing {field}: {capability.get('id')}")
+            self.assertIsInstance(capability["principal_types"], list)
+            self.assertTrue(capability["principal_types"])
+            self.assertEqual(len(capability["principal_types"]), len(set(capability["principal_types"])))
+
+            requirements = capability["identity_requirements"]
+            for field in schema["$defs"]["identity_requirements"]["required"]:
+                self.assertIn(field, requirements, msg=f"missing identity requirement {field}: {capability.get('id')}")
+            self.assertTrue(requirements["applies_to_principal_types"])
+            self.assertTrue(set(requirements["applies_to_principal_types"]).issubset(
+                {"person", "agent", "service", "application", "device"}
+            ))
 
     def test_decentralized_capabilities_are_optional_adapters(self):
         data = self.load_registry()
