@@ -114,11 +114,16 @@ pub trait CanonicalAuthorizationBoundary {
     fn authorize_longitudinal_observation_context(
         &self,
         request: &AuthorizationRequest,
-    ) -> Result<crate::longitudinal_observation_repository::AuthorizedObservationAccessContext, AuthorizationDecision> {
+    ) -> Result<
+        crate::longitudinal_observation_repository::AuthorizedObservationAccessContext,
+        AuthorizationDecision,
+    > {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                crate::longitudinal_observation_repository::AuthorizedObservationAccessContext::from_authorized_request(request)
-                    .map_err(|_| AuthorizationDecision::Deny)
+                crate::longitudinal_observation_repository::AuthorizedObservationAccessContext::from_authorized_request(
+                    request,
+                )
+                .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
