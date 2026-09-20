@@ -18,6 +18,16 @@ class PolicyKernelTests(unittest.TestCase):
             resource_type="research-source", resource_id="source-1", action="read", context={}, subject_ref=None,
         )
 
+    def _evaluate(self, request):
+        identity = {
+            "principal_id": request.principal_id,
+            "principal_type": request.principal_type,
+            "authentication_status": "VERIFIED",
+            "identity_mode": "anonymous_local",
+            "assurance_level": "LOW",
+        }
+        return self.kernel.evaluate(request, identity_context=identity)
+
     def test_registered_capability_uses_resource_instance_grant(self):
         identity = {
             "principal_id": "person-1",
@@ -37,7 +47,7 @@ class PolicyKernelTests(unittest.TestCase):
         self.assertEqual(kernel.evaluate(PolicyRequest(principal_id="person-1", principal_type="person", capability_id="health.read", resource_type="health_record", resource_id="r-1", action="read", context={}, subject_ref="subject-2")).reason_code, "authorization_required")
 
     def test_different_resource_id_fails_closed(self):
-        result = self.kernel.evaluate(self._with_request(resource_id="source-2"))
+        result = self._evaluate(self._with_request(resource_id="source-2"))
         self.assertEqual(result.reason_code, "authorization_required")
 
     def test_different_identity_fails_closed(self):
@@ -74,7 +84,7 @@ class PolicyKernelTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "invalid_request")
 
     def test_context_cannot_change_resource_scope(self):
-        result = self.kernel.evaluate(self._with_context(resource_id="source-2"))
+        result = self._evaluate(self._with_context(resource_id="source-2"))
         self.assertEqual(result.decision, Decision.ALLOW)
 
     def test_human_review_precedes_grant(self):
