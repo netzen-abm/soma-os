@@ -352,6 +352,180 @@
         "web",
         "future-client-surfaces"
       ]
+    },
+    {
+      "id": "health.read",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance"
+      ],
+      "adapters": [
+        "health-state"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.measurement.write",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance"
+      ],
+      "adapters": [
+        "health-state"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.intervention.write",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "consent",
+        "provenance"
+      ],
+      "adapters": [
+        "health-state"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.evidence.link",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance",
+        "uncertainty"
+      ],
+      "adapters": [
+        "health-state-evidence"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "research-tools",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.outcome.write",
+      "version": "1.0.0",
+      "status": "implemented",
+      "maturity": "validated",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance",
+        "uncertainty"
+      ],
+      "adapters": [
+        "health-state"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "future-client-surfaces"
+      ]
     }
   ]
 }
