@@ -24,6 +24,7 @@ mod health_state_measurement;
 mod health_state_outcome;
 mod health_state_repository;
 mod key_restoration;
+#[cfg(test)]
 mod legacy_promotion_preflight;
 mod local_health_vault;
 mod local_health_vault_storage;

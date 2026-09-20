@@ -152,6 +152,9 @@ jobs:
       - name: Audit protected-data access paths
         run: python scripts/audit_protected_data_access.py
 
+      - name: Audit database runtime credential separation
+        run: python scripts/audit_database_runtime_credentials.py
+
   postgres-security-integration:
     name: PostgreSQL protected-data isolation tests
     needs: code-audit
