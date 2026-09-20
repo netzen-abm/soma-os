@@ -29,6 +29,7 @@ impl AuthorizedProtectedDbContext {
             request.principal_ref.as_str(),
             request.subject_ref.as_str(),
             request.capability_id.as_str(),
+            request.capability_version.as_str(),
             request.resource_type.as_str(),
             request.resource_id.as_str(),
             request.action.as_str(),
@@ -149,6 +150,7 @@ mod tests {
         assert_eq!(context.principal_ref(), "principal-1");
         assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.capability_id(), "health.read");
+        assert_eq!(context.capability_version(), "1.0.0");
         assert_eq!(context.resource_type(), "health_record");
         assert_eq!(context.resource_id(), "record-1");
         assert_eq!(context.action(), "read");
@@ -172,6 +174,9 @@ mod tests {
         request.action.clear();
         assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
         request.action = "read\n".into();
+        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
+        request.action = "read".into();
+        request.capability_version.clear();
         assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
     }
 }
