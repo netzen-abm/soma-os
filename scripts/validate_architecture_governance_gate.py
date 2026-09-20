@@ -14,6 +14,9 @@ REGISTRY = ROOT / "services/shared/capability_registry.json"
 MAPPING = ROOT / "schemas/evidence-canonical-mapping-v1.json"
 FIXTURES = ROOT / "scripts/fixtures/evidence_canonical_mapping_pilot.json"
 
+CANONICAL_REGISTRY_SCHEMA_VERSION = "1.0.0"
+VALID_PRINCIPAL_TYPES = {"person", "agent", "service", "application", "device"}
+
 REQUIRED_CAPABILITY_FIELDS = {
     "id", "version", "status", "maturity", "principal_types", "policy", "adapters", "surfaces"
 }
