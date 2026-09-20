@@ -18,6 +18,7 @@ class PolicyRequest:
     principal_id: str
     principal_type: str
     capability_id: str
+    capability_version: str
     resource_type: str
     resource_id: str
     action: str
@@ -56,6 +57,8 @@ class PolicyKernel:
         capability = self._capabilities.get(request.capability_id)
         if capability is None:
             return self._deny("unknown_capability")
+        if request.capability_version != capability.get("version"):
+            return self._deny("capability_version_mismatch")
 
         principal_types = capability.get("principal_types")
         if not self._valid_principal_types(principal_types):
