@@ -19,7 +19,14 @@ class PolicyKernelTests(unittest.TestCase):
         )
 
     def test_registered_capability_uses_resource_instance_grant(self):
-        result = self.kernel.evaluate(self.request)
+        identity = {
+            "principal_id": "person-1",
+            "principal_type": "person",
+            "authentication_status": "VERIFIED",
+            "identity_mode": "anonymous_local",
+            "assurance_level": "LOW",
+        }
+        result = self.kernel.evaluate(self.request, identity_context=identity)
         self.assertEqual(result.decision, Decision.ALLOW)
 
     def test_subject_bound_grant_requires_exact_subject(self):
