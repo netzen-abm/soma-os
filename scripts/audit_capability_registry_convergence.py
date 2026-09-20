@@ -22,8 +22,8 @@ SEARCH_ROOTS = (
 )
 
 PATTERNS = (
-    re.compile(r"\bcapability_id\s*[:=]\s*["']([^"']+)["']"),
-    re.compile(r"\bcapability_id\s*:\s*String::from\(["']([^"']+)["']\)"),
+    re.compile(r'''\bcapability_id\s*[:=]\s*["']([^"']+)["']'''),
+    re.compile(r'''\bcapability_id\s*:\s*String::from\(["']([^"']+)["']\)'''),
 )
 
 
