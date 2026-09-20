@@ -13,7 +13,8 @@ IdentityContext
   → Identity Authorization Enforcement
   → Policy Kernel
   → approved migration/promotion operation
-  → somaos_persistence
+  → dedicated control-plane execution identity
+  → somaos_legacy_promotion_executor
   → soma_apply_legacy_promotion(...)
   → verified classification evidence
   → derive tenant_id/data_domain
@@ -29,11 +30,11 @@ Migration `0009_legacy_promotion_executor.sql` creates:
 
 - `somaos_legacy_promotion_owner`: `NOLOGIN`, non-superuser, `BYPASSRLS`, dedicated only to owning the narrow executor function.
 - `soma_apply_legacy_promotion(...)`: `SECURITY DEFINER`, fixed `search_path = pg_catalog`, explicitly schema-qualified table references.
-- `EXECUTE` granted only to `somaos_persistence`; `PUBLIC` receives no execute privilege.
+- `EXECUTE` granted only to `somaos_legacy_promotion_executor`; `PUBLIC` and `somaos_persistence` receive no execute privilege after migration `0012_legacy_promotion_executor_privilege_isolation.sql`.
 
 PostgreSQL documents that `SECURITY DEFINER` executes with the function owner's privileges and that a secure `search_path` plus restricted `EXECUTE` privileges are required to avoid privilege escalation.
 
-The executor owner is deliberately not a login role and is not a general migration/admin identity. It has no application credential.
+The executor owner is deliberately not a login role and is not a general migration/admin identity. The executor capability is a separate `NOLOGIN` role. A migration/promotion operator may be granted membership in that role by deployment-time privilege provisioning; the normal application credential must not receive that membership.
 
 ## Promotion invariants
 
@@ -96,6 +97,6 @@ The implementation must verify:
 
 ## Deployment implications
 
-Production must not expose credentials for `somaos_legacy_promotion_owner`. The normal application/persistence credential remains bound to the approved persistence service identity. Promotion invocation is an explicitly authorized migration capability, not a general-purpose SQL privilege.
+Production must not expose credentials for `somaos_legacy_promotion_owner`. The normal application/persistence credential remains bound to the approved persistence service identity and cannot invoke the promotion function. Promotion invocation is an explicitly authorized migration capability, not a general-purpose SQL privilege. Production operator membership in `somaos_legacy_promotion_executor` must be provisioned outside the application credential path and must not be granted to the ordinary persistence identity.
 
 The final zero-NULL preflight and final `NOT NULL` migration remain separate gates and are not introduced by this executor.

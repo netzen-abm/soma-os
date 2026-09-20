@@ -68,6 +68,7 @@ mod tests {
         include_str!("../../../database/migrations/0007_protected_data_rls_constraints.sql"),
         include_str!("../../../database/migrations/0008_legacy_data_promotion_events.sql"),
         include_str!("../../../database/migrations/0009_legacy_promotion_executor.sql"),
+        include_str!("../../../database/migrations/0012_legacy_promotion_executor_privilege_isolation.sql"),
     ];
 
     static PREPARED: OnceCell<()> = OnceCell::const_new();
@@ -110,8 +111,9 @@ mod tests {
             .bind(log_id).bind(state).bind(tenant).bind(domain).bind(provenance).bind(verification).fetch_one(pool).await.unwrap().get("classification_id")
     }
 
-    async fn assume_persistence_role(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>) {
-        sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut **tx).await.unwrap();
+    async fn assume_control_plane_role(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>) {
+        sqlx::query("GRANT somaos_legacy_promotion_executor TO somaos_test").execute(&mut **tx).await.unwrap();
+        sqlx::query("SET LOCAL ROLE somaos_legacy_promotion_executor").execute(&mut **tx).await.unwrap();
     }
 
     #[test]
@@ -186,7 +188,7 @@ mod tests {
         let id = log_id(&pool, "lp-rollback").await;
         let class_id = classification(&pool, id, "SCOPED_VERIFIED", Some("tenant-r"), Some("domain-r"), Some("prov-r"), "VERIFIED").await;
         let mut tx = pool.begin().await.unwrap();
-        assume_persistence_role(&mut tx).await;
+        assume_control_plane_role(&mut tx).await;
         let _: i64 = sqlx::query_scalar("SELECT public.soma_apply_legacy_promotion($1, $2, $3, $4, $5)").bind(id).bind(class_id).bind("event-r").bind("prov-r").bind("operator-r").fetch_one(&mut *tx).await.unwrap();
         tx.rollback().await.unwrap();
         let row = sqlx::query("SELECT tenant_id, data_domain FROM anonymized_user_vitals WHERE log_id = $1").bind(id).fetch_one(&pool).await.unwrap();
