@@ -12,6 +12,7 @@ PROTECTED_DATA_ACCESS_VERSION = "1.0.0"
 class ProtectedDataRequest:
     authorization_context: Mapping[str, object]
     capability_id: str
+    capability_version: str
     resource_type: str
     resource_id: str
     action: str
@@ -40,7 +41,8 @@ class ProtectedDataAccess:
             raise PermissionError("invalid_protected_data_request")
         policy_request = PolicyRequest(
             principal_id=principal_id, principal_type=principal_type,
-            capability_id=request.capability_id, resource_type=request.resource_type,
+            capability_id=request.capability_id, capability_version=request.capability_version,
+            resource_type=request.resource_type,
             resource_id=request.resource_id, action=request.action, context={},
             subject_ref=request.subject_ref,
         )
@@ -83,6 +85,6 @@ def _valid_request(request: ProtectedDataRequest) -> bool:
     if not isinstance(request.authorization_context, Mapping):
         return False
     return all(isinstance(value, str) and value.strip() for value in (
-        request.capability_id, request.resource_type, request.resource_id,
+        request.capability_id, request.capability_version, request.resource_type, request.resource_id,
         request.action, request.target_tenant_id, request.target_data_domain, request.subject_ref,
     ))
