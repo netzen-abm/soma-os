@@ -43,6 +43,9 @@ Adapters / protocols / surfaces
 | Governed operations | `canonical-governed-capability-operation-v1.md` | Operation lifecycle and authority gates |
 | Capability adapters | `capability-adapter-contract.md` | Adapter boundary |
 | Health state | `health-state-model-v1.md` | Canonical personal-health semantic model |
+| Intervention boundary | `health-state-intervention-v1.md` | Governed intervention-intent boundary |
+| Measurement boundary | `health-state-measurement-v1.md` | Measurement-plan boundary |
+| Outcome boundary | `health-state-outcome-v1.md` | Bounded outcome representation |
 | Health evidence | `health-evidence-graph-v1.md` | Canonical general evidence semantic model |
 | Health-state/evidence boundary | `health-state-evidence-contracts-v1.md` | Explicit separation and linkage |
 | Longitudinal reasoning | `longitudinal-evidence-driven-health-intelligence-v1.md` | Future health-intelligence architecture baseline |
