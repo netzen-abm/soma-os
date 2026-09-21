@@ -764,6 +764,78 @@
         "mobile",
         "future-client-surfaces"
       ]
+    },
+    {
+      "id": "health.relationship.read",
+      "version": "1.0.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance",
+        "uncertainty"
+      ],
+      "adapters": [
+        "health-state-relationship"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "research-tools",
+        "future-client-surfaces"
+      ]
+    },
+    {
+      "id": "health.relationship.write",
+      "version": "1.0.0",
+      "status": "architecture",
+      "maturity": "development",
+      "principal_types": [
+        "person"
+      ],
+      "identity_requirements": {
+        "applies_to_principal_types": [
+          "person"
+        ],
+        "allowed_identity_modes": [
+          "anonymous_local",
+          "authenticated_account"
+        ],
+        "minimum_assurance_level": "LOW",
+        "requires_durable_identity": false
+      },
+      "policy": [
+        "privacy",
+        "safety",
+        "subject-binding",
+        "provenance",
+        "uncertainty"
+      ],
+      "adapters": [
+        "health-state-relationship"
+      ],
+      "surfaces": [
+        "web",
+        "mobile",
+        "research-tools",
+        "future-client-surfaces"
+      ]
     }
   ]
 }
