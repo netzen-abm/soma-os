@@ -107,3 +107,47 @@ def test_invalid_request_never_reaches_adapter() -> None:
     except PermissionError as exc: assert str(exc) == "invalid_protected_data_request"
     else: raise AssertionError("expected denial")
     assert adapter.calls == 0
+
+
+def permission_bound_request(ctx: dict[str, object], permission: dict[str, object]) -> ProtectedDataRequest:
+    return ProtectedDataRequest(
+        authorization_context=ctx, capability_id="health.read", capability_version="1.0.0",
+        resource_type="health_record", resource_id="r-1", action="read",
+        target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1",
+        operation_id="op-1", purpose="read_health_record", requested_scope=("health_record:r-1",),
+        permission=permission,
+    )
+
+
+def active_permission() -> dict[str, object]:
+    return {
+        "permission_id": "perm-1", "operation_id": "op-1", "principal_ref": "person-1", "subject_ref": "person-1",
+        "capability_id": "health.read", "capability_version": "1.0.0", "purpose": "read_health_record",
+        "scope": ["health_record:r-1"], "status": "ACTIVE", "expires_at": "2026-09-21T20:00:00Z",
+        "auto_revoke": True, "regrant_requires_fresh_consent": True,
+    }
+
+
+def test_permission_bound_read_uses_canonical_execution_and_revokes() -> None:
+    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
+    result = access.read(permission_bound_request(identity(), active_permission()))
+    assert result == {"resource_id": "r-1"}
+    assert adapter.calls == 1
+
+
+def test_permission_bound_expiry_never_reaches_adapter() -> None:
+    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
+    permission = active_permission(); permission["expires_at"] = "2026-09-21T18:00:00Z"
+    try: access.read(permission_bound_request(identity(), permission))
+    except PermissionError as exc: assert str(exc) == "permission_expired"
+    else: raise AssertionError("expected denial")
+    assert adapter.calls == 0
+
+
+def test_permission_bound_subject_mismatch_never_reaches_adapter() -> None:
+    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
+    permission = active_permission(); permission["subject_ref"] = "other-subject"
+    try: access.read(permission_bound_request(identity(), permission))
+    except PermissionError as exc: assert str(exc) == "permission_binding_mismatch"
+    else: raise AssertionError("expected denial")
+    assert adapter.calls == 0
