@@ -98,7 +98,10 @@ jobs:
 
       - name: Validate Governed Capability Operation JSON contract
         run: python -m json.tool schemas/governed-capability-operation-v1.json > /dev/null
-\n      - name: Validate canonical relationship vocabulary\n        run: python scripts/validate_relationship_vocabulary.py\n
+
+      - name: Validate canonical relationship vocabulary
+        run: python scripts/validate_relationship_vocabulary.py
+
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
