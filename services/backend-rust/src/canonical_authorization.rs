@@ -288,10 +288,7 @@ mod tests {
     fn malformed_allow_cannot_mint_health_state_repository_context() {
         let mut request = request();
         request.data_domain = "".into();
-        assert_eq!(
-            AllowBoundary.authorize_health_state_repository_context(&request),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(AllowBoundary.authorize_health_state_repository_context(&request), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
@@ -299,20 +296,14 @@ mod tests {
         let context = AllowBoundary.authorize_longitudinal_context(&request()).unwrap();
         assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
-        assert_eq!(
-            DenyBoundary.authorize_longitudinal_context(&request()),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(DenyBoundary.authorize_longitudinal_context(&request()), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
     fn malformed_allow_cannot_mint_longitudinal_context() {
         let mut request = request();
         request.data_domain = "".into();
-        assert_eq!(
-            AllowBoundary.authorize_longitudinal_context(&request),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
