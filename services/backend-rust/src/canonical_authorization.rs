@@ -10,6 +10,7 @@ use crate::health_state_intervention::AuthorizedInterventionContext;
 use crate::health_state_measurement::AuthorizedMeasurementContext;
 use crate::health_state_repository::AuthorizedHealthStateAccessContext;
 use crate::longitudinal_context::AuthorizedLongitudinalContextAccessContext;
+use crate::longitudinal_observation_repository::AuthorizedObservationAccessContext;
 use crate::protected_db_context::AuthorizedProtectedDbContext;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,13 +115,10 @@ pub trait CanonicalAuthorizationBoundary {
     fn authorize_longitudinal_observation_context(
         &self,
         request: &AuthorizationRequest,
-    ) -> Result<
-        crate::longitudinal_observation_repository::AuthorizedObservationAccessContext,
-        AuthorizationDecision,
-    > {
+    ) -> Result<AuthorizedObservationAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                crate::longitudinal_observation_repository::AuthorizedObservationAccessContext::from_authorized_request(
+                AuthorizedObservationAccessContext::from_authorized_request(
                     request,
                 )
                 .map_err(|_| AuthorizationDecision::Deny)
