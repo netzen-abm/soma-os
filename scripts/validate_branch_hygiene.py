@@ -31,7 +31,7 @@ def remote_branches() -> set[str]:
     return {
         line.strip()
         for line in raw.splitlines()
-        if line.strip() and line.strip() != "HEAD"
+        if line.strip() and line.strip() != "HEAD" and not line.strip().endswith("/HEAD")
     }
 
 
