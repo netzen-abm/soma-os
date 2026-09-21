@@ -19,6 +19,9 @@ EXCLUDED_PARTS = {".git", "target", "__pycache__", ".pytest_cache"}
 ALLOWED_FILES = {
     pathlib.Path("services/backend-rust/src/db_layer.rs"),
     pathlib.Path("services/backend-rust/src/protected_db_context.rs"),
+    pathlib.Path("services/shared/protected_data_access.py"),
+    pathlib.Path("services/shared/permission_lifecycle_enforcement.py"),
+    pathlib.Path("services/shared/governed_capability_executor.py"),
     pathlib.Path("services/backend-rust/src/legacy_promotion.rs"),
     pathlib.Path("services/backend-rust/src/legacy_promotion_preflight.rs"),
     pathlib.Path("services/backend-rust/src/db_postgres_integration_test.rs"),
