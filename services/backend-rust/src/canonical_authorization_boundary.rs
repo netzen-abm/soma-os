@@ -59,7 +59,8 @@ fn allow_context<T, F>(
     decision: AuthorizationDecision, mint: F,
 ) -> Result<T, AuthorizationDecision>
 where
-    F: FnOnce() -> Result<T, impl Into<()>>,
+    F: FnOnce() -> Result<T, E>,
+    E: std::fmt::Debug,
 {
     match decision {
         AuthorizationDecision::Allow => mint().map_err(|_| AuthorizationDecision::Deny),
