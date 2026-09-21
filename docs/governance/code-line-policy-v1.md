@@ -1,38 +1,32 @@
-# SOMA-OS Code Line Policy v1
+# SOMA-OS Code Maintainability Policy
 
-## Rule
+## Authority
 
-New or modified programming source files must remain under 180 lines. The maximum permitted file length is therefore 179 lines.
+This policy governs source maintainability. It does **not** impose an arbitrary universal file-length limit.
 
-This is a maintainability and reviewability constraint, not a style preference.
+## Review principle
 
-## Scope
+Line count is a diagnostic signal, not an architectural rule. A file should be refactored when its size reflects multiple responsibilities, obscures security boundaries, reduces testability, or materially harms reviewability.
 
-The rule applies to Python, Rust, JavaScript, TypeScript, shell scripts, SQL migrations, and executable configuration where practical.
+## Before changing a large file
 
-It does not apply to prose documentation, licenses, generated lockfiles, or machine-readable schemas unless a separate policy explicitly says otherwise.
+1. Read the complete file.
+2. Measure its actual line count.
+3. Identify its responsibilities and public interfaces.
+4. Check references, callers, tests, and security boundaries.
+5. Determine whether the size reflects legitimate cohesion or accumulated responsibilities.
+6. Refactor only when there is a concrete maintainability or architectural reason.
+7. Split by responsibility, not arbitrary line ranges.
+8. Re-run formatting, compilation, tests, and relevant security gates.
 
-## Refactoring rule
+## Security-sensitive code
 
-When a source file exceeds the limit:
+Authorization, identity, protected-data, cryptographic, health-data, and privacy code receives a higher review standard. Splitting such code must preserve fail-closed behavior, subject binding, provenance, auditability, and canonical ownership.
 
-1. Do not compress formatting merely to reduce the count.
-2. Preserve behavior and public contracts.
-3. Split by responsibility, not arbitrary line ranges.
-4. Keep security-sensitive boundaries explicit.
-5. Move tests with the responsibility they exercise where practical.
-6. Update imports and references.
-7. Run formatting, tests, and relevant CI gates.
-8. Record unavoidable transitional exceptions explicitly.
+## Practical guideline
 
-## Security priority
+The repository may use **180 lines as a review trigger** for a source file, but crossing that number is not itself a defect. A file above the guideline must be inspected before deciding whether to refactor.
 
-Security-sensitive code receives the same line limit but a higher review standard. Splitting a security boundary must never weaken authorization, subject binding, fail-closed behavior, auditability, or provenance.
+## Architectural rule
 
-## Enforcement
-
-The repository validator reports every programming file at or above 180 lines. CI should fail on new violations. Existing violations are technical debt and must be reduced in bounded refactoring passes rather than hidden by exclusions.
-
-## Review invariant
-
-No new feature is complete if it introduces a programming file at 180 lines or more.
+Prefer one cohesive module with one clear responsibility over multiple artificially small modules. Do not create fragmentation merely to satisfy a numeric threshold.
