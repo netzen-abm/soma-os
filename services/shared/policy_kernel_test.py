@@ -6,7 +6,7 @@ from policy_kernel import Decision, PolicyKernel, PolicyRequest
 
 REGISTRY = Path(__file__).with_name("capability_registry.json")
 GRANTS = {
-    ("person-1", "person", "evidence.research", "research-source", "source-1", "read"): True,
+    ("person-1", "person", "evidence.research", "research-source", "source-1", "read", "person-1"): True,
 }
 
 
@@ -15,7 +15,7 @@ class PolicyKernelTests(unittest.TestCase):
         self.kernel = PolicyKernel.from_registry_file(REGISTRY, GRANTS)
         self.request = PolicyRequest(
             principal_id="person-1", principal_type="person", capability_id="evidence.research", capability_version="0.1.0",
-            resource_type="research-source", resource_id="source-1", action="read", context={}, subject_ref=None,
+            resource_type="research-source", resource_id="source-1", action="read", context={}, subject_ref="person-1",
         )
 
     def _evaluate(self, request):
@@ -118,7 +118,7 @@ class PolicyKernelTests(unittest.TestCase):
             },
         }
         request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="remote.sync", capability_version="1.0.0", resource_type="vault", resource_id="v1", action="read", context={}, subject_ref=None)
-        grants = {("person-1", "person", "remote.sync", "vault", "v1", "read"): True}
+        grants = {("person-1", "person", "remote.sync", "vault", "v1", "read", "person-1"): True}
         kernel = PolicyKernel({"capabilities": [capability]}, grants)
         anonymous = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "anonymous_local", "assurance_level": "LOW"}
         result = kernel.evaluate(request, identity_context=anonymous)
@@ -127,7 +127,7 @@ class PolicyKernelTests(unittest.TestCase):
     def test_durable_identity_requirement_cannot_be_satisfied_by_anonymous(self):
         capability = {"id": "share.vault", "version": "1.0.0", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["anonymous_local", "authenticated_account"], "minimum_assurance_level": "LOW", "requires_durable_identity": True}}
         request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="share.vault", capability_version="1.0.0", resource_type="vault", resource_id="v1", action="share", context={}, subject_ref=None)
-        kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "share.vault", "vault", "v1", "share"): True})
+        kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "share.vault", "vault", "v1", "share", "person-1"): True})
         anonymous = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "anonymous_local", "assurance_level": "LOW"}
         result = kernel.evaluate(request, identity_context=anonymous)
         self.assertEqual(result.reason_code, "durable_identity_required")
@@ -135,7 +135,7 @@ class PolicyKernelTests(unittest.TestCase):
     def test_insufficient_assurance_fails_closed(self):
         capability = {"id": "high.assurance", "version": "1.0.0", "principal_types": ["person"], "identity_requirements": {"applies_to_principal_types": ["person"], "allowed_identity_modes": ["authenticated_account"], "minimum_assurance_level": "HIGH", "requires_durable_identity": False}}
         request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="high.assurance", capability_version="1.0.0", resource_type="resource", resource_id="r1", action="read", context={}, subject_ref=None)
-        kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "high.assurance", "resource", "r1", "read"): True})
+        kernel = PolicyKernel({"capabilities": [capability]}, {("person-1", "person", "high.assurance", "resource", "r1", "read", "person-1"): True})
         account = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "authenticated_account", "assurance_level": "SUBSTANTIAL"}
         result = kernel.evaluate(request, identity_context=account)
         self.assertEqual(result.reason_code, "insufficient_identity_assurance")
