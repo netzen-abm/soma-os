@@ -296,7 +296,10 @@ mod tests {
         let context = AllowBoundary.authorize_longitudinal_context(&request()).unwrap();
         assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.scope(), "tenant-1:personal_health");
-        assert_eq!(DenyBoundary.authorize_longitudinal_context(&request()), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            DenyBoundary.authorize_longitudinal_context(&request()),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 
     #[test]
