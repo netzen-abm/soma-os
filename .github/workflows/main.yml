@@ -101,7 +101,7 @@ jobs:
 
       - name: Validate canonical relationship vocabulary
         run: python scripts/validate_relationship_vocabulary.py
-
+\n      - name: Validate semantic ownership and authorization convergence\n        run: python scripts/validate_semantic_convergence.py\n
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
