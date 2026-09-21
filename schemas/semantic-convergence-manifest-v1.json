@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soma-os.org/schema/semantic-convergence-manifest-v1.json",
+  "title": "SOMA Semantic Convergence Manifest v1",
+  "description": "Machine-readable ownership and non-duplication invariants for the shared SOMA health intelligence substrate.",
+  "version": "1.0.0",
+  "canonical_owners": {
+    "health_state": "schemas/health-state-v1.json",
+    "longitudinal_observation": "schemas/longitudinal-observation-v1.json",
+    "health_evidence": "schemas/health-evidence-graph-v1.json",
+    "health_state_evidence_link": "schemas/health-state-evidence-link-v1.json",
+    "capability_registry": "schemas/capability-registry-v1.json",
+    "authorization_decision": "schemas/authorization-policy-decision-boundary-v1.json",
+    "governed_operation": "schemas/governed-capability-operation-v1.json",
+    "protected_data": "services/shared/protected_data_access.py",
+    "policy_evaluator": "services/shared/policy_kernel.py"
+  },
+  "relationship_types": [
+    "HAS_OBSERVATION",
+    "HAS_CONTEXT",
+    "HAS_GOAL",
+    "HAS_INTERVENTION",
+    "HAS_RESPONSE",
+    "HAS_OUTCOME",
+    "DERIVED_FROM",
+    "SUPPORTS_HYPOTHESIS",
+    "REFUTES_HYPOTHESIS",
+    "TEMPORALLY_PRECEDES",
+    "ASSOCIATED_WITH",
+    "MEASURED_BY",
+    "EVIDENCE_LINKED"
+  ],
+  "forbidden_foundational_relationship_types": ["CAUSES"],
+  "authorization_fields": [
+    "principal_ref",
+    "subject_ref",
+    "capability_id",
+    "capability_version",
+    "resource_type",
+    "resource_id",
+    "action",
+    "tenant_id",
+    "data_domain"
+  ],
+  "semantic_invariants": [
+    "observation_is_not_interpretation",
+    "relationship_is_not_causation",
+    "temporal_precedence_is_not_causation",
+    "intervention_is_not_efficacy",
+    "response_is_not_proof_of_intervention_effect",
+    "evidence_is_not_personal_health_fact",
+    "ai_output_is_not_canonical_fact",
+    "unknown_time_remains_unknown",
+    "no_second_authorization_engine",
+    "no_second_health_state_model",
+    "no_second_protected_health_store"
+  ]
+}
