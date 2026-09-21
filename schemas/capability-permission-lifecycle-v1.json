@@ -1,0 +1,26 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://soma-os.org/schema/capability-permission-lifecycle-v1.json",
+  "title":"SOMA Capability Permission Lifecycle v1",
+  "description":"Canonical purpose-bound lifecycle for sensitive device and user capabilities. Grant is scoped, time/purpose bound, and automatically revoked after completion or expiry.",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["permission_id","principal_ref","subject_ref","capability_id","capability_version","purpose","scope","status","granted_at","expires_at","auto_revoke"],
+  "properties":{
+    "permission_id":{"type":"string","minLength":1},
+    "principal_ref":{"type":"string","minLength":1},
+    "subject_ref":{"type":"string","minLength":1},
+    "capability_id":{"type":"string","minLength":1},
+    "capability_version":{"type":"string","minLength":1},
+    "purpose":{"type":"string","minLength":1},
+    "scope":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},
+    "status":{"type":"string","enum":["REQUESTED","GRANTED","ACTIVE","REVOKED","EXPIRED","DENIED"]},
+    "granted_at":{"type":"string","format":"date-time"},
+    "expires_at":{"type":"string","format":"date-time"},
+    "revoked_at":{"type":"string","format":"date-time"},
+    "revocation_reason":{"type":"string","minLength":1},
+    "auto_revoke":{"const":true},
+    "regrant_requires_fresh_consent":{"const":true},
+    "operation_id":{"type":"string","minLength":1}
+  }
+}
