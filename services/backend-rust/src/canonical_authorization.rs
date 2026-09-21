@@ -118,7 +118,8 @@ pub trait CanonicalAuthorizationBoundary {
     ) -> Result<AuthorizedObservationAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedObservationAccessContext::from_authorized_request(request).map_err(|_| AuthorizationDecision::Deny)
+                AuthorizedObservationAccessContext::from_authorized_request(request)
+                    .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
         }
