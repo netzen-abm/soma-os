@@ -78,6 +78,14 @@ class CapabilityRegistryTests(unittest.TestCase):
         self.assertIn("agent.platform", ids)
         self.assertIn("protocol.mcp", ids)
 
+    def test_sensitive_capabilities_must_declare_permission_lifecycle_when_enabled(self):
+        data = self.load_registry()
+        for capability in data["capabilities"]:
+            if capability.get("requires_permission_lifecycle") is True:
+                self.assertIn("surfaces", capability)
+                self.assertIn("adapters", capability)
+                self.assertTrue(capability["adapters"] or capability["surfaces"])
+
 
 if __name__ == "__main__":
     unittest.main()
