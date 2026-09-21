@@ -150,3 +150,11 @@ Before physical deletion, unique historical commits and design decisions must re
 - Governed execution completion revokes the temporary permission; execution failure also revokes it.
 - Added adversarial tests for authorization denial, expired/revoked permission, subject mismatch, scope expansion, successful completion revocation, and execution-failure revocation.
 - CI now runs both lifecycle enforcement and governed execution tests.
+
+
+## Retirement evidence — principal/subject/scope generation family
+
+- `feat/canonical-principal-subject-scope` and `feat/canonical-principal-subject-scope-v2` were re-compared against current `main` and are exact functional duplicates at the branch tip: each is 4 commits ahead and 286 commits behind, with the same three changed files.
+- The shared ephemeral-device permission contract from this family has now been preserved on `main` at `docs/architecture/ephemeral-device-permission-contract-v1.md`.
+- The Rust `capability_permission.rs` implementation was deliberately not copied into `main` because the current canonical permission lifecycle enforcement already exists in shared infrastructure; introducing a second Rust lifecycle authority without first proving an adapter seam would violate the single-authority invariant.
+- Therefore the two duplicate branch refs are strong `REDUNDANT_DELETE` candidates once an authorized remote branch-delete operation is available. No force-reset is permitted as a substitute.
