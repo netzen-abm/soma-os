@@ -117,10 +117,8 @@ pub trait CanonicalAuthorizationBoundary {
         request: &AuthorizationRequest,
     ) -> Result<AuthorizedObservationAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
-            AuthorizationDecision::Allow => {
-                AuthorizedObservationAccessContext::from_authorized_request(request)
-                    .map_err(|_| AuthorizationDecision::Deny)
-            }
+            AuthorizationDecision::Allow => AuthorizedObservationAccessContext::from_authorized_request(request)
+                .map_err(|_| AuthorizationDecision::Deny),
             decision => Err(decision),
         }
     }
@@ -324,7 +322,10 @@ mod tests {
         request.resource_type = "health_observation".into();
         request.resource_id = "observation-1".into();
         request.action = "".into();
-        assert_eq!(AllowBoundary.authorize_longitudinal_observation_context(&request), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            AllowBoundary.authorize_longitudinal_observation_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 
     #[test]
