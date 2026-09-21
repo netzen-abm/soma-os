@@ -109,6 +109,9 @@ jobs:
       - name: Run permission lifecycle enforcement tests
         working-directory: services/shared
         run: python -m unittest -v permission_lifecycle_enforcement_test.py
+      - name: Run governed capability execution tests
+        working-directory: services/shared
+        run: python -m unittest -v governed_capability_executor_test.py
 
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
