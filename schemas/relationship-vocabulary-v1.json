@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "relationship_types": {
+    "HAS_CONTEXT": {
+      "domain": "health-state",
+      "causal": false
+    },
+    "HAS_INTERVENTION": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "HAS_RESPONSE": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "HAS_OUTCOME": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "DERIVED_FROM": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "TEMPORALLY_PRECEDES": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "ASSOCIATED_WITH": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "MEASURED_BY": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "EVIDENCE_LINKED": {
+      "domain": "longitudinal",
+      "causal": false
+    },
+    "HAS_OBSERVATION": {
+      "domain": "health-state",
+      "causal": false
+    },
+    "HAS_GOAL": {
+      "domain": "health-state",
+      "causal": false
+    },
+    "SUPPORTS_HYPOTHESIS": {
+      "domain": "health-state",
+      "causal": false
+    },
+    "REFUTES_HYPOTHESIS": {
+      "domain": "health-state",
+      "causal": false
+    }
+  }
+}
