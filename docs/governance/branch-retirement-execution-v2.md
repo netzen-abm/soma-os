@@ -141,3 +141,12 @@ Before physical deletion, unique historical commits and design decisions must re
 - `scripts/validate_branch_hygiene.py` was added as a non-destructive local/CI audit for the nine-branch invariant.
 - Permission lifecycle was bound into the governed-operation schema through an explicit operation-linked permission object requiring `auto_revoke=true` and `regrant_requires_fresh_consent=true`.
 - A contract test now verifies that the permission lifecycle can be bound to the governed operation without introducing another authority model.
+
+
+## Execution update — 2026-09-21 (execution-boundary pass)
+
+- Added `services/shared/permission_lifecycle_enforcement.py` as the canonical provider-neutral lifecycle validator. It does not evaluate policy and does not create a second authorization authority.
+- Added `services/shared/governed_capability_executor.py` as the bounded execution seam: canonical authorization must already be allowed, then the permission lifecycle must be active, purpose/capability/scope/subject bound, unexpired, and safe before execution.
+- Governed execution completion revokes the temporary permission; execution failure also revokes it.
+- Added adversarial tests for authorization denial, expired/revoked permission, subject mismatch, scope expansion, successful completion revocation, and execution-failure revocation.
+- CI now runs both lifecycle enforcement and governed execution tests.
