@@ -303,7 +303,10 @@ mod tests {
     fn malformed_allow_cannot_mint_longitudinal_context() {
         let mut request = request();
         request.data_domain = "".into();
-        assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
+        assert_eq!(
+            AllowBoundary.authorize_longitudinal_context(&request),
+            Err(AuthorizationDecision::Deny)
+        );
     }
 
     #[test]
