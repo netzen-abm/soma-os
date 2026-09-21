@@ -106,6 +106,9 @@ jobs:
 
       - name: Validate capability permission lifecycle
         run: python scripts/validate_capability_permission_lifecycle.py
+
+      - name: Validate programming file line limit
+        run: python scripts/validate_code_line_limit.py
       - name: Run permission lifecycle enforcement tests
         working-directory: services/shared
         run: python -m unittest -v permission_lifecycle_enforcement_test.py
