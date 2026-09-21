@@ -118,9 +118,7 @@ pub trait CanonicalAuthorizationBoundary {
     ) -> Result<AuthorizedObservationAccessContext, AuthorizationDecision> {
         match self.authorize(request) {
             AuthorizationDecision::Allow => {
-                AuthorizedObservationAccessContext::from_authorized_request(
-                    request,
-                )
+                AuthorizedObservationAccessContext::from_authorized_request(request)
                 .map_err(|_| AuthorizationDecision::Deny)
             }
             decision => Err(decision),
@@ -301,10 +299,7 @@ mod tests {
     fn malformed_allow_cannot_mint_longitudinal_context() {
         let mut request = request();
         request.data_domain = "".into();
-        assert_eq!(
-            AllowBoundary.authorize_longitudinal_context(&request),
-            Err(AuthorizationDecision::Deny)
-        );
+        assert_eq!(AllowBoundary.authorize_longitudinal_context(&request), Err(AuthorizationDecision::Deny));
     }
 
     #[test]
