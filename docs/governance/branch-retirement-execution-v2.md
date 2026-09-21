@@ -131,3 +131,13 @@ No candidate should be merged solely to make its branch deletable.
 
 Before physical deletion, unique historical commits and design decisions must remain recoverable through repository history, documentation, or another explicitly authorized archival mechanism.
 
+
+
+## Execution update — 2026-09-21 (current pass)
+
+- Current physical inventory was re-queried from GitHub: 42 branches total, consisting of the nine canonical branches plus 33 non-canonical historical branches.
+- No open pull requests remain.
+- The connected GitHub capability still does not expose an authorized remote branch-delete mutation. No branch was force-moved as a deletion substitute.
+- `scripts/validate_branch_hygiene.py` was added as a non-destructive local/CI audit for the nine-branch invariant.
+- Permission lifecycle was bound into the governed-operation schema through an explicit operation-linked permission object requiring `auto_revoke=true` and `regrant_requires_fresh_consent=true`.
+- A contract test now verifies that the permission lifecycle can be bound to the governed operation without introducing another authority model.
