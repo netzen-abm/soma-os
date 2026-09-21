@@ -101,7 +101,19 @@ jobs:
 
       - name: Validate canonical relationship vocabulary
         run: python scripts/validate_relationship_vocabulary.py
-\n      - name: Validate semantic ownership and authorization convergence\n        run: python scripts/validate_semantic_convergence.py\n
+      - name: Validate semantic ownership and authorization convergence
+        run: python scripts/validate_semantic_convergence.py
+
+      - name: Validate capability permission lifecycle
+        run: python scripts/validate_capability_permission_lifecycle.py
+
+      - name: Enforce under-180-line rule on changed source
+        shell: bash
+        run: |
+          mapfile -t changed < <(git diff-tree --no-commit-id --name-only -r HEAD)
+          if [ ${#changed[@]} -eq 0 ]; then exit 0; fi
+          python scripts/validate_code_line_limit.py "${changed[@]}"
+      - name: Validate semantic ownership and authorization convergence        run: python scripts/validate_semantic_convergence.py
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
         run: python -m unittest -v health_contract_test.py
