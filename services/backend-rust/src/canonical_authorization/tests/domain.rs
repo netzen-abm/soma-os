@@ -1,3 +1,5 @@
+use super::{AuthorizationDecision, AuthorizationRequest, AllowBoundary, CanonicalAuthorizationBoundary, DenyBoundary, request};
+
 #[test]
     fn health_state_evidence_link_context_requires_authoritative_allow() {
         let context = AllowBoundary.authorize_health_state_evidence_link_context(&request()).unwrap();
