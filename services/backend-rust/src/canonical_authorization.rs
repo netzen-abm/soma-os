@@ -309,9 +309,7 @@ mod tests {
         request.resource_type = "health_observation".into();
         request.resource_id = "observation-1".into();
         request.action = "read".into();
-        let context = AllowBoundary
-            .authorize_longitudinal_observation_context(&request)
-            .unwrap();
+        let context = AllowBoundary.authorize_longitudinal_observation_context(&request).unwrap();
         assert_eq!(context.subject_ref(), "person-1");
         assert_eq!(context.capability_id(), "health.timeline.read");
         assert_eq!(context.capability_version(), "1.0.0");
