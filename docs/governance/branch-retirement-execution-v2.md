@@ -73,6 +73,13 @@ The connected GitHub capability currently does not expose an authorized remote b
 Retained work must converge into the single SOMA shared infrastructure. No parallel identity, authorization, policy, Health State, observation, evidence, safety, causality, intervention/response/outcome, provenance, or protected-data foundation may be introduced.
 
 
+## Execution update — 2026-09-21
+
+- PR #147 (security: converge policy kernel on subject-bound authorization) was merged into main at ede355f4fac74f55a42c3881017e4aa6a459f017.
+- Exact-head CI for PR head 7671a0096ecfae784b824632a677973fff8ea752 completed successfully for the Authorization invariant gate, SOMA Evidence Pipeline, and SOMA Local Health Vault Key Lifecycle Verification.
+- The merged change makes PolicyRequest.subject_ref mandatory and removes the legacy six-field grant fallback.
+- No new authorization engine, protected-data store, or Health State foundation was introduced.
+
 ## Evidence register — 2026-09-21
 
 The retirement candidates were compared against `main`. The following branches are materially behind `main` and diverged. They are therefore **not** candidates for blind fast-forward merging.
