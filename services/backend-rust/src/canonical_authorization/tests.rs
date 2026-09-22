@@ -30,5 +30,12 @@ fn request() -> AuthorizationRequest {
     }
 }
 
-mod protected;
-mod domain;
+#[test]
+fn allow_boundary_accepts_protected_execution() {
+    assert_eq!(AllowBoundary.authorize(&request()), AuthorizationDecision::Allow);
+}
+
+#[test]
+fn deny_boundary_rejects_protected_execution() {
+    assert_eq!(DenyBoundary.authorize(&request()), AuthorizationDecision::Deny);
+}
