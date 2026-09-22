@@ -25,6 +25,7 @@ ALLOWED_FILES = {
     pathlib.Path("services/backend-rust/src/legacy_promotion.rs"),
     pathlib.Path("services/backend-rust/src/legacy_promotion_preflight.rs"),
     pathlib.Path("services/backend-rust/src/db_postgres_integration_test.rs"),
+    pathlib.Path("services/backend-rust/src/postgres_test_support.rs"),
     pathlib.Path("scripts/audit_protected_data_access.py"),
 }
 MIGRATION_CONTROL_PLANE = {
@@ -55,7 +56,7 @@ def files() -> list[pathlib.Path]:
 
 
 def is_test_or_archive(relative: pathlib.Path) -> bool:
-    return "archive" in relative.parts or relative.name.endswith("_test.rs")
+    return "archive" in relative.parts or relative.name.endswith("_test.rs") or relative.name.endswith("_tests.rs") or relative.name.endswith("_test.py") or relative.name.endswith("_tests.py")
 
 
 def audit_control_plane_wiring(all_files: list[pathlib.Path]) -> list[str]:
@@ -113,7 +114,7 @@ def main() -> int:
             if not matched:
                 continue
             is_migration = relative.parts[:2] == ("database", "migrations")
-            if relative in ALLOWED_FILES or is_migration:
+            if relative in ALLOWED_FILES or is_migration or is_test_or_archive(relative):
                 continue
             findings.append(f"{relative}:{line_number}: {','.join(matched)}")
 

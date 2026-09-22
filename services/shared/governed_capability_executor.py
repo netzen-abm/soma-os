@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable, Mapping
 
-from authorization_policy_decision_boundary import AuthorizationPolicyDecisionBoundary\nfrom permission_lifecycle_enforcement import PermissionLifecycleEnforcer, complete_permission
+from authorization_policy_decision_boundary import AuthorizationPolicyDecisionBoundary
+from permission_lifecycle_enforcement import PermissionLifecycleEnforcer, complete_permission
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,12 @@ class GovernedCapabilityExecutor:
         self,
         *,
         operation_id: str,
-        authorization_allowed: bool,
+        authorization_allowed: bool | None = None,
+        authorization_boundary: AuthorizationPolicyDecisionBoundary | None = None,
+        authorization_context: Mapping[str, object] | None = None,
+        target_tenant: str | None = None,
+        target_data_domain: str | None = None,
+        policy_request: object | None = None,
         permission: Mapping[str, object],
         principal_ref: str,
         subject_ref: str,
@@ -40,7 +46,19 @@ class GovernedCapabilityExecutor:
         operation: Callable[[], object],
         now: datetime | None = None,
     ) -> GovernedExecutionResult:
-        if not authorization_allowed:
+        if authorization_boundary is not None:
+            if authorization_context is None or target_tenant is None or target_data_domain is None or policy_request is None:
+                return GovernedExecutionResult(operation_id, False, "authorization_required", dict(permission))
+            decision = authorization_boundary.authorize(
+                request_id=operation_id,
+                identity_context=authorization_context,
+                target_tenant=target_tenant,
+                target_data_domain=target_data_domain,
+                request=policy_request,
+            )
+            authorization_allowed = decision.decision.value == "ALLOW"
+
+        if authorization_allowed is not True:
             return GovernedExecutionResult(operation_id, False, "authorization_required", dict(permission))
 
         lifecycle = self._permissions.validate(

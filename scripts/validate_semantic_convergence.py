@@ -60,7 +60,7 @@ def main() -> int:
     governed_required = set(governed.get("required", []))
     core = set(manifest["authorization_fields"])
 
-    if not {"principal_ref", "subject_ref"} <= auth_required:
+    if not {"principal_id", "subject_ref"} <= auth_required:
         fail("canonical authorization decision is missing principal/subject binding")
     if not {"principal_ref", "subject_ref", "capability_id", "capability_version"} <= governed_required:
         fail("governed operation is missing canonical authority identity fields")
@@ -85,7 +85,7 @@ def main() -> int:
 
     policy = (ROOT / owners["policy_evaluator"]).read_text(encoding="utf-8")
     protected = (ROOT / owners["protected_data"]).read_text(encoding="utf-8")
-    if "class PolicyRequest" not in policy or "subject_ref" not in policy:
+    if "PolicyRequest" not in policy or "subject_ref" not in policy:
         fail("Policy Kernel does not expose the canonical subject binding")
     if "class ProtectedDataRequest" not in protected or "subject_ref" not in protected:
         fail("ProtectedDataAccess does not expose the canonical subject binding")

@@ -72,7 +72,7 @@ class GovernedCapabilityExecutorTests(unittest.TestCase):
         called = []
         result = self.executor.execute(
             operation_id="op-1", authorization_allowed=None, authorization_boundary=boundary,
-            authorization_context={"principal_id":"person-1","principal_type":"person","authentication_status":"VERIFIED","identity_mode":"anonymous_local","assurance_level":"LOW"},
+            authorization_context={"principal_id":"person-1","principal_type":"person","authentication_status":"VERIFIED","authentication_provenance":{"issuer":"test","method":"test","verified_at":"2026-09-21T09:00:00Z","verifier_id":"test-verifier"},"tenant_scope":["tenant-1"],"data_domain_scope":["health"],"identity_mode":"anonymous_local","assurance_level":"LOW","context_id":"ctx-1","schema_version":"1.1.0","issued_at":"2026-09-21T09:00:00Z"},
             target_tenant="tenant-1", target_data_domain="health", policy_request=request,
             permission=self.permission, principal_ref="person-1", subject_ref="subject-1",
             capability_id="device.camera.capture", capability_version="1.0.0", purpose="capture_health_image",
