@@ -8,7 +8,7 @@ use crate::canonical_authorization::AuthorizationRequest;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-const SCHEMA_VERSION: &str = "1.0.0";
+pub(super) const SCHEMA_VERSION: &str = "1.0.0";
 
 /// Directional, provenance-preserving reference between canonical health-state
 /// and evidence entities. The referenced entities remain owned by their domains.
