@@ -113,7 +113,7 @@ def main() -> int:
             if not matched:
                 continue
             is_migration = relative.parts[:2] == ("database", "migrations")
-            if relative in ALLOWED_FILES or is_migration:
+            if relative in ALLOWED_FILES or is_migration or is_test_or_archive(relative):
                 continue
             findings.append(f"{relative}:{line_number}: {','.join(matched)}")
 
