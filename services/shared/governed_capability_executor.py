@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable, Mapping
 
-from authorization_policy_decision_boundary import AuthorizationPolicyDecisionBoundary\nfrom permission_lifecycle_enforcement import PermissionLifecycleEnforcer, complete_permission
+from authorization_policy_decision_boundary import AuthorizationPolicyDecisionBoundary
+from permission_lifecycle_enforcement import PermissionLifecycleEnforcer, complete_permission
 
 
 @dataclass(frozen=True)
