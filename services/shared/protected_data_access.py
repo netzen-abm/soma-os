@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Mapping, Protocol
 
 from authorization_policy_decision_boundary import AuthorizationDecision, AuthorizationPolicyDecisionBoundary
-from governed_capability_executor import GovernedCapabilityExecutor\nfrom policy_kernel import PolicyKernel, PolicyRequest
+from governed_capability_executor import GovernedCapabilityExecutor
+from policy_kernel import PolicyKernel, PolicyRequest
 
 PROTECTED_DATA_ACCESS_VERSION = "1.0.0"
 
@@ -30,7 +31,8 @@ class ProtectedDataAccess:
     """Provider-neutral protected-data gate using the canonical decision boundary."""
     def __init__(self, policy_kernel: PolicyKernel, adapter: ProtectedDataAdapter) -> None:
         self._decision_boundary = AuthorizationPolicyDecisionBoundary(policy_kernel)
-        self._adapter = adapter\n        self._executor = GovernedCapabilityExecutor()
+        self._adapter = adapter
+        self._executor = GovernedCapabilityExecutor()
 
     def authorize(self, request: ProtectedDataRequest) -> AuthorizationDecision:
         if not _valid_request(request):
