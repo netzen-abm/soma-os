@@ -25,6 +25,7 @@ ALLOWED_FILES = {
     pathlib.Path("services/backend-rust/src/legacy_promotion.rs"),
     pathlib.Path("services/backend-rust/src/legacy_promotion_preflight.rs"),
     pathlib.Path("services/backend-rust/src/db_postgres_integration_test.rs"),
+    pathlib.Path("services/backend-rust/src/postgres_test_support.rs"),
     pathlib.Path("scripts/audit_protected_data_access.py"),
 }
 MIGRATION_CONTROL_PLANE = {
