@@ -85,7 +85,7 @@ def main() -> int:
 
     policy = (ROOT / owners["policy_evaluator"]).read_text(encoding="utf-8")
     protected = (ROOT / owners["protected_data"]).read_text(encoding="utf-8")
-    if "class PolicyRequest" not in policy or "subject_ref" not in policy:
+    if "PolicyRequest" not in policy or "subject_ref" not in policy:
         fail("Policy Kernel does not expose the canonical subject binding")
     if "class ProtectedDataRequest" not in protected or "subject_ref" not in protected:
         fail("ProtectedDataAccess does not expose the canonical subject binding")
