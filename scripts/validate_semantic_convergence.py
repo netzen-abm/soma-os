@@ -60,7 +60,7 @@ def main() -> int:
     governed_required = set(governed.get("required", []))
     core = set(manifest["authorization_fields"])
 
-    if not {"principal_ref", "subject_ref"} <= auth_required:
+    if not {"principal_id", "subject_ref"} <= auth_required:
         fail("canonical authorization decision is missing principal/subject binding")
     if not {"principal_ref", "subject_ref", "capability_id", "capability_version"} <= governed_required:
         fail("governed operation is missing canonical authority identity fields")
