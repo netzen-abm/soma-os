@@ -1,4 +1,6 @@
+#[path = "health_state_outcome_contract.rs"]
 mod contract;
+#[path = "health_state_outcome_boundary.rs"]
 mod boundary;
 #[cfg(test)]
 #[path = "health_state_outcome_tests.rs"]
