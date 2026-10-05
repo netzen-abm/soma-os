@@ -33,7 +33,7 @@ pub(crate) async fn test_pool() -> Option<PgPool> {
 pub(crate) async fn prepare(pool: &PgPool) {
     PREPARED
         .get_or_init(|| async {
-        for (index, migration) in MIGRATIONS.iter().enumerate() {
+            for (index, migration) in MIGRATIONS.iter().enumerate() {
             sqlx::raw_sql(migration)
                 .execute(pool)
                 .await
