@@ -38,12 +38,12 @@ impl VaultAuthorizer for SubjectAuthorizer {
     }
 }
 
-fn root() -> PathBuf {
+    fn root() -> PathBuf {
     let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
     std::env::temp_dir().join(format!("soma-phr-repository-test-{nanos}"))
 }
 
-fn record(id: &str, subject: &str, entity_type: &str, created_at: &str) -> LocalHealthVaultRecord {
+    fn record(id: &str, subject: &str, entity_type: &str, created_at: &str) -> LocalHealthVaultRecord {
     LocalHealthVaultCrypto::encrypt_record(
         &[7u8; KEY_LEN],
         crate::local_health_vault::VaultRecordMetadata {
@@ -61,7 +61,7 @@ fn record(id: &str, subject: &str, entity_type: &str, created_at: &str) -> Local
     .unwrap()
 }
 
-fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, SubjectAuthorizer>, Rc<Cell<usize>>) {
+    fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, SubjectAuthorizer>, Rc<Cell<usize>>) {
     let calls = Rc::new(Cell::new(0));
     let mut values = HashMap::new();
     values.insert("vault-key-v1".into(), [7u8; KEY_LEN]);
