@@ -4,7 +4,7 @@
 //! does not itself establish efficacy, causality, clinical significance, or an
 //! adaptation decision.
 
-use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
+use crate::canonical_authorization::AuthorizationRequest;
 use thiserror::Error;
 
 pub(crate) const SCHEMA_VERSION: &str = "1.0.0";
