@@ -1,6 +1,3 @@
-#[cfg(test)]
-#[path = "longitudinal_context_tests.rs"]
-mod tests;
 //! Read-only assembly of governed longitudinal context from canonical SOMA projections.
 //!
 //! This module does not own health data, evidence, relationships, or policy. It
@@ -147,3 +144,7 @@ impl LongitudinalContextAssembly {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "longitudinal_context_tests.rs"]
+mod tests;
