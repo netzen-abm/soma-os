@@ -1,3 +1,4 @@
+// Standalone repository tests; formatting follows rustfmt at file-module scope.
 use super::*;
 use crate::local_health_vault::LocalHealthVaultCrypto;
 use crate::local_health_vault_storage::VaultAction;
