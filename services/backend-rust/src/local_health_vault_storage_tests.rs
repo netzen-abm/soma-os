@@ -1,10 +1,10 @@
 use super::*;
-use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
+use crate::local_health_vault::{LocalHealthVaultCrypto, LocalHealthVaultRecord, VaultRecordMetadata};
 use std::{
     cell::Cell,
     collections::HashMap,
     fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     rc::Rc,
     time::{SystemTime, UNIX_EPOCH},
 };
