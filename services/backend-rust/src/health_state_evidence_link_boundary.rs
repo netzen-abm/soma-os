@@ -1,4 +1,5 @@
 use super::contract::{
+    SCHEMA_VERSION,
     AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkError,
     HealthStateEvidenceRelationship,
 };
