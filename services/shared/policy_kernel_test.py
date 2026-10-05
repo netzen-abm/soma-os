@@ -117,7 +117,7 @@ class PolicyKernelTests(unittest.TestCase):
                 "requires_durable_identity": True,
             },
         }
-        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="remote.sync", capability_version="1.0.0", resource_type="vault", resource_id="v1", action="read", context={}, subject_ref=None)
+        request = PolicyRequest(principal_id="person-1", principal_type="person", capability_id="remote.sync", capability_version="1.0.0", resource_type="vault", resource_id="v1", action="read", context={}, subject_ref="person-1")
         grants = {("person-1", "person", "remote.sync", "vault", "v1", "read", "person-1"): True}
         kernel = PolicyKernel({"capabilities": [capability]}, grants)
         anonymous = {"principal_id": "person-1", "principal_type": "person", "authentication_status": "VERIFIED", "identity_mode": "anonymous_local", "assurance_level": "LOW"}
