@@ -1,6 +1,5 @@
 use super::*;
 
-
 use super::*;
 
 fn request() -> AuthorizationRequest {

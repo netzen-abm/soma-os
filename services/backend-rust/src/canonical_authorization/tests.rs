@@ -30,5 +30,5 @@ fn request() -> AuthorizationRequest {
     }
 }
 
-mod protected;
 mod domain;
+mod protected;
