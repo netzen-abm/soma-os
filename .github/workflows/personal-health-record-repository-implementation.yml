@@ -17,9 +17,37 @@ on:
       - ".github/workflows/personal-health-record-repository-implementation.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+
+  normalize-development-rustfmt:
+    name: Normalize development Rust formatting
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'development'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Normalize Rust formatting
+        run: cargo fmt --manifest-path services/backend-rust/Cargo.toml --all
+      - name: Commit normalized formatting
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "soma-os formatter"
+          git config user.email "actions@github.com"
+          git add services/backend-rust
+          git commit -m "chore: normalize Rust formatting"
+          git push origin HEAD:development
+
   repository:
     name: Validate PHR repository implementation
     runs-on: ubuntu-latest
