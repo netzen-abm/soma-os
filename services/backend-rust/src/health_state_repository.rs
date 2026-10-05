@@ -5,7 +5,7 @@ mod contract;
 #[path = "health_state_repository_impl.rs"]
 mod implementation;
 
-pub use contract::{
+pub(super) use contract::{
     AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository, HealthStateRepositoryError,
     HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES, HEALTH_STATE_CONTENT_TYPE,
 };
