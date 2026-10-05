@@ -1,6 +1,6 @@
 use super::*;
-use base64::Engine;
 use crate::local_health_vault::{LocalHealthVaultCrypto, LocalHealthVaultRecord, VaultRecordMetadata};
+use base64::Engine;
 use std::{
     cell::Cell,
     collections::HashMap,
