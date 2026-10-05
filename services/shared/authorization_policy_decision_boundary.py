@@ -57,7 +57,7 @@ class AuthorizationPolicyDecisionBoundary:
             policy_version = enforcement.policy_decision.policy_version
             reason_code = enforcement.reason_code
         return AuthorizationDecision(
-            request_id=request_id, principal_id=request.principal_id,
+            request_id=request_id, principal_ref=request.principal_id,
             principal_type=request.principal_type, subject_ref=request.subject_ref,
             capability_id=request.capability_id,
             capability_version=request.capability_version,
