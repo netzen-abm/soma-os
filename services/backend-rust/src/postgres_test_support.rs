@@ -19,7 +19,13 @@ static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 pub(crate) async fn test_pool() -> Option<PgPool> {
     let url = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty())?;
-    Some(PgPoolOptions::new().max_connections(4).connect(&url).await.expect("SOMA_TEST_DATABASE_URL must point to a reachable PostgreSQL test database"))
+    Some(
+        PgPoolOptions::new()
+            .max_connections(4)
+            .connect(&url)
+            .await
+            .expect("SOMA_TEST_DATABASE_URL must point to a reachable PostgreSQL test database"),
+    )
 }
 
 pub(crate) async fn prepare(pool: &PgPool) {
@@ -35,5 +41,8 @@ pub(crate) async fn prepare(pool: &PgPool) {
 }
 
 pub(crate) async fn assume_persistence_role(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>) {
-    sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut **tx).await.expect("test connection must assume persistence role");
+    sqlx::query("SET LOCAL ROLE somaos_persistence")
+        .execute(&mut **tx)
+        .await
+        .expect("test connection must assume persistence role");
 }

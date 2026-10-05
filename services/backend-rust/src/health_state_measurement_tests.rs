@@ -1,6 +1,5 @@
 use super::*;
 
-
 use super::*;
 
 fn request() -> AuthorizationRequest {
@@ -64,18 +63,12 @@ fn subject_mismatch_is_rejected() {
 fn missing_intervention_reference_is_rejected() {
     let mut candidate = plan();
     candidate.intervention_ref.clear();
-    assert_eq!(
-        MeasurementBoundary::validate(&candidate, &context()),
-        Err(MeasurementError::InvalidMeasurementPlan)
-    );
+    assert_eq!(MeasurementBoundary::validate(&candidate, &context()), Err(MeasurementError::InvalidMeasurementPlan));
 }
 
 #[test]
 fn measurement_fields_reject_control_characters() {
     let mut candidate = plan();
     candidate.metric = "sleep\nduration".into();
-    assert_eq!(
-        MeasurementBoundary::validate(&candidate, &context()),
-        Err(MeasurementError::InvalidMeasurementPlan)
-    );
+    assert_eq!(MeasurementBoundary::validate(&candidate, &context()), Err(MeasurementError::InvalidMeasurementPlan));
 }

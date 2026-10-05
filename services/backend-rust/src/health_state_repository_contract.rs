@@ -7,10 +7,8 @@ use crate::local_health_vault::LocalHealthVaultRecord;
 use crate::local_health_vault_storage::StorageError;
 
 pub const HEALTH_STATE_CONTENT_TYPE: &str = "application/json";
-pub const ALLOWED_ENTITY_TYPES: [&str; 8] = [
-    "person", "observation", "interpretation", "goal",
-    "context", "intervention", "response", "outcome",
-];
+pub const ALLOWED_ENTITY_TYPES: [&str; 8] =
+    ["person", "observation", "interpretation", "goal", "context", "intervention", "response", "outcome"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedHealthStateAccessContext {
@@ -25,13 +23,17 @@ pub struct AuthorizedHealthStateAccessContext {
 }
 
 impl AuthorizedHealthStateAccessContext {
-    pub(crate) fn from_authorized_request(
-        request: &AuthorizationRequest,
-    ) -> Result<Self, HealthStateRepositoryError> {
+    pub(crate) fn from_authorized_request(request: &AuthorizationRequest) -> Result<Self, HealthStateRepositoryError> {
         let values = [
-            &request.principal_ref, &request.subject_ref, &request.capability_id,
-            &request.capability_version, &request.resource_type, &request.resource_id,
-            &request.action, &request.tenant_id, &request.data_domain,
+            &request.principal_ref,
+            &request.subject_ref,
+            &request.capability_id,
+            &request.capability_version,
+            &request.resource_type,
+            &request.resource_id,
+            &request.action,
+            &request.tenant_id,
+            &request.data_domain,
         ];
         if values.iter().any(|value| value.trim().is_empty() || value.chars().any(char::is_control)) {
             return Err(HealthStateRepositoryError::AuthorizationDenied);
@@ -48,14 +50,30 @@ impl AuthorizedHealthStateAccessContext {
         })
     }
 
-    pub fn principal_ref(&self) -> &str { &self.principal_ref }
-    pub fn subject_ref(&self) -> &str { &self.subject_ref }
-    pub fn scope(&self) -> &str { &self.scope }
-    pub fn capability_id(&self) -> &str { &self.capability_id }
-    pub fn capability_version(&self) -> &str { &self.capability_version }
-    pub fn resource_type(&self) -> &str { &self.resource_type }
-    pub fn resource_id(&self) -> &str { &self.resource_id }
-    pub fn action(&self) -> &str { &self.action }
+    pub fn principal_ref(&self) -> &str {
+        &self.principal_ref
+    }
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+    pub fn scope(&self) -> &str {
+        &self.scope
+    }
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn capability_version(&self) -> &str {
+        &self.capability_version
+    }
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+    pub fn action(&self) -> &str {
+        &self.action
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -96,24 +114,43 @@ impl From<StorageError> for HealthStateRepositoryError {
             StorageError::NotFound => Self::NotFound,
             StorageError::Tombstoned => Self::Tombstoned,
             StorageError::IndexIntegrityFailure | StorageError::RecordIntegrityFailure => Self::IntegrityFailure,
-            StorageError::InvalidRecord | StorageError::KeyResolutionFailed
-            | StorageError::Io | StorageError::Serialization
+            StorageError::InvalidRecord
+            | StorageError::KeyResolutionFailed
+            | StorageError::Io
+            | StorageError::Serialization
             | StorageError::NonceGenerationFailed => Self::StorageFailure,
         }
     }
 }
 
 pub trait HealthStateRepository {
-    fn put(&self, record: LocalHealthVaultRecord, context: &AuthorizedHealthStateAccessContext)
-        -> Result<(), HealthStateRepositoryError>;
-    fn get(&self, record_id: &str, context: &AuthorizedHealthStateAccessContext)
-        -> Result<LocalHealthVaultRecord, HealthStateRepositoryError>;
-    fn query(&self, context: &AuthorizedHealthStateAccessContext, query: &HealthStateQuery)
-        -> Result<Vec<LocalHealthVaultRecord>, HealthStateRepositoryError>;
-    fn timeline(&self, context: &AuthorizedHealthStateAccessContext)
-        -> Result<Vec<HealthStateTimelineEntry>, HealthStateRepositoryError>;
-    fn tombstone(&self, record_id: &str, context: &AuthorizedHealthStateAccessContext)
-        -> Result<(), HealthStateRepositoryError>;
-    fn verify(&self, record_id: &str, context: &AuthorizedHealthStateAccessContext)
-        -> Result<(), HealthStateRepositoryError>;
+    fn put(
+        &self,
+        record: LocalHealthVaultRecord,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<(), HealthStateRepositoryError>;
+    fn get(
+        &self,
+        record_id: &str,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<LocalHealthVaultRecord, HealthStateRepositoryError>;
+    fn query(
+        &self,
+        context: &AuthorizedHealthStateAccessContext,
+        query: &HealthStateQuery,
+    ) -> Result<Vec<LocalHealthVaultRecord>, HealthStateRepositoryError>;
+    fn timeline(
+        &self,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<Vec<HealthStateTimelineEntry>, HealthStateRepositoryError>;
+    fn tombstone(
+        &self,
+        record_id: &str,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<(), HealthStateRepositoryError>;
+    fn verify(
+        &self,
+        record_id: &str,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<(), HealthStateRepositoryError>;
 }

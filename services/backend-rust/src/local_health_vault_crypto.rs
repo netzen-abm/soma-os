@@ -5,8 +5,8 @@ use ring::{
 };
 
 use super::contract::{
-    AuthenticatedMetadata, LocalHealthVaultRecord, VaultError, VaultRecordMetadata,
-    CLASS, ENCRYPTION, INTEGRITY, SCHEMA,
+    AuthenticatedMetadata, LocalHealthVaultRecord, VaultError, VaultRecordMetadata, CLASS, ENCRYPTION, INTEGRITY,
+    SCHEMA,
 };
 
 const NONCE_LEN: usize = 12;
@@ -24,9 +24,14 @@ impl LocalHealthVaultCrypto {
             return Err(VaultError::InvalidKeyLength);
         }
         let values = [
-            metadata.record_id, metadata.subject_ref, metadata.entity_type,
-            metadata.content_type, metadata.key_ref, metadata.provenance_ref,
-            metadata.created_at, metadata.updated_at,
+            metadata.record_id,
+            metadata.subject_ref,
+            metadata.entity_type,
+            metadata.content_type,
+            metadata.key_ref,
+            metadata.provenance_ref,
+            metadata.created_at,
+            metadata.updated_at,
         ];
         if values.iter().any(|value| value.is_empty()) {
             return Err(VaultError::InvalidMetadata);
@@ -46,8 +51,7 @@ impl LocalHealthVaultCrypto {
         };
         let aad = serde_json::to_vec(&authenticated).map_err(|_| VaultError::InvalidMetadata)?;
         let key = aead::LessSafeKey::new(
-            aead::UnboundKey::new(&aead::AES_256_GCM, key)
-                .map_err(|_| VaultError::InvalidKeyLength)?,
+            aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| VaultError::InvalidKeyLength)?,
         );
         let mut nonce_bytes = [0u8; NONCE_LEN];
         SystemRandom::new().fill(&mut nonce_bytes).map_err(|_| VaultError::NonceGenerationFailed)?;
@@ -75,28 +79,40 @@ impl LocalHealthVaultCrypto {
     }
 
     pub fn decrypt_record(key: &[u8], record: &LocalHealthVaultRecord) -> Result<Vec<u8>, VaultError> {
-        if key.len() != KEY_LEN || record.schema_version != SCHEMA || record.classification != CLASS
-            || record.encryption_algorithm != ENCRYPTION || record.integrity_algorithm != INTEGRITY || record.tombstone {
+        if key.len() != KEY_LEN
+            || record.schema_version != SCHEMA
+            || record.classification != CLASS
+            || record.encryption_algorithm != ENCRYPTION
+            || record.integrity_algorithm != INTEGRITY
+            || record.tombstone
+        {
             return Err(VaultError::InvalidEnvelope);
         }
         let nonce_vec = BASE64.decode(&record.nonce).map_err(|_| VaultError::InvalidEnvelope)?;
         if nonce_vec.len() != NONCE_LEN {
             return Err(VaultError::InvalidEnvelope);
         }
-        let nonce = aead::Nonce::try_assume_unique_for_key(&nonce_vec)
-            .map_err(|_| VaultError::InvalidEnvelope)?;
+        let nonce = aead::Nonce::try_assume_unique_for_key(&nonce_vec).map_err(|_| VaultError::InvalidEnvelope)?;
         let mut ciphertext = BASE64.decode(&record.ciphertext).map_err(|_| VaultError::InvalidEnvelope)?;
         let metadata = AuthenticatedMetadata {
-            record_id: &record.record_id, subject_ref: &record.subject_ref, entity_type: &record.entity_type,
-            schema_version: &record.schema_version, classification: &record.classification,
-            content_type: &record.content_type, key_ref: &record.key_ref, provenance_ref: &record.provenance_ref,
-            created_at: &record.created_at, updated_at: &record.updated_at, tombstone: record.tombstone,
+            record_id: &record.record_id,
+            subject_ref: &record.subject_ref,
+            entity_type: &record.entity_type,
+            schema_version: &record.schema_version,
+            classification: &record.classification,
+            content_type: &record.content_type,
+            key_ref: &record.key_ref,
+            provenance_ref: &record.provenance_ref,
+            created_at: &record.created_at,
+            updated_at: &record.updated_at,
+            tombstone: record.tombstone,
         };
         let aad = serde_json::to_vec(&metadata).map_err(|_| VaultError::InvalidEnvelope)?;
         let key = aead::LessSafeKey::new(
             aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| VaultError::InvalidKeyLength)?,
         );
-        let plaintext = key.open_in_place(nonce, aead::Aad::from(aad.as_slice()), &mut ciphertext)
+        let plaintext = key
+            .open_in_place(nonce, aead::Aad::from(aad.as_slice()), &mut ciphertext)
             .map_err(|_| VaultError::AuthenticationFailed)?;
         Ok(plaintext.to_vec())
     }

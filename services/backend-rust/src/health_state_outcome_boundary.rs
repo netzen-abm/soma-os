@@ -1,5 +1,5 @@
-use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 use super::contract::{AuthorizedOutcomeContext, Outcome, OutcomeError};
+use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 
 /// Outcome authorization adapter: consumes the canonical authorization decision
 /// and mints the outcome context only after an explicit ALLOW.

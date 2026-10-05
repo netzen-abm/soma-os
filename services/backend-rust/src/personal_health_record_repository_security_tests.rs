@@ -77,66 +77,63 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
     (LocalPersonalHealthRecordRepository::new(vault), calls)
 }
 
-
 #[test]
-    fn missing_reference_fails_closed() {
-        let root = root();
-        let (repository, _) = repository(&root);
-        let context = AuthorizationContext {
-            principal_ref: "person-1".into(),
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
-        };
-        assert_eq!(repository.put_reference("person-1-missing", &context), Err(RepositoryError::NotFound));
-        fs::remove_dir_all(root).unwrap();
+fn missing_reference_fails_closed() {
+    let root = root();
+    let (repository, _) = repository(&root);
+    let context = AuthorizationContext {
+        principal_ref: "person-1".into(),
+        subject_ref: "person-1".into(),
+        scope: "self".into(),
+    };
+    assert_eq!(repository.put_reference("person-1-missing", &context), Err(RepositoryError::NotFound));
+    fs::remove_dir_all(root).unwrap();
 }
 
-
 #[test]
-    fn encrypted_bundle_does_not_persist_plaintext_payload() {
-        let root = root();
-        let (repository, _) = repository(&root);
-        let context = AuthorizationContext {
-            principal_ref: "person-1".into(),
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
-        };
-        repository
-            .vault
-            .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
-            .unwrap();
-        let subject_hash = hex::encode(Sha256::digest(context.subject_ref.as_bytes()));
-        let record_hash = hex::encode(Sha256::digest(b"person-1-record-1"));
-        let bundle_path = root.join(subject_hash).join(format!("{record_hash}.bundle"));
-        let bytes = fs::read(bundle_path).unwrap();
-        let persisted = String::from_utf8_lossy(&bytes);
-        assert!(!persisted.contains("heart_rate"));
-        assert!(!persisted.contains("\"value\":60"));
-        fs::remove_dir_all(root).unwrap();
+fn encrypted_bundle_does_not_persist_plaintext_payload() {
+    let root = root();
+    let (repository, _) = repository(&root);
+    let context = AuthorizationContext {
+        principal_ref: "person-1".into(),
+        subject_ref: "person-1".into(),
+        scope: "self".into(),
+    };
+    repository
+        .vault
+        .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
+        .unwrap();
+    let subject_hash = hex::encode(Sha256::digest(context.subject_ref.as_bytes()));
+    let record_hash = hex::encode(Sha256::digest(b"person-1-record-1"));
+    let bundle_path = root.join(subject_hash).join(format!("{record_hash}.bundle"));
+    let bytes = fs::read(bundle_path).unwrap();
+    let persisted = String::from_utf8_lossy(&bytes);
+    assert!(!persisted.contains("heart_rate"));
+    assert!(!persisted.contains("\"value\":60"));
+    fs::remove_dir_all(root).unwrap();
 }
 
-
 #[test]
-    fn timeline_is_deterministic_and_rebuild_does_not_create_a_second_source_of_truth() {
-        let root = root();
-        let (repository, _) = repository(&root);
-        let context = AuthorizationContext {
-            principal_ref: "person-1".into(),
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
-        };
-        repository
-            .vault
-            .put(record("person-1-record-2", "person-1", "observation", "2026-09-11T00:00:00Z"), &context)
-            .unwrap();
-        repository
-            .vault
-            .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
-            .unwrap();
-        let timeline = repository.timeline(&context).unwrap();
-        let rebuilt = repository.rebuild_index(&context).unwrap();
-        assert_eq!(timeline[0].record_id, "person-1-record-1");
-        assert_eq!(timeline[1].record_id, "person-1-record-2");
-        assert_eq!(timeline, rebuilt);
-        fs::remove_dir_all(root).unwrap();
+fn timeline_is_deterministic_and_rebuild_does_not_create_a_second_source_of_truth() {
+    let root = root();
+    let (repository, _) = repository(&root);
+    let context = AuthorizationContext {
+        principal_ref: "person-1".into(),
+        subject_ref: "person-1".into(),
+        scope: "self".into(),
+    };
+    repository
+        .vault
+        .put(record("person-1-record-2", "person-1", "observation", "2026-09-11T00:00:00Z"), &context)
+        .unwrap();
+    repository
+        .vault
+        .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
+        .unwrap();
+    let timeline = repository.timeline(&context).unwrap();
+    let rebuilt = repository.rebuild_index(&context).unwrap();
+    assert_eq!(timeline[0].record_id, "person-1-record-1");
+    assert_eq!(timeline[1].record_id, "person-1-record-2");
+    assert_eq!(timeline, rebuilt);
+    fs::remove_dir_all(root).unwrap();
 }
