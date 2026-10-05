@@ -8,3 +8,6 @@ mod security_tests;
 #[cfg(test)]
 #[path = "personal_health_record_repository_tests.rs"]
 mod tests;
+
+pub(super) use contract::{PersonalHealthRecordRepository, RepositoryError, RepositoryQuery};
+pub(super) use implementation::LocalPersonalHealthRecordRepository;
