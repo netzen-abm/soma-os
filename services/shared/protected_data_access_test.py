@@ -46,14 +46,14 @@ def kernel() -> PolicyKernel:
 
 
 class ProtectedDataAccessTests(unittest.TestCase):
-    def test_authorized_read_reaches_adapter() -> None:
+    def test_authorized_read_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         assert access.read(request(identity())) == {"resource_id": "r-1"}
         assert adapter.calls == 1
     
     
 
-    def test_anonymous_local_identity_can_use_explicitly_granted_low_risk_capability() -> None:
+    def test_anonymous_local_identity_can_use_explicitly_granted_low_risk_capability(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         ctx = identity(); ctx.update({"identity_mode": "anonymous_local", "assurance_level": "LOW"})
         assert access.read(request(ctx)) == {"resource_id": "r-1"}
@@ -61,7 +61,7 @@ class ProtectedDataAccessTests(unittest.TestCase):
     
     
 
-    def test_wrong_tenant_never_reaches_adapter() -> None:
+    def test_wrong_tenant_never_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         ctx = identity(tenant="tenant-b")
         try: access.read(request(ctx))
@@ -71,7 +71,7 @@ class ProtectedDataAccessTests(unittest.TestCase):
     
     
 
-    def test_wrong_domain_never_reaches_adapter() -> None:
+    def test_wrong_domain_never_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         ctx = identity(domain="another-domain")
         try: access.read(request(ctx))
@@ -81,7 +81,7 @@ class ProtectedDataAccessTests(unittest.TestCase):
     
     
 
-    def test_wrong_resource_never_reaches_adapter() -> None:
+    def test_wrong_resource_never_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         try: access.read(request(identity(), resource_id="r-2"))
         except PermissionError as exc: assert str(exc) == "policy_authorization_required"
@@ -90,7 +90,7 @@ class ProtectedDataAccessTests(unittest.TestCase):
     
     
 
-    def test_unverified_identity_never_reaches_adapter() -> None:
+    def test_unverified_identity_never_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         ctx = identity(); ctx["authentication_status"] = "UNVERIFIED"
         try: access.read(request(ctx))
@@ -100,7 +100,7 @@ class ProtectedDataAccessTests(unittest.TestCase):
     
     
 
-    def test_capability_version_mismatch_never_reaches_adapter() -> None:
+    def test_capability_version_mismatch_never_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", capability_version="9.9.9", resource_type="health_record", resource_id="r-1", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="subject-001")
         try: access.read(bad)
@@ -110,7 +110,7 @@ class ProtectedDataAccessTests(unittest.TestCase):
     
     
 
-    def test_invalid_request_never_reaches_adapter() -> None:
+    def test_invalid_request_never_reaches_adapter(self) -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1")
         try: access.read(bad)
