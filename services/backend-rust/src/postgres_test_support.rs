@@ -18,7 +18,9 @@ const MIGRATIONS: &[&str] = &[
 static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 pub(crate) async fn test_pool() -> Option<PgPool> {
-    let url = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty())?;
+    let url = std::env::var("SOMA_TEST_DATABASE_URL")
+        .ok()
+        .filter(|v| !v.trim().is_empty())?;
     Some(
         PgPoolOptions::new()
             .max_connections(4)
@@ -31,7 +33,7 @@ pub(crate) async fn test_pool() -> Option<PgPool> {
 pub(crate) async fn prepare(pool: &PgPool) {
     PREPARED
         .get_or_init(|| async {
-            for (index, migration) in MIGRATIONS.iter().enumerate() {
+        for (index, migration) in MIGRATIONS.iter().enumerate() {
             sqlx::raw_sql(migration)
                 .execute(pool)
                 .await
