@@ -1,6 +1,3 @@
-#[cfg(test)]
-#[path = "local_longitudinal_observation_repository_tests.rs"]
-mod tests;
 //! Local longitudinal observation provider backed by the existing Health Vault.
 //!
 //! This adapter owns no second clinical payload store. It composes the existing
@@ -8,13 +5,14 @@ mod tests;
 //! contract while preserving the vault's encryption, integrity, tombstone, and
 //! authorization boundary.
 
+
 use crate::local_health_vault::LocalHealthVaultRecord;
 use crate::local_health_vault_storage::{
     AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider,
 };
 use crate::longitudinal_observation_repository::{
-    sort_timeline, AuthorizedObservationAccessContext, LongitudinalObservationRepository, ObservationQuery,
-    ObservationRepositoryError, ObservationTimelineEntry,
+    sort_timeline, AuthorizedObservationAccessContext, LongitudinalObservationRepository,
+    ObservationQuery, ObservationRepositoryError, ObservationTimelineEntry,
 };
 
 /// Local provider for longitudinal observations.
@@ -79,7 +77,10 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        let record = self.vault.get(observation_id, &vault_context).map_err(Self::map_error)?;
+        let record = self
+            .vault
+            .get(observation_id, &vault_context)
+            .map_err(Self::map_error)?;
         if !Self::is_observation(&record) {
             return Err(ObservationRepositoryError::InvalidObservation);
         }
@@ -153,7 +154,9 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        self.vault.tombstone(observation_id, &vault_context).map_err(Self::map_error)
+        self.vault
+            .tombstone(observation_id, &vault_context)
+            .map_err(Self::map_error)
     }
 
     fn verify(
@@ -162,6 +165,13 @@ where
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
         let vault_context = Self::vault_context(context);
-        self.vault.verify(observation_id, &vault_context).map_err(Self::map_error)
+        self.vault
+            .verify(observation_id, &vault_context)
+            .map_err(Self::map_error)
     }
 }
+
+
+#[cfg(test)]
+#[path = "local_longitudinal_observation_repository_tests.rs"]
+mod tests;
