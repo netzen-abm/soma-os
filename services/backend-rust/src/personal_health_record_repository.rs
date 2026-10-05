@@ -8,7 +8,9 @@ mod contract;
 #[path = "personal_health_record_repository_impl.rs"]
 mod implementation;
 
+#[allow(unused_imports)]
 pub use contract::{PersonalHealthRecordRepository, RepositoryError, RepositoryQuery};
+#[allow(unused_imports)]
 pub use implementation::LocalPersonalHealthRecordRepository;
 
 #[cfg(test)]
