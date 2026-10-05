@@ -84,8 +84,10 @@ def main() -> int:
         fail(f"canonical Rust authorization fields missing from runtime: {missing}")
 
     policy = (ROOT / owners["policy_evaluator"]).read_text(encoding="utf-8")
+    policy_contract = (ROOT / "services/shared/policy_kernel_contract.py").read_text(encoding="utf-8")
     protected = (ROOT / owners["protected_data"]).read_text(encoding="utf-8")
-    if "class PolicyRequest" not in policy or "subject_ref" not in policy:
+    protected_contract = (ROOT / "services/shared/protected_data_access.py").read_text(encoding="utf-8")
+    if "class PolicyRequest" not in policy_contract or "subject_ref" not in policy_contract or "subject_ref" not in policy:
         fail("Policy Kernel does not expose the canonical subject binding")
     if "class ProtectedDataRequest" not in protected or "subject_ref" not in protected:
         fail("ProtectedDataAccess does not expose the canonical subject binding")
