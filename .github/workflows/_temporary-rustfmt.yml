@@ -20,6 +20,7 @@ jobs:
         with:
           toolchain: stable
       - name: Run canonical rustfmt
+        working-directory: services/backend-rust
         run: cargo fmt --all
       - name: Commit formatting normalization
         run: |
