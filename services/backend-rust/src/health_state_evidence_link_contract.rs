@@ -147,8 +147,3 @@ pub enum HealthStateEvidenceLinkError {
     SubjectMismatch,
 }
 
-/// Smallest canonical validation boundary for cross-domain linkage.
-///
-/// It validates the link contract and binds access to an already-authorized
-/// context. It deliberately does not resolve either reference, infer causation,
-/// or persist the link.
