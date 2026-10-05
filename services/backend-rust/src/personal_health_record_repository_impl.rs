@@ -74,6 +74,6 @@ where
     }
 
     fn rebuild_index(&self, context: &AuthorizationContext) -> Result<Vec<AuthorizedIndexEntry>, RepositoryError> {
-        self.list(context)
+        self.timeline(context)
     }
 }
