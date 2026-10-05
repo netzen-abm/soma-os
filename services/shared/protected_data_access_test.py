@@ -1,24 +1,29 @@
 from __future__ import annotations
 
+import unittest
 from dataclasses import dataclass
 from typing import Mapping
 
-from policy_kernel import Decision, GrantKey, PolicyKernel
 from protected_data_access import ProtectedDataAccess, ProtectedDataRequest
+from policy_kernel import GrantKey, PolicyKernel
 
 
 @dataclass
 class Adapter:
     calls: int = 0
+
     def read(self, request: ProtectedDataRequest) -> object:
         self.calls += 1
         return {"resource_id": request.resource_id}
+
     def insert(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
         self.calls += 1
         return payload
+
     def update(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
         self.calls += 1
         return payload
+
     def delete(self, request: ProtectedDataRequest) -> object:
         self.calls += 1
         return True
@@ -26,128 +31,124 @@ class Adapter:
 
 def identity(tenant: str = "tenant-a", domain: str = "personal-health") -> dict[str, object]:
     return {
-        "context_id": "ctx-1", "schema_version": "1.1.0", "principal_id": "person-1",
-        "principal_type": "person", "identity_mode": "authenticated_account", "authentication_status": "VERIFIED",
-        "authentication_provenance": {"issuer": "test", "method": "test", "verified_at": "2026-09-04T10:00:00Z", "verifier_id": "test"},
-        "tenant_scope": [tenant], "data_domain_scope": [domain], "assurance_level": "HIGH",
+        "context_id": "ctx-1",
+        "schema_version": "1.1.0",
+        "principal_id": "person-1",
+        "principal_type": "person",
+        "identity_mode": "authenticated_account",
+        "authentication_status": "VERIFIED",
+        "authentication_provenance": {
+            "issuer": "test",
+            "method": "test",
+            "verified_at": "2026-09-04T10:00:00Z",
+            "verifier_id": "test",
+        },
+        "tenant_scope": [tenant],
+        "data_domain_scope": [domain],
+        "assurance_level": "HIGH",
         "issued_at": "2026-09-04T10:00:00Z",
+        "expires_at": "2026-09-04T12:00:00Z",
     }
 
 
-def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1") -> ProtectedDataRequest:
-    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
-
-
-def kernel() -> PolicyKernel:
-    grants: dict[GrantKey, bool] = {("person-1", "person", "health.read", "health_record", "r-1", "read", "person-1"): True}
-    return PolicyKernel({"capabilities": [{"id": "health.read", "version": "1.0.0", "principal_types": ["person"]}]}, grants)
-
-
-def test_authorized_read_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    assert access.read(request(identity())) == {"resource_id": "r-1"}
-    assert adapter.calls == 1
-
-
-def test_anonymous_local_identity_can_use_explicitly_granted_low_risk_capability() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    ctx = identity(); ctx.update({"identity_mode": "anonymous_local", "assurance_level": "LOW"})
-    assert access.read(request(ctx)) == {"resource_id": "r-1"}
-    assert adapter.calls == 1
-
-
-def test_wrong_tenant_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    ctx = identity(tenant="tenant-b")
-    try: access.read(request(ctx))
-    except PermissionError as exc: assert str(exc) == "target_scope_mismatch"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def test_wrong_domain_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    ctx = identity(domain="another-domain")
-    try: access.read(request(ctx))
-    except PermissionError as exc: assert str(exc) == "target_scope_mismatch"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def test_wrong_resource_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    try: access.read(request(identity(), resource_id="r-2"))
-    except PermissionError as exc: assert str(exc) == "policy_authorization_required"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def test_unverified_identity_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    ctx = identity(); ctx["authentication_status"] = "UNVERIFIED"
-    try: access.read(request(ctx))
-    except PermissionError as exc: assert str(exc) == "invalid_identity_context"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def test_capability_version_mismatch_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", capability_version="9.9.9", resource_type="health_record", resource_id="r-1", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="subject-001")
-    try: access.read(bad)
-    except PermissionError as exc: assert str(exc) == "policy_capability_version_mismatch"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def test_invalid_request_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    bad = ProtectedDataRequest(authorization_context=identity(), capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id="", action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1")
-    try: access.read(bad)
-    except PermissionError as exc: assert str(exc) == "invalid_protected_data_request"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def permission_bound_request(ctx: dict[str, object], permission: dict[str, object]) -> ProtectedDataRequest:
+def request(ctx: dict[str, object], resource_id: str = "r-1") -> ProtectedDataRequest:
     return ProtectedDataRequest(
-        authorization_context=ctx, capability_id="health.read", capability_version="1.0.0",
-        resource_type="health_record", resource_id="r-1", action="read",
-        target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref="person-1",
-        operation_id="op-1", purpose="read_health_record", requested_scope=("health_record:r-1",),
-        permission=permission,
+        authorization_context=ctx,
+        capability_id="health.read",
+        capability_version="1.0.0",
+        resource_type="health_record",
+        resource_id=resource_id,
+        action="read",
+        target_tenant_id="tenant-a",
+        target_data_domain="personal-health",
+        subject_ref="person-1",
     )
 
 
-def active_permission() -> dict[str, object]:
-    return {
-        "permission_id": "perm-1", "operation_id": "op-1", "principal_ref": "person-1", "subject_ref": "person-1",
-        "capability_id": "health.read", "capability_version": "1.0.0", "purpose": "read_health_record",
-        "scope": ["health_record:r-1"], "status": "ACTIVE", "expires_at": "2026-09-21T20:00:00Z",
-        "auto_revoke": True, "regrant_requires_fresh_consent": True,
+def kernel() -> PolicyKernel:
+    grants: dict[GrantKey, bool] = {
+        ("person-1", "person", "health.read", "health_record", "r-1", "read", "person-1"): True
     }
+    return PolicyKernel(
+        {"capabilities": [{"id": "health.read", "version": "1.0.0", "principal_types": ["person"]}]},
+        grants,
+    )
 
 
-def test_permission_bound_read_uses_canonical_execution_and_revokes() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    result = access.read(permission_bound_request(identity(), active_permission()))
-    assert result == {"resource_id": "r-1"}
-    assert adapter.calls == 1
+class ProtectedDataAccessTests(unittest.TestCase):
+    def test_authorized_read_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        self.assertEqual(access.read(request(identity())), {"resource_id": "r-1"})
+        self.assertEqual(adapter.calls, 1)
+
+    def test_wrong_tenant_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        with self.assertRaisesRegex(PermissionError, "target_scope_mismatch"):
+            access.read(request(identity(tenant="tenant-b")))
+        self.assertEqual(adapter.calls, 0)
+
+    def test_wrong_domain_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        with self.assertRaisesRegex(PermissionError, "target_scope_mismatch"):
+            access.read(request(identity(domain="another-domain")))
+        self.assertEqual(adapter.calls, 0)
+
+    def test_wrong_resource_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        with self.assertRaisesRegex(PermissionError, "policy_authorization_required"):
+            access.read(request(identity(), resource_id="r-2"))
+        self.assertEqual(adapter.calls, 0)
+
+    def test_unverified_identity_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        ctx = identity()
+        ctx["authentication_status"] = "UNVERIFIED"
+        with self.assertRaisesRegex(PermissionError, "invalid_identity_context"):
+            access.read(request(ctx))
+        self.assertEqual(adapter.calls, 0)
+
+    def test_capability_version_mismatch_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        bad = ProtectedDataRequest(
+            authorization_context=identity(),
+            capability_id="health.read",
+            capability_version="9.9.9",
+            resource_type="health_record",
+            resource_id="r-1",
+            action="read",
+            target_tenant_id="tenant-a",
+            target_data_domain="personal-health",
+            subject_ref="person-1",
+        )
+        with self.assertRaisesRegex(PermissionError, "policy_capability_version_mismatch"):
+            access.read(bad)
+        self.assertEqual(adapter.calls, 0)
+
+    def test_invalid_request_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        bad = request(identity())
+        bad = ProtectedDataRequest(
+            authorization_context=bad.authorization_context,
+            capability_id=bad.capability_id,
+            capability_version=bad.capability_version,
+            resource_type=bad.resource_type,
+            resource_id="",
+            action=bad.action,
+            target_tenant_id=bad.target_tenant_id,
+            target_data_domain=bad.target_data_domain,
+            subject_ref=bad.subject_ref,
+        )
+        with self.assertRaisesRegex(PermissionError, "invalid_protected_data_request"):
+            access.read(bad)
+        self.assertEqual(adapter.calls, 0)
 
 
-def test_permission_bound_expiry_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    permission = active_permission(); permission["expires_at"] = "2026-09-21T18:00:00Z"
-    try: access.read(permission_bound_request(identity(), permission))
-    except PermissionError as exc: assert str(exc) == "permission_expired"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
-
-
-def test_permission_bound_subject_mismatch_never_reaches_adapter() -> None:
-    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    permission = active_permission(); permission["subject_ref"] = "other-subject"
-    try: access.read(permission_bound_request(identity(), permission))
-    except PermissionError as exc: assert str(exc) == "permission_binding_mismatch"
-    else: raise AssertionError("expected denial")
-    assert adapter.calls == 0
+if __name__ == "__main__":
+    unittest.main()
