@@ -9,7 +9,6 @@ pub use contract::{
     AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository, HealthStateRepositoryError,
     HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES, HEALTH_STATE_CONTENT_TYPE,
 };
-pub use implementation::LocalHealthStateRepository;
 
 #[cfg(test)]
 #[path = "health_state_repository_tests.rs"]
