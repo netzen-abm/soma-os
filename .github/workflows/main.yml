@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
   SOMA_CI_CHECKOUT_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
@@ -33,6 +36,19 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: services/backend-rust -> target
+
+      - name: Normalize development Rust formatting
+        if: github.event_name == 'push' && github.ref == 'refs/heads/development' && !contains(github.event.head_commit.message, 'chore: normalize Rust formatting')
+        run: |
+          cargo fmt --manifest-path services/backend-rust/Cargo.toml --all
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "soma-os formatter"
+          git config user.email "actions@github.com"
+          git add services/backend-rust
+          git commit -m "chore: normalize Rust formatting"
+          git push origin HEAD:development
 
       - name: Check Rust formatting
         run: >-
