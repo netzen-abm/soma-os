@@ -30,6 +30,17 @@ jobs:
       - name: Checkout exact revision
         uses: actions/checkout@v4
 
+      - name: Generate rustfmt patch
+        run: |
+          cargo fmt --all
+          git diff --binary > /tmp/rustfmt.patch
+      - name: Upload rustfmt patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: soma-rustfmt-patch
+          path: /tmp/rustfmt.patch
+          if-no-files-found: error
+
       - name: Rust format
         run: cargo fmt --all -- --check
 
