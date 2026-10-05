@@ -146,4 +146,3 @@ fn tombstoned_records_are_not_visible_or_registrable() {
     assert!(matches!(repository.get("person-1-record-1", &context), Err(RepositoryError::Tombstoned)));
     fs::remove_dir_all(root).unwrap();
 }
-
