@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import unittest
 from typing import Mapping
 
 from policy_kernel import Decision, GrantKey, PolicyKernel
@@ -45,7 +46,7 @@ def kernel() -> PolicyKernel:
 
 
 class ProtectedDataAccessTests(unittest.TestCase):
-    def ef test_authorized_read_reaches_adapter() -> None:
+    def test_authorized_read_reaches_adapter() -> None:
         adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
         assert access.read(request(identity())) == {"resource_id": "r-1"}
         assert adapter.calls == 1
