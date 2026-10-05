@@ -1,7 +1,6 @@
 use super::contract::{
-    SCHEMA_VERSION,
     AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkError,
-    HealthStateEvidenceRelationship,
+    HealthStateEvidenceRelationship, SCHEMA_VERSION,
 };
 
 pub struct HealthStateEvidenceLinkBoundary;
