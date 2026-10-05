@@ -1,7 +1,9 @@
 // Standalone repository tests; formatting follows rustfmt at file-module scope.
 use super::*;
 use crate::local_health_vault::{LocalHealthVaultCrypto, LocalHealthVaultRecord};
-use crate::local_health_vault_storage::{AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider};
+use crate::local_health_vault_storage::{
+    AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
+};
 use sha2::{Digest, Sha256};
 use std::{
     cell::Cell,
