@@ -1,0 +1,31 @@
+name: SOMA Development Rustfmt Normalize
+
+on:
+  push:
+    branches:
+      - development
+
+permissions:
+  contents: write
+
+jobs:
+  rustfmt:
+    if: ${{ !contains(github.event.head_commit.message, 'chore: normalize Rust formatting') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Format Rust workspace
+        run: cargo fmt --manifest-path services/backend-rust/Cargo.toml --all
+      - name: Commit formatter output
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "soma-os formatter"
+          git config user.email "actions@github.com"
+          git add services/backend-rust
+          git commit -m "chore: normalize Rust formatting"
+          git push origin HEAD:development
