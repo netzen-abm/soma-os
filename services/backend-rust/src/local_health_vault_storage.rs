@@ -4,6 +4,7 @@ mod contract;
 mod crypto;
 #[path = "local_health_vault_storage_store.rs"]
 mod store;
+#[allow(unused_imports)]
 pub use contract::{
     AuthorizationContext, AuthorizedIndexEntry, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider, KEY_LEN,
 };
