@@ -17,7 +17,6 @@ const KEY_LEN: usize = 32;
 struct Keys {
     calls: Rc<Cell<usize>>,
     values: HashMap<String, [u8; KEY_LEN]>,
-    }
 }
 
 impl VaultKeyProvider for Keys {
