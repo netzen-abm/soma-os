@@ -1,6 +1,4 @@
 use super::*;
-
-use super::*;
 use sqlx::postgres::PgPoolOptions;
 
 #[test]
