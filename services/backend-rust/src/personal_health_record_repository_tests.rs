@@ -20,7 +20,7 @@ struct Keys {
 }
 
 impl VaultKeyProvider for Keys {
-    fn key_for(&self, key_ref: &str) -> Result<[u8; KEY_LEN], StorageError> {
+fn key_for(&self, key_ref: &str) -> Result<[u8; KEY_LEN], StorageError> {
         self.calls.set(self.calls.get() + 1);
         self.values.get(key_ref).copied().ok_or(StorageError::KeyResolutionFailed)
     }
@@ -30,7 +30,7 @@ impl VaultKeyProvider for Keys {
 struct SubjectAuthorizer;
 
 impl VaultAuthorizer for SubjectAuthorizer {
-    fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
+fn authorize(&self, context: &AuthorizationContext, record_id: &str, action: VaultAction) -> bool {
         match action {
             VaultAction::List => true,
             _ => record_id == "*" || record_id.starts_with(&context.subject_ref),
@@ -79,7 +79,7 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
 
 
 #[test]
-    fn repository_is_reference_based_and_queries_derived_metadata() {
+fn repository_is_reference_based_and_queries_derived_metadata() {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
@@ -106,7 +106,7 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
 
 
 #[test]
-    fn unauthorized_reference_verification_happens_before_key_resolution() {
+fn unauthorized_reference_verification_happens_before_key_resolution() {
         let root = root();
         let (repository, calls) = repository(&root);
         let owner = AuthorizationContext {
@@ -131,7 +131,7 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
 
 
 #[test]
-    fn tombstoned_records_are_not_visible_or_registrable() {
+fn tombstoned_records_are_not_visible_or_registrable() {
         let root = root();
         let (repository, _) = repository(&root);
         let context = AuthorizationContext {
