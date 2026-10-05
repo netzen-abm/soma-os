@@ -152,3 +152,4 @@ pub enum HealthStateEvidenceLinkError {
 /// It validates the link contract and binds access to an already-authorized
 /// context. It deliberately does not resolve either reference, infer causation,
 /// or persist the link.
+
