@@ -9,6 +9,7 @@ pub use contract::{
     AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository, HealthStateRepositoryError,
     HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES, HEALTH_STATE_CONTENT_TYPE,
 };
+#[allow(unused_imports)]
 pub use implementation::LocalHealthStateRepository;
 
 #[cfg(test)]
