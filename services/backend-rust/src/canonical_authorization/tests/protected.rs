@@ -1,6 +1,4 @@
-use super::{
-    request, AllowBoundary, AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary, DenyBoundary,
-};
+use super::AuthorizationDecision;
 
 #[test]
 fn only_allow_can_cross_protected_execution_boundary() {
