@@ -1,5 +1,5 @@
 use super::*;
-use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
+use crate::local_health_vault::{LocalHealthVaultCrypto, LocalHealthVaultRecord, VaultRecordMetadata};
 use std::{
     cell::Cell,
     collections::HashMap,
