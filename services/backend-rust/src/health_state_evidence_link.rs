@@ -6,8 +6,6 @@ mod contract;
 #[path = "health_state_evidence_link_tests.rs"]
 mod tests;
 
-pub use boundary::HealthStateEvidenceLinkBoundary;
 pub use contract::{
-    AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkError,
-    HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty,
+    AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink,
 };
