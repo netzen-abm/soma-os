@@ -58,8 +58,9 @@ def audit_python() -> None:
         fail("no PolicyRequest construction sites found")
     if protected_calls == 0:
         fail("no ProtectedDataRequest construction sites found")
-    if "subject_ref: str | None" not in (ROOT / "services/shared/policy_kernel.py").read_text(encoding="utf-8"):
-        fail("PolicyRequest must expose subject_ref")
+    policy_contract = (ROOT / "services/shared/policy_kernel_contract.py").read_text(encoding="utf-8")
+    if "subject_ref: str | None" not in policy_contract:
+        fail("PolicyRequest contract must expose optional subject_ref")
     if "subject_ref: str" not in (ROOT / "services/shared/protected_data_access.py").read_text(encoding="utf-8"):
         fail("ProtectedDataRequest must require subject_ref")
 
