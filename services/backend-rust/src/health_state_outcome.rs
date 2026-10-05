@@ -5,5 +5,3 @@ mod contract;
 #[cfg(test)]
 #[path = "health_state_outcome_tests.rs"]
 mod tests;
-
-

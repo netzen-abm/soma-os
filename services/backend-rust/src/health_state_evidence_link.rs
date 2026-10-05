@@ -6,6 +6,4 @@ mod contract;
 #[path = "health_state_evidence_link_tests.rs"]
 mod tests;
 
-pub use contract::{
-    AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink,
-};
+pub use contract::{AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink};
