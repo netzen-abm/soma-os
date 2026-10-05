@@ -18,9 +18,7 @@ const MIGRATIONS: &[&str] = &[
 static PREPARED: OnceCell<()> = OnceCell::const_new();
 
 pub(crate) async fn test_pool() -> Option<PgPool> {
-    let url = std::env::var("SOMA_TEST_DATABASE_URL")
-        .ok()
-        .filter(|v| !v.trim().is_empty())?;
+    let url = std::env::var("SOMA_TEST_DATABASE_URL").ok().filter(|v| !v.trim().is_empty())?;
     Some(
         PgPoolOptions::new()
             .max_connections(4)
