@@ -1,11 +1,12 @@
-#[cfg(test)]
-#[path = "longitudinal_observation_repository_tests.rs"]
-mod tests;
 //! Provider-neutral longitudinal observation and timeline contract.
 //!
 //! Protected observation access must cross the canonical authorization boundary
 //! before a provider can read payloads or resolve vault keys. This module keeps
 //! the resulting access context non-forgeable at the application boundary.
+
+#[cfg(test)]
+#[path = "longitudinal_observation_repository_tests.rs"]
+mod tests;
 
 use std::cmp::Ordering;
 use thiserror::Error;
