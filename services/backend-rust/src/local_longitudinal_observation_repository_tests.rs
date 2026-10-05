@@ -1,7 +1,4 @@
 use super::*;
-
-
-use super::*;
 use crate::canonical_authorization::AuthorizationRequest;
 use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
 use crate::local_health_vault_storage::VaultAction;
