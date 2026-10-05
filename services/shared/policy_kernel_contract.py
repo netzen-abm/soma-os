@@ -3,6 +3,8 @@ from enum import Enum
 from typing import Mapping
 
 
+
+
 class Decision(str, Enum):
     ALLOW = "ALLOW"
     DENY = "DENY"
@@ -21,7 +23,7 @@ class PolicyRequest:
     resource_id: str
     action: str
     context: Mapping[str, str]
-    subject_ref: str
+    subject_ref: str | None
 
 
 @dataclass(frozen=True)
