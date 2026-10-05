@@ -65,7 +65,7 @@ pub trait CanonicalAuthorizationBoundary {
     }
 }
 
-fn allow_context<T, F>(decision: AuthorizationDecision, mint: F) -> Result<T, AuthorizationDecision>
+fn allow_context<T, E, F>(decision: AuthorizationDecision, mint: F) -> Result<T, AuthorizationDecision>
 where
     F: FnOnce() -> Result<T, E>,
     E: std::fmt::Debug,
