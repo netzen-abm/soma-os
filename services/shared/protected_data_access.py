@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Mapping, Protocol
 
 from authorization_policy_decision_boundary import AuthorizationDecision, AuthorizationPolicyDecisionBoundary
-from governed_capability_executor import GovernedCapabilityExecutor\nfrom policy_kernel import PolicyKernel, PolicyRequest
+from governed_capability_executor import GovernedCapabilityExecutor
+from policy_kernel import PolicyKernel, PolicyRequest
 
 PROTECTED_DATA_ACCESS_VERSION = "1.0.0"
 
