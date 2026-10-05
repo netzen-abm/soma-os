@@ -1,6 +1,3 @@
-#[cfg(test)]
-#[path = "longitudinal_observation_repository_tests.rs"]
-mod tests;
 //! Provider-neutral longitudinal observation and timeline contract.
 //!
 //! Protected observation access must cross the canonical authorization boundary
@@ -189,3 +186,7 @@ pub fn sort_timeline(entries: &mut [ObservationTimelineEntry]) {
         .then_with(|| left.observation_id.cmp(&right.observation_id))
     });
 }
+
+#[cfg(test)]
+#[path = "longitudinal_observation_repository_tests.rs"]
+mod tests;
