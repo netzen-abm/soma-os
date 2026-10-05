@@ -1,8 +1,8 @@
+use super::contract::SCHEMA_VERSION;
 use super::contract::{
     AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkError,
     HealthStateEvidenceRelationship,
 };
-use super::contract::SCHEMA_VERSION;
 
 pub struct HealthStateEvidenceLinkBoundary;
 
