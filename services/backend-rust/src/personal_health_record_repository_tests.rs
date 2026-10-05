@@ -58,7 +58,7 @@ fn record(id: &str, subject: &str, entity_type: &str, created_at: &str) -> Local
     },
     br#"{"concept":"heart_rate","value":60}"#,
     )
-    .unwrap()
+        .unwrap()
 }
 
 fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, SubjectAuthorizer>, Rc<Cell<usize>>) {
@@ -73,10 +73,9 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
     },
     SubjectAuthorizer,
     )
-    .unwrap();
+        .unwrap();
     (LocalPersonalHealthRecordRepository::new(vault), calls)
 }
-
 
 #[test]
 fn repository_is_reference_based_and_queries_derived_metadata() {
@@ -91,19 +90,18 @@ fn repository_is_reference_based_and_queries_derived_metadata() {
     repository.vault.put(vault, &context).unwrap();
     repository.put_reference("person-1-record-1", &context).unwrap();
     let entries = repository
-    .query(
+        .query(
     &context,
     &RepositoryQuery {
         entity_type: Some("observation".into()),
         ..Default::default()
     },
     )
-    .unwrap();
+        .unwrap();
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].record_id, "person-1-record-1");
     fs::remove_dir_all(root).unwrap();
 }
-
 
 #[test]
 fn unauthorized_reference_verification_happens_before_key_resolution() {
@@ -120,15 +118,14 @@ fn unauthorized_reference_verification_happens_before_key_resolution() {
         scope: "self".into(),
     };
     repository
-    .vault
-    .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &owner)
-    .unwrap();
+        .vault
+        .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &owner)
+        .unwrap();
     calls.set(0);
     assert_eq!(repository.put_reference("person-1-record-1", &other), Err(RepositoryError::AuthorizationDenied));
     assert_eq!(calls.get(), 0);
     fs::remove_dir_all(root).unwrap();
 }
-
 
 #[test]
 fn tombstoned_records_are_not_visible_or_registrable() {
@@ -140,9 +137,9 @@ fn tombstoned_records_are_not_visible_or_registrable() {
         scope: "self".into(),
     };
     repository
-    .vault
-    .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
-    .unwrap();
+        .vault
+        .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
+        .unwrap();
     repository.tombstone("person-1-record-1", &context).unwrap();
     assert!(repository.list(&context).unwrap().is_empty());
     assert_eq!(repository.put_reference("person-1-record-1", &context), Err(RepositoryError::NotFound));
