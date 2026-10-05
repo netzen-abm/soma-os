@@ -1,5 +1,8 @@
+#[path = "local_health_vault_storage_contract.rs"]
 mod contract;
+#[path = "local_health_vault_storage_crypto.rs"]
 mod crypto;
+#[path = "local_health_vault_storage_store.rs"]
 mod store;
 pub use contract::{
     AuthorizedIndexEntry, AuthorizationContext, StorageError, VaultAction,
