@@ -6,6 +6,7 @@ from typing import Callable, Mapping
 
 from authorization_policy_decision_boundary import AuthorizationPolicyDecisionBoundary
 from permission_lifecycle_enforcement import PermissionLifecycleEnforcer, complete_permission
+from policy_kernel import PolicyRequest
 
 
 @dataclass(frozen=True)
