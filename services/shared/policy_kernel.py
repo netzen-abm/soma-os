@@ -114,7 +114,8 @@ class PolicyKernel:
             request.action,
         )
         return all(isinstance(value, str) and bool(value.strip()) for value in fields) and (
-            isinstance(request.subject_ref, str) and bool(request.subject_ref.strip())
+            request.subject_ref is None
+            or (isinstance(request.subject_ref, str) and bool(request.subject_ref.strip()))
         )
 
     @staticmethod
