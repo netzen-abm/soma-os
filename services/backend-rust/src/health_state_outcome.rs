@@ -6,5 +6,4 @@ mod contract;
 #[path = "health_state_outcome_tests.rs"]
 mod tests;
 
-pub use boundary::{OutcomeAuthorizationBoundary, OutcomeBoundary};
-pub use contract::{AuthorizedOutcomeContext, Outcome, OutcomeError, OutcomeStatus};
+
