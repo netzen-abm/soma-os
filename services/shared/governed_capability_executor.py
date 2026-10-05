@@ -30,7 +30,7 @@ class GovernedCapabilityExecutor:
         self,
         *,
         operation_id: str,
-        authorization_allowed: bool,
+        authorization_allowed: bool | None,
         permission: Mapping[str, object],
         principal_ref: str,
         subject_ref: str,
@@ -39,8 +39,23 @@ class GovernedCapabilityExecutor:
         purpose: str,
         requested_scope: list[str],
         operation: Callable[[], object],
+        authorization_boundary: AuthorizationPolicyDecisionBoundary | None = None,
+        authorization_context: Mapping[str, object] | None = None,
+        target_tenant: str | None = None,
+        target_data_domain: str | None = None,
+        policy_request: PolicyRequest | None = None,
         now: datetime | None = None,
     ) -> GovernedExecutionResult:
+        if authorization_allowed is None:
+            if authorization_boundary is None or authorization_context is None or target_tenant is None or target_data_domain is None or policy_request is None:
+                return GovernedExecutionResult(operation_id, False, "authorization_required", dict(permission))
+            decision = authorization_boundary.authorize(
+                request_id=f"operation:{operation_id}", identity_context=authorization_context,
+                target_tenant=target_tenant, target_data_domain=target_data_domain,
+                request=policy_request, now=now,
+            )
+            authorization_allowed = decision.allowed
+
         if not authorization_allowed:
             return GovernedExecutionResult(operation_id, False, "authorization_required", dict(permission))
 
