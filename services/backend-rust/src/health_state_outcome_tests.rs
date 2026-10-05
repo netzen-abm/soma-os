@@ -1,6 +1,5 @@
 use super::*;
-
-use super::*;
+use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 
 struct AllowBoundary;
 
