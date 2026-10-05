@@ -4,10 +4,11 @@ mod contract;
 mod crypto;
 #[path = "local_health_vault_storage_store.rs"]
 mod store;
-pub use contract::{
+pub(super) use contract::{
     AuthorizationContext, AuthorizedIndexEntry, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
 };
-pub use store::LocalFileVaultStore;
+pub(super) use contract::KEY_LEN;
+pub(super) use store::LocalFileVaultStore;
 
 #[cfg(test)]
 #[path = "local_health_vault_storage_tests.rs"]
