@@ -145,7 +145,7 @@ where
     fn subject_path(&self, subject_ref: &str) -> PathBuf {
         self.root.join(hex::encode(Sha256::digest(subject_ref.as_bytes())))
     }
-    fn path_for(&self, subject_ref: &str, record_id: &str) -> PathBuf {
+    pub(crate) fn path_for(&self, subject_ref: &str, record_id: &str) -> PathBuf {
         self.subject_path(subject_ref).join(format!("{}.bundle", hex::encode(Sha256::digest(record_id.as_bytes()))))
     }
 }
