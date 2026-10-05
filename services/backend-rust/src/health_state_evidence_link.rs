@@ -6,4 +6,7 @@ mod contract;
 #[path = "health_state_evidence_link_tests.rs"]
 mod tests;
 
-pub(super) use contract::{AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkError, HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty};
+pub(super) use contract::{
+    AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkError,
+    HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty,
+};
