@@ -1,6 +1,6 @@
 use super::*;
-
-use super::*;
+use crate::canonical_authorization::AuthorizationRequest;
+use crate::health_state_evidence_link::contract::SCHEMA_VERSION;
 
 fn request() -> AuthorizationRequest {
     AuthorizationRequest {
