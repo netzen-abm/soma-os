@@ -45,20 +45,20 @@ fn root() -> PathBuf {
 
 fn record(id: &str, subject: &str, entity_type: &str, created_at: &str) -> LocalHealthVaultRecord {
     LocalHealthVaultCrypto::encrypt_record(
-    &[7u8; KEY_LEN],
-    crate::local_health_vault::VaultRecordMetadata {
-        record_id: id,
-        subject_ref: subject,
-        entity_type,
-        content_type: "application/json",
-        key_ref: "vault-key-v1",
-        provenance_ref: "p1",
-        created_at,
-        updated_at: created_at,
-    },
-    br#"{"concept":"heart_rate","value":60}"#,
+        &[7u8; KEY_LEN],
+        crate::local_health_vault::VaultRecordMetadata {
+            record_id: id,
+            subject_ref: subject,
+            entity_type,
+            content_type: "application/json",
+            key_ref: "vault-key-v1",
+            provenance_ref: "p1",
+            created_at,
+            updated_at: created_at,
+        },
+        br#"{"concept":"heart_rate","value":60}"#,
     )
-        .unwrap()
+    .unwrap()
 }
 
 fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, SubjectAuthorizer>, Rc<Cell<usize>>) {
@@ -66,14 +66,14 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
     let mut values = HashMap::new();
     values.insert("vault-key-v1".into(), [7u8; KEY_LEN]);
     let vault = LocalFileVaultStore::new(
-    root,
-    Keys {
-        calls: calls.clone(),
-        values,
-    },
-    SubjectAuthorizer,
+        root,
+        Keys {
+            calls: calls.clone(),
+            values,
+        },
+        SubjectAuthorizer,
     )
-        .unwrap();
+    .unwrap();
     (LocalPersonalHealthRecordRepository::new(vault), calls)
 }
 
@@ -91,12 +91,12 @@ fn repository_is_reference_based_and_queries_derived_metadata() {
     repository.put_reference("person-1-record-1", &context).unwrap();
     let entries = repository
         .query(
-    &context,
-    &RepositoryQuery {
-        entity_type: Some("observation".into()),
-        ..Default::default()
-    },
-    )
+            &context,
+            &RepositoryQuery {
+                entity_type: Some("observation".into()),
+                ..Default::default()
+            },
+        )
         .unwrap();
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].record_id, "person-1-record-1");
