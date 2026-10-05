@@ -77,76 +77,72 @@ fn repository(root: &Path) -> (LocalPersonalHealthRecordRepository<Keys, Subject
     (LocalPersonalHealthRecordRepository::new(vault), calls)
 }
 
-
 #[test]
-    fn repository_is_reference_based_and_queries_derived_metadata() {
-        let root = root();
-        let (repository, _) = repository(&root);
-        let context = AuthorizationContext {
-            principal_ref: "person-1".into(),
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
-        };
-        let vault = record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z");
-        repository.vault.put(vault, &context).unwrap();
-        repository.put_reference("person-1-record-1", &context).unwrap();
-        let entries = repository
-            .query(
-                &context,
-                &RepositoryQuery {
-                    entity_type: Some("observation".into()),
-                    ..Default::default()
-                },
-            )
-            .unwrap();
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].record_id, "person-1-record-1");
-        fs::remove_dir_all(root).unwrap();
+fn repository_is_reference_based_and_queries_derived_metadata() {
+    let root = root();
+    let (repository, _) = repository(&root);
+    let context = AuthorizationContext {
+        principal_ref: "person-1".into(),
+        subject_ref: "person-1".into(),
+        scope: "self".into(),
+    };
+    let vault = record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z");
+    repository.vault.put(vault, &context).unwrap();
+    repository.put_reference("person-1-record-1", &context).unwrap();
+    let entries = repository
+        .query(
+            &context,
+            &RepositoryQuery {
+                entity_type: Some("observation".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].record_id, "person-1-record-1");
+    fs::remove_dir_all(root).unwrap();
 }
 
-
 #[test]
-    fn unauthorized_reference_verification_happens_before_key_resolution() {
-        let root = root();
-        let (repository, calls) = repository(&root);
-        let owner = AuthorizationContext {
-            principal_ref: "person-1".into(),
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
-        };
-        let other = AuthorizationContext {
-            principal_ref: "person-2".into(),
-            subject_ref: "person-2".into(),
-            scope: "self".into(),
-        };
-        repository
-            .vault
-            .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &owner)
-            .unwrap();
-        calls.set(0);
-        assert_eq!(repository.put_reference("person-1-record-1", &other), Err(RepositoryError::AuthorizationDenied));
-        assert_eq!(calls.get(), 0);
-        fs::remove_dir_all(root).unwrap();
+fn unauthorized_reference_verification_happens_before_key_resolution() {
+    let root = root();
+    let (repository, calls) = repository(&root);
+    let owner = AuthorizationContext {
+        principal_ref: "person-1".into(),
+        subject_ref: "person-1".into(),
+        scope: "self".into(),
+    };
+    let other = AuthorizationContext {
+        principal_ref: "person-2".into(),
+        subject_ref: "person-2".into(),
+        scope: "self".into(),
+    };
+    repository
+        .vault
+        .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &owner)
+        .unwrap();
+    calls.set(0);
+    assert_eq!(repository.put_reference("person-1-record-1", &other), Err(RepositoryError::AuthorizationDenied));
+    assert_eq!(calls.get(), 0);
+    fs::remove_dir_all(root).unwrap();
 }
 
-
 #[test]
-    fn tombstoned_records_are_not_visible_or_registrable() {
-        let root = root();
-        let (repository, _) = repository(&root);
-        let context = AuthorizationContext {
-            principal_ref: "person-1".into(),
-            subject_ref: "person-1".into(),
-            scope: "self".into(),
-        };
-        repository
-            .vault
-            .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
-            .unwrap();
-        repository.tombstone("person-1-record-1", &context).unwrap();
-        assert!(repository.list(&context).unwrap().is_empty());
-        assert_eq!(repository.put_reference("person-1-record-1", &context), Err(RepositoryError::NotFound));
-        assert!(matches!(repository.get("person-1-record-1", &context), Err(RepositoryError::Tombstoned)));
-        fs::remove_dir_all(root).unwrap();
+fn tombstoned_records_are_not_visible_or_registrable() {
+    let root = root();
+    let (repository, _) = repository(&root);
+    let context = AuthorizationContext {
+        principal_ref: "person-1".into(),
+        subject_ref: "person-1".into(),
+        scope: "self".into(),
+    };
+    repository
+        .vault
+        .put(record("person-1-record-1", "person-1", "observation", "2026-09-10T00:00:00Z"), &context)
+        .unwrap();
+    repository.tombstone("person-1-record-1", &context).unwrap();
+    assert!(repository.list(&context).unwrap().is_empty());
+    assert_eq!(repository.put_reference("person-1-record-1", &context), Err(RepositoryError::NotFound));
+    assert!(matches!(repository.get("person-1-record-1", &context), Err(RepositoryError::Tombstoned)));
+    fs::remove_dir_all(root).unwrap();
 }
-

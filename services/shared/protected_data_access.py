@@ -30,7 +30,8 @@ class ProtectedDataAccess:
     """Provider-neutral protected-data gate using the canonical decision boundary."""
     def __init__(self, policy_kernel: PolicyKernel, adapter: ProtectedDataAdapter) -> None:
         self._decision_boundary = AuthorizationPolicyDecisionBoundary(policy_kernel)
-        self._adapter = adapter\n        self._executor = GovernedCapabilityExecutor()
+        self._adapter = adapter
+        self._executor = GovernedCapabilityExecutor()
 
     def authorize(self, request: ProtectedDataRequest) -> AuthorizationDecision:
         if not _valid_request(request):

@@ -1,12 +1,13 @@
-#[cfg(test)]
-#[path = "local_longitudinal_observation_repository_tests.rs"]
-mod tests;
 //! Local longitudinal observation provider backed by the existing Health Vault.
 //!
 //! This adapter owns no second clinical payload store. It composes the existing
 //! LocalFileVaultStore and exposes the provider-neutral observation repository
 //! contract while preserving the vault's encryption, integrity, tombstone, and
 //! authorization boundary.
+
+#[cfg(test)]
+#[path = "local_longitudinal_observation_repository_tests.rs"]
+mod tests;
 
 use crate::local_health_vault::LocalHealthVaultRecord;
 use crate::local_health_vault_storage::{
