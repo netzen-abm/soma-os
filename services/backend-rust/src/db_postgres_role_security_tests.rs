@@ -1,3 +1,4 @@
+use sqlx::Row;
 use super::postgres_test_support::{assume_persistence_role, prepare, test_pool};
 #[tokio::test]
 async fn application_persistence_role_cannot_execute_legacy_control_plane_functions() {
