@@ -12,7 +12,7 @@ DECISION_BOUNDARY_VERSION = "1.0.0"
 @dataclass(frozen=True)
 class AuthorizationDecision:
     request_id: str
-    principal_id: str
+    principal_ref: str
     principal_type: str
     subject_ref: str | None
     capability_id: str
