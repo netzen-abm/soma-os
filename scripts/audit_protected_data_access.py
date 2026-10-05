@@ -55,7 +55,7 @@ def files() -> list[pathlib.Path]:
 
 
 def is_test_or_archive(relative: pathlib.Path) -> bool:
-    return "archive" in relative.parts or relative.name.endswith("_test.rs")
+    return "archive" in relative.parts or relative.name.endswith(("_test.rs", "_tests.rs")) or ".test." in relative.name or relative.name.startswith("test_")
 
 
 def audit_control_plane_wiring(all_files: list[pathlib.Path]) -> list[str]:
