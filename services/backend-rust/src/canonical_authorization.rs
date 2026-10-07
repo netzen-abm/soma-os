@@ -3,8 +3,13 @@
 //! This module never evaluates policy independently. It consumes the authoritative
 //! SOMA authorization decision and mints protected contexts only from ALLOW.
 
-pub use crate::canonical_authorization_boundary::CanonicalAuthorizationBoundary;
-pub use crate::canonical_authorization_contract::{AuthorizationDecision, AuthorizationRequest};
+#[path = "canonical_authorization_boundary.rs"]
+mod boundary;
+#[path = "canonical_authorization_contract.rs"]
+mod contract;
+
+pub use boundary::CanonicalAuthorizationBoundary;
+pub use contract::{AuthorizationDecision, AuthorizationRequest};
 
 #[cfg(test)]
 mod tests;
