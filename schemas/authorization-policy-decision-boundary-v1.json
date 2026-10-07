@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": [
     "request_id",
-    "principal_id",
+    "principal_ref",
     "principal_type",
     "subject_ref",
     "capability_id",
@@ -24,7 +24,7 @@
   ],
   "properties": {
     "request_id": {"type": "string", "minLength": 1},
-    "principal_id": {"type": "string", "minLength": 1},
+    "principal_ref": {"type": "string", "minLength": 1},
     "principal_type": {"type": "string", "minLength": 1},
     "subject_ref": {"type": "string", "minLength": 1},
     "capability_id": {"type": "string", "minLength": 1},
