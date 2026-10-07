@@ -1,4 +1,6 @@
+#[path = "personal_health_record_repository_contract.rs"]
 mod contract;
+#[path = "personal_health_record_repository_impl.rs"]
 mod implementation;
 #[cfg(test)]
 #[path = "personal_health_record_repository_tests.rs"]
