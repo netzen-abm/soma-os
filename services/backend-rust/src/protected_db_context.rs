@@ -83,4 +83,87 @@ mod tests {
         assert!(ProtectedDbContext::new("tenant\n", "personal-health").is_err());
         assert!(ProtectedDbContext::new("tenant-a", "personal\thealth").is_err());
     }
+
+    #[tokio::test]
+    async fn transaction_scope_is_bound_and_not_leaked_after_commit() {
+        let Some(pool) = pool(1).await else { return };
+        let context_a = ProtectedDbContext::new("tenant-a", "domain-a").unwrap();
+        let context_b = ProtectedDbContext::new("tenant-b", "domain-b").unwrap();
+
+        let mut tx_a = begin_protected_transaction(&pool, &context_a).await.unwrap();
+        let row = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+            .fetch_one(&mut *tx_a)
+            .await
+            .unwrap();
+        assert_eq!(row.get::<String, _>(0), "tenant-a");
+        assert_eq!(row.get::<String, _>(1), "domain-a");
+        tx_a.commit().await.unwrap();
+
+        let mut tx_b = begin_protected_transaction(&pool, &context_b).await.unwrap();
+        let row = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
+            .fetch_one(&mut *tx_b)
+            .await
+            .unwrap();
+        assert_eq!(row.get::<String, _>(0), "tenant-b");
+        assert_eq!(row.get::<String, _>(1), "domain-b");
+        tx_b.rollback().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn transaction_scope_does_not_leak_after_rollback() {
+        let Some(pool) = pool(1).await else { return };
+        let context_a = ProtectedDbContext::new("tenant-a", "domain-a").unwrap();
+        let context_b = ProtectedDbContext::new("tenant-b", "domain-b").unwrap();
+
+        let mut tx_a = begin_protected_transaction(&pool, &context_a).await.unwrap();
+        let row = sqlx::query("SELECT current_setting('soma.tenant_id')")
+            .fetch_one(&mut *tx_a)
+            .await
+            .unwrap();
+        assert_eq!(row.get::<String, _>(0), "tenant-a");
+        tx_a.rollback().await.unwrap();
+
+        let mut tx_b = begin_protected_transaction(&pool, &context_b).await.unwrap();
+        let row = sqlx::query("SELECT current_setting('soma.tenant_id')")
+            .fetch_one(&mut *tx_b)
+            .await
+            .unwrap();
+        assert_eq!(row.get::<String, _>(0), "tenant-b");
+        tx_b.rollback().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn concurrent_transactions_keep_scopes_isolated() {
+        let Some(pool) = pool(2).await else { return };
+        let context_a = ProtectedDbContext::new("tenant-a", "domain-a").unwrap();
+        let context_b = ProtectedDbContext::new("tenant-b", "domain-b").unwrap();
+
+        let (tx_a, tx_b) = tokio::join!(
+            begin_protected_transaction(&pool, &context_a),
+            begin_protected_transaction(&pool, &context_b)
+        );
+        let mut tx_a = tx_a.unwrap();
+        let mut tx_b = tx_b.unwrap();
+
+        let (row_a, row_b) = tokio::join!(
+            sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')").fetch_one(&mut *tx_a),
+            sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')").fetch_one(&mut *tx_b)
+        );
+
+        let row_a = row_a.unwrap();
+        let row_b = row_b.unwrap();
+        assert_eq!(row_a.get::<String, _>(0), "tenant-a");
+        assert_eq!(row_a.get::<String, _>(1), "domain-a");
+        assert_eq!(row_b.get::<String, _>(0), "tenant-b");
+        assert_eq!(row_b.get::<String, _>(1), "domain-b");
+
+        tx_a.rollback().await.unwrap();
+        tx_b.rollback().await.unwrap();
+    }
+}
+
+#[cfg(test)]
+#[allow(dead_code)]
+fn pool(_max_connections: u32) -> Option<sqlx::PgPool> {
+    None
 }
