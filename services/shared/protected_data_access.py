@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Protocol
+from typing import Callable, Mapping, Protocol
 
 from authorization_policy_decision_boundary import AuthorizationDecision, AuthorizationPolicyDecisionBoundary
 from governed_capability_executor import GovernedCapabilityExecutor
@@ -72,7 +72,7 @@ class ProtectedDataAccess:
     def delete(self, request: ProtectedDataRequest) -> object:
         return self._execute(request, lambda: self._adapter.delete(request))
 
-    def _execute(self, request: ProtectedDataRequest, operation: callable) -> object:
+    def _execute(self, request: ProtectedDataRequest, operation: Callable[[], object]) -> object:
         if request.permission is None:
             decision = self.authorize(request)
             if not decision_allowed(decision):
