@@ -63,7 +63,13 @@ pub async fn begin_protected_transaction<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::ProtectedDbContext;
+    use super::{begin_protected_transaction, ProtectedDbContext};
+    use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+
+    async fn pool(max_connections: u32) -> Option<PgPool> {
+        let url = std::env::var("DATABASE_URL").ok().filter(|value| !value.trim().is_empty())?;
+        PgPoolOptions::new().max_connections(max_connections).connect(&url).await.ok()
+    }
 
     #[test]
     fn accepts_valid_scope() {
@@ -160,10 +166,4 @@ mod tests {
         tx_a.rollback().await.unwrap();
         tx_b.rollback().await.unwrap();
     }
-}
-
-#[cfg(test)]
-#[allow(dead_code)]
-fn pool(_max_connections: u32) -> Option<sqlx::PgPool> {
-    None
 }
