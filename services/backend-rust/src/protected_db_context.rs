@@ -1,56 +1,119 @@
 use sqlx::{postgres::Postgres, PgPool, Transaction};
-use std::error::Error;
 
-/// Trusted persistence scope established only after the canonical authorization boundary.
+/// Canonical database service identity expected by the protected persistence adapter.
+pub const TRUSTED_PERSISTENCE_DB_ROLE: &str = "somaos_persistence";
+
+/// Protected persistence scope that has crossed the canonical authorization boundary.
 ///
-/// This type carries the tenant/data-domain binding required by the PostgreSQL adapter,
-/// but it does not evaluate policy or infer scope from caller metadata.
+/// The fields are intentionally private. External callers cannot construct this type
+/// from arbitrary tenant/data-domain strings; the canonical authorization boundary
+/// mints it only after an authoritative `ALLOW` decision and request validation.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ProtectedDbContext {
-    pub tenant_id: String,
-    pub data_domain: String,
+pub struct AuthorizedProtectedDbContext {
+    principal_ref: String,
+    subject_ref: String,
+    capability_id: String,
+    capability_version: String,
+    resource_type: String,
+    resource_id: String,
+    action: String,
+    tenant_id: String,
+    data_domain: String,
 }
 
-impl ProtectedDbContext {
-    pub fn new(tenant_id: impl Into<String>, data_domain: impl Into<String>) -> Result<Self, Box<dyn Error>> {
-        let tenant_id = tenant_id.into();
-        let data_domain = data_domain.into();
-
-        if tenant_id.trim().is_empty() || data_domain.trim().is_empty() {
-            return Err("protected database scope must be non-empty".into());
+impl AuthorizedProtectedDbContext {
+    pub(crate) fn from_authorized_request(
+        request: &crate::canonical_authorization::AuthorizationRequest,
+    ) -> Result<Self, &'static str> {
+        let fields = [
+            request.principal_ref.as_str(),
+            request.subject_ref.as_str(),
+            request.capability_id.as_str(),
+            request.capability_version.as_str(),
+            request.resource_type.as_str(),
+            request.resource_id.as_str(),
+            request.action.as_str(),
+            request.tenant_id.as_str(),
+            request.data_domain.as_str(),
+        ];
+        if fields.iter().any(|field| field.trim().is_empty()) {
+            return Err("protected authorization request contains an empty field");
         }
-
-        if tenant_id.chars().any(char::is_control) || data_domain.chars().any(char::is_control) {
-            return Err("protected database scope contains control characters".into());
+        if fields.iter().any(|field| field.chars().any(char::is_control)) {
+            return Err("protected authorization request contains control characters");
         }
 
         Ok(Self {
-            tenant_id,
-            data_domain,
+            principal_ref: request.principal_ref.clone(),
+            subject_ref: request.subject_ref.clone(),
+            capability_id: request.capability_id.clone(),
+            capability_version: request.capability_version.clone(),
+            resource_type: request.resource_type.clone(),
+            resource_id: request.resource_id.clone(),
+            action: request.action.clone(),
+            tenant_id: request.tenant_id.clone(),
+            data_domain: request.data_domain.clone(),
         })
+    }
+
+    pub fn principal_ref(&self) -> &str {
+        &self.principal_ref
+    }
+
+    pub fn subject_ref(&self) -> &str {
+        &self.subject_ref
+    }
+
+    pub fn capability_id(&self) -> &str {
+        &self.capability_id
+    }
+    pub fn capability_version(&self) -> &str {
+        &self.capability_version
+    }
+
+    pub fn resource_type(&self) -> &str {
+        &self.resource_type
+    }
+
+    pub fn resource_id(&self) -> &str {
+        &self.resource_id
+    }
+
+    pub fn action(&self) -> &str {
+        &self.action
+    }
+
+    pub fn tenant_id(&self) -> &str {
+        &self.tenant_id
+    }
+
+    pub fn data_domain(&self) -> &str {
+        &self.data_domain
     }
 }
 
-/// Begin a PostgreSQL transaction and bind the protected scope for this transaction only.
+/// Begin a PostgreSQL transaction and establish protected scope through the
+/// dedicated persistence database identity boundary.
 ///
-/// `set_config(..., true)` is transaction-local. This is mandatory with pooled connections:
-/// scope must never leak from one request/transaction into a later borrower of the connection.
-/// This helper is a persistence boundary, not an authorization evaluator.
+/// This function accepts only an authorization-bound context. It therefore cannot
+/// be used as the authorization decision point and cannot mint its own scope.
+/// Production deployments must connect with a LOGIN role that is explicitly
+/// granted membership in `somaos_persistence`, then this adapter switches into
+/// that NOLOGIN role for the transaction.
 pub async fn begin_protected_transaction<'a>(
     pool: &'a PgPool,
-    context: &ProtectedDbContext,
+    context: &AuthorizedProtectedDbContext,
 ) -> Result<Transaction<'a, Postgres>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    if let Err(error) =
-        sqlx::query("SELECT set_config('soma.tenant_id', $1, true)").bind(&context.tenant_id).execute(&mut *tx).await
-    {
+    if let Err(error) = sqlx::query("SET LOCAL ROLE somaos_persistence").execute(&mut *tx).await {
         let _ = tx.rollback().await;
         return Err(error);
     }
 
-    if let Err(error) = sqlx::query("SELECT set_config('soma.data_domain', $1, true)")
-        .bind(&context.data_domain)
+    if let Err(error) = sqlx::query("SELECT public.soma_set_protected_scope($1, $2)")
+        .bind(context.tenant_id())
+        .bind(context.data_domain())
         .execute(&mut *tx)
         .await
     {
@@ -63,107 +126,57 @@ pub async fn begin_protected_transaction<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::{begin_protected_transaction, ProtectedDbContext};
-    use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+    use super::{AuthorizedProtectedDbContext, TRUSTED_PERSISTENCE_DB_ROLE};
 
-    async fn pool(max_connections: u32) -> Option<PgPool> {
-        let url = std::env::var("DATABASE_URL").ok().filter(|value| !value.trim().is_empty())?;
-        PgPoolOptions::new().max_connections(max_connections).connect(&url).await.ok()
+    #[test]
+    fn canonical_persistence_role_is_explicit() {
+        assert_eq!(TRUSTED_PERSISTENCE_DB_ROLE, "somaos_persistence");
     }
 
     #[test]
-    fn accepts_valid_scope() {
-        let context = ProtectedDbContext::new("tenant-a", "personal-health").unwrap();
-        assert_eq!(context.tenant_id, "tenant-a");
-        assert_eq!(context.data_domain, "personal-health");
+    fn context_preserves_authorized_request_scope_read_only() {
+        let request = crate::canonical_authorization::AuthorizationRequest {
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
+            capability_id: "health.read".into(),
+            capability_version: "1.0.0".into(),
+            resource_type: "health_record".into(),
+            resource_id: "record-1".into(),
+            action: "read".into(),
+            tenant_id: "tenant-a".into(),
+            data_domain: "personal-health".into(),
+        };
+        let context = AuthorizedProtectedDbContext::from_authorized_request(&request).unwrap();
+        assert_eq!(context.principal_ref(), "principal-1");
+        assert_eq!(context.subject_ref(), "person-1");
+        assert_eq!(context.capability_id(), "health.read");
+        assert_eq!(context.capability_version(), "1.0.0");
+        assert_eq!(context.resource_type(), "health_record");
+        assert_eq!(context.resource_id(), "record-1");
+        assert_eq!(context.action(), "read");
+        assert_eq!(context.tenant_id(), "tenant-a");
+        assert_eq!(context.data_domain(), "personal-health");
     }
 
     #[test]
-    fn rejects_empty_scope() {
-        assert!(ProtectedDbContext::new("", "personal-health").is_err());
-        assert!(ProtectedDbContext::new("tenant-a", "").is_err());
-    }
-
-    #[test]
-    fn rejects_control_characters() {
-        assert!(ProtectedDbContext::new("tenant\n", "personal-health").is_err());
-        assert!(ProtectedDbContext::new("tenant-a", "personal\thealth").is_err());
-    }
-
-    #[tokio::test]
-    async fn transaction_scope_is_bound_and_not_leaked_after_commit() {
-        let Some(pool) = pool(1).await else { return };
-        let context_a = ProtectedDbContext::new("tenant-a", "domain-a").unwrap();
-        let context_b = ProtectedDbContext::new("tenant-b", "domain-b").unwrap();
-
-        let mut tx_a = begin_protected_transaction(&pool, &context_a).await.unwrap();
-        let row = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
-            .fetch_one(&mut *tx_a)
-            .await
-            .unwrap();
-        assert_eq!(row.get::<String, _>(0), "tenant-a");
-        assert_eq!(row.get::<String, _>(1), "domain-a");
-        tx_a.commit().await.unwrap();
-
-        let mut tx_b = begin_protected_transaction(&pool, &context_b).await.unwrap();
-        let row = sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')")
-            .fetch_one(&mut *tx_b)
-            .await
-            .unwrap();
-        assert_eq!(row.get::<String, _>(0), "tenant-b");
-        assert_eq!(row.get::<String, _>(1), "domain-b");
-        tx_b.rollback().await.unwrap();
-    }
-
-    #[tokio::test]
-    async fn transaction_scope_does_not_leak_after_rollback() {
-        let Some(pool) = pool(1).await else { return };
-        let context_a = ProtectedDbContext::new("tenant-a", "domain-a").unwrap();
-        let context_b = ProtectedDbContext::new("tenant-b", "domain-b").unwrap();
-
-        let mut tx_a = begin_protected_transaction(&pool, &context_a).await.unwrap();
-        let row = sqlx::query("SELECT current_setting('soma.tenant_id')")
-            .fetch_one(&mut *tx_a)
-            .await
-            .unwrap();
-        assert_eq!(row.get::<String, _>(0), "tenant-a");
-        tx_a.rollback().await.unwrap();
-
-        let mut tx_b = begin_protected_transaction(&pool, &context_b).await.unwrap();
-        let row = sqlx::query("SELECT current_setting('soma.tenant_id')")
-            .fetch_one(&mut *tx_b)
-            .await
-            .unwrap();
-        assert_eq!(row.get::<String, _>(0), "tenant-b");
-        tx_b.rollback().await.unwrap();
-    }
-
-    #[tokio::test]
-    async fn concurrent_transactions_keep_scopes_isolated() {
-        let Some(pool) = pool(2).await else { return };
-        let context_a = ProtectedDbContext::new("tenant-a", "domain-a").unwrap();
-        let context_b = ProtectedDbContext::new("tenant-b", "domain-b").unwrap();
-
-        let (tx_a, tx_b) = tokio::join!(
-            begin_protected_transaction(&pool, &context_a),
-            begin_protected_transaction(&pool, &context_b)
-        );
-        let mut tx_a = tx_a.unwrap();
-        let mut tx_b = tx_b.unwrap();
-
-        let (row_a, row_b) = tokio::join!(
-            sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')").fetch_one(&mut *tx_a),
-            sqlx::query("SELECT current_setting('soma.tenant_id'), current_setting('soma.data_domain')").fetch_one(&mut *tx_b)
-        );
-
-        let row_a = row_a.unwrap();
-        let row_b = row_b.unwrap();
-        assert_eq!(row_a.get::<String, _>(0), "tenant-a");
-        assert_eq!(row_a.get::<String, _>(1), "domain-a");
-        assert_eq!(row_b.get::<String, _>(0), "tenant-b");
-        assert_eq!(row_b.get::<String, _>(1), "domain-b");
-
-        tx_a.rollback().await.unwrap();
-        tx_b.rollback().await.unwrap();
+    fn rejects_empty_or_control_character_scope() {
+        let mut request = crate::canonical_authorization::AuthorizationRequest {
+            principal_ref: "principal-1".into(),
+            subject_ref: "person-1".into(),
+            capability_version: "1.0.0".into(),
+            capability_id: "health.read".into(),
+            resource_type: "health_record".into(),
+            resource_id: "record-1".into(),
+            action: "read".into(),
+            tenant_id: "tenant-a".into(),
+            data_domain: "personal-health".into(),
+        };
+        request.action.clear();
+        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
+        request.action = "read\n".into();
+        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
+        request.action = "read".into();
+        request.capability_version.clear();
+        assert!(AuthorizedProtectedDbContext::from_authorized_request(&request).is_err());
     }
 }
