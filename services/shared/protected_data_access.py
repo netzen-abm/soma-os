@@ -20,6 +20,10 @@ class ProtectedDataRequest:
     target_tenant_id: str
     target_data_domain: str
     subject_ref: str
+    operation_id: str | None = None
+    purpose: str | None = None
+    requested_scope: tuple[str, ...] = ()
+    permission: Mapping[str, object] | None = None
 
 class ProtectedDataAdapter(Protocol):
     def read(self, request: ProtectedDataRequest) -> object: ...
@@ -57,28 +61,62 @@ class ProtectedDataAccess:
         )
 
     def read(self, request: ProtectedDataRequest) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.read(request)
+        return self._execute(request, lambda: self._adapter.read(request))
 
     def insert(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.insert(request, payload)
+        return self._execute(request, lambda: self._adapter.insert(request, payload))
 
     def update(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.update(request, payload)
+        return self._execute(request, lambda: self._adapter.update(request, payload))
 
     def delete(self, request: ProtectedDataRequest) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.delete(request)
+        return self._execute(request, lambda: self._adapter.delete(request))
+
+    def _execute(self, request: ProtectedDataRequest, operation: callable) -> object:
+        if request.permission is None:
+            decision = self.authorize(request)
+            if not decision_allowed(decision):
+                raise PermissionError(decision.reason_code)
+            return operation()
+
+        if request.operation_id is None or request.purpose is None or not request.requested_scope:
+            raise PermissionError("invalid_protected_data_request")
+
+        principal_ref = request.authorization_context.get("principal_id")
+        if not isinstance(principal_ref, str) or not principal_ref.strip():
+            raise PermissionError("invalid_protected_data_request")
+
+        policy_request = PolicyRequest(
+            principal_id=principal_ref,
+            principal_type=request.authorization_context["principal_type"],
+            capability_id=request.capability_id,
+            capability_version=request.capability_version,
+            resource_type=request.resource_type,
+            resource_id=request.resource_id,
+            action=request.action,
+            context={},
+            subject_ref=request.subject_ref,
+        )
+        result_holder: list[object] = []
+        result = self._executor.execute(
+            operation_id=request.operation_id,
+            authorization_boundary=self._decision_boundary,
+            authorization_context=request.authorization_context,
+            target_tenant=request.target_tenant_id,
+            target_data_domain=request.target_data_domain,
+            policy_request=policy_request,
+            permission=request.permission,
+            principal_ref=principal_ref,
+            subject_ref=request.subject_ref,
+            capability_id=request.capability_id,
+            capability_version=request.capability_version,
+            purpose=request.purpose,
+            requested_scope=list(request.requested_scope),
+            operation=lambda: result_holder.append(operation()),
+        )
+        if not result.succeeded:
+            raise PermissionError(result.reason_code)
+        return result_holder[0]
 
 def decision_allowed(decision: AuthorizationDecision) -> bool:
     return decision.decision.value == "ALLOW"
