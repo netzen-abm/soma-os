@@ -120,7 +120,7 @@ jobs:
 
       - name: Run protected-data permission lifecycle integration tests
         working-directory: services/shared
-        run: python -m unittest -v protected_data_access_test.py
+        run: python -m pytest -q protected_data_access_test.py
 
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared
