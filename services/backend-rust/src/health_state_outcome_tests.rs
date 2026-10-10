@@ -1,5 +1,5 @@
-use super::*;
 use super::contract::SCHEMA_VERSION;
+use super::*;
 use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 
 struct AllowBoundary;
