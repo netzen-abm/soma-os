@@ -1,3 +1,4 @@
+#[path = "postgres_test_support.rs"]
 mod postgres_test_support;
 #[path = "db_postgres_role_security_tests.rs"]
 mod role_security_tests;
