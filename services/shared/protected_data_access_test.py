@@ -35,15 +35,15 @@ def identity(tenant: str = "tenant-a", domain: str = "personal-health") -> dict[
 
 
 def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1", action: str = "read") -> ProtectedDataRequest:
-    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action=action, target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
+    return ProtectedDataRequest(authorization_context=ctx, capability_id=f"health.{action}", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action=action, target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
 
 
 def kernel() -> PolicyKernel:
     grants: dict[GrantKey, bool] = {
-        ("person-1", "person", "health.read", "health_record", "r-1", action, "person-1"): True
+        ("person-1", "person", f"health.{action}", "health_record", "r-1", action, "person-1"): True
         for action in ("read", "insert", "update", "delete")
     }
-    return PolicyKernel({"capabilities": [{"id": "health.read", "version": "1.0.0", "principal_types": ["person"]}]}, grants)
+    return PolicyKernel({"capabilities": [{"id": f"health.{action}", "version": "1.0.0", "principal_types": ["person"]} for action in ("read", "insert", "update", "delete")]}, grants)
 
 
 def test_authorized_read_reaches_adapter() -> None:
