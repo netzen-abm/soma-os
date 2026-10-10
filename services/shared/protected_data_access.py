@@ -75,6 +75,8 @@ class ProtectedDataAccess:
     def _execute(self, request: ProtectedDataRequest, expected_action: str, operation: Callable[[], object]) -> object:
         if request.action != expected_action:
             raise PermissionError("protected_data_action_mismatch")
+        if not _valid_request(request):
+            raise PermissionError("invalid_protected_data_request")
 
         principal_ref = request.authorization_context.get("principal_id")
         principal_type = request.authorization_context.get("principal_type")
