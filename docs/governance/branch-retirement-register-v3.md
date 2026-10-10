@@ -36,7 +36,7 @@ Do not merge historical code merely to reduce branch count. Do not infer semanti
 
 ## Current noncanonical inventory
 
-The following 31 refs remain. Unless an entry below records a verified disposition, treat it as `UNKNOWN / HOLD` until its unique work is reconciled:
+The following 32 noncanonical refs remain. Unless an entry below records a verified disposition, treat it as `UNKNOWN / HOLD` until its unique work is reconciled:
 
 | Branch | Current disposition |
 |---|---|
@@ -50,11 +50,11 @@ The following 31 refs remain. Unless an entry below records a verified dispositi
 | `design/canonical-domain-runtime-polyglot-v1` | HOLD — diverged runtime/ADR history; preserve provenance |
 | `design/canonical-domain-runtime-polyglot-v1-main` | HOLD — distinct diverged history; do not assume duplicate |
 | `design/db-constraints-trusted-context-rls-v1` | HOLD — database trust/RLS requirements require verification |
-| `design/hybrid-web-platform-v1` | HOLD — architecture decision requires disposition |
-| `design/identity-authorization-enforcement-v1` | HOLD — identity/authorization design requires reconciliation |
-| `design/legacy-scope-classification-quarantine-v1` | HOLD — legacy classification semantics require verification |
-| `design/protected-data-access-enforcement-v1` | HOLD — protected-data access requirements require verification |
-| `design/trusted-db-service-identity-context-v1` | HOLD — trusted persistence context requirements require verification |
+| `design/hybrid-web-platform-v1` | PRESERVE_THEN_DELETE — design document copied to `docs/archive/branch-retirement/2026-10-10/hybrid-platform-design.md`; implementation and exact tip archive still required |
+| `design/identity-authorization-enforcement-v1` | PRESERVE_THEN_DELETE — design document copied to `docs/archive/branch-retirement/2026-10-10/design-identity-authorization-enforcement-v1.md`; implementation and exact tip archive still required |
+| `design/legacy-scope-classification-quarantine-v1` | PRESERVE_THEN_DELETE — design document copied to `docs/archive/branch-retirement/2026-10-10/design-legacy-scope-classification-quarantine-v1.md`; semantics and exact tip archive still required |
+| `design/protected-data-access-enforcement-v1` | PRESERVE_THEN_DELETE — design document copied to `docs/archive/branch-retirement/2026-10-10/design-protected-data-access-enforcement-v1.md`; tests and exact tip archive still required |
+| `design/trusted-db-service-identity-context-v1` | PRESERVE_THEN_DELETE — design document and ADR copied to `docs/archive/branch-retirement/2026-10-10/`; implementation and exact tip archive still required |
 | `fix/governed-executor-no-bypass-v1` | RETIREMENT CANDIDATE — PR #159 merged into main; archive exact head `fffbf2d2b098612fe4dccd9b88c247773d339ab6`, verify no remaining dependencies, then delete source ref through reviewed local Git workflow |
 | `feat/canonical-principal-subject-scope-v3` | HOLD — broad authorization/health/vault implementation; compare behavior and tests |
 | `feat/canonical-principal-subject-scope-v4-clean` | HOLD — diverged later generation; compare authorization and outcome contracts |
