@@ -18,11 +18,11 @@ mod data_parser;
 #[cfg(test)]
 mod db_layer;
 mod device_sync;
-mod health_state_evidence_link;
-mod health_state_intervention;
-mod health_state_measurement;
-mod health_state_outcome;
-mod health_state_repository;
+pub mod health_state_evidence_link;
+pub mod health_state_intervention;
+pub mod health_state_measurement;
+pub mod health_state_outcome;
+pub mod health_state_repository;
 mod key_restoration;
 #[cfg(test)]
 mod legacy_promotion_preflight;
