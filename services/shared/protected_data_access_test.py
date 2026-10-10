@@ -34,12 +34,15 @@ def identity(tenant: str = "tenant-a", domain: str = "personal-health") -> dict[
     }
 
 
-def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1") -> ProtectedDataRequest:
-    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
+def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1", action: str = "read") -> ProtectedDataRequest:
+    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action=action, target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
 
 
 def kernel() -> PolicyKernel:
-    grants: dict[GrantKey, bool] = {("person-1", "person", "health.read", "health_record", "r-1", "read", "person-1"): True}
+    grants: dict[GrantKey, bool] = {
+        ("person-1", "person", "health.read", "health_record", "r-1", action, "person-1"): True
+        for action in ("read", "insert", "update", "delete")
+    }
     return PolicyKernel({"capabilities": [{"id": "health.read", "version": "1.0.0", "principal_types": ["person"]}]}, grants)
 
 
@@ -150,4 +153,50 @@ def test_permission_bound_subject_mismatch_never_reaches_adapter() -> None:
     try: access.read(permission_bound_request(identity(), permission))
     except PermissionError as exc: assert str(exc) == "permission_binding_mismatch"
     else: raise AssertionError("expected denial")
+    assert adapter.calls == 0
+
+
+
+def test_insert_update_delete_use_governed_execution_exactly_once() -> None:
+    adapter = Adapter()
+    access = ProtectedDataAccess(kernel(), adapter)
+    payload = {"value": "test"}
+
+    assert access.insert(request(identity(), action="insert"), payload) == payload
+    assert access.update(request(identity(), action="update"), payload) == payload
+    assert access.delete(request(identity(), action="delete")) is True
+    assert adapter.calls == 3
+
+
+def test_insert_update_delete_denial_happens_before_adapter() -> None:
+    adapter = Adapter()
+    access = ProtectedDataAccess(kernel(), adapter)
+    ctx = identity(tenant="tenant-b")
+
+    for action, operation in (
+        ("insert", lambda req: access.insert(req, {"value": "test"})),
+        ("update", lambda req: access.update(req, {"value": "test"})),
+        ("delete", access.delete),
+    ):
+        try:
+            operation(request(ctx, action=action))
+        except PermissionError as exc:
+            assert str(exc) == "target_scope_mismatch"
+        else:
+            raise AssertionError(f"expected denial for {action}")
+
+    assert adapter.calls == 0
+
+
+def test_adapter_method_rejects_mismatched_action_before_authorization_or_io() -> None:
+    adapter = Adapter()
+    access = ProtectedDataAccess(kernel(), adapter)
+
+    try:
+        access.insert(request(identity(), action="read"), {"value": "test"})
+    except PermissionError as exc:
+        assert str(exc) == "protected_data_action_mismatch"
+    else:
+        raise AssertionError("expected action mismatch denial")
+
     assert adapter.calls == 0
