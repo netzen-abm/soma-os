@@ -4,7 +4,7 @@
 
 - Repository: `netzen-abm/soma-os`
 - Main: `78dd05e67b410264e85e929d4bb4a208b4fa7d6b`
-- Development: `63b9dc6f76d33f5557e7ca293afe6dbe2160a13d`
+- Development: `9d32626bcfc8058d7706f75fde00c0c198e8b75d`
 - Remote branches: 40
 - Canonical active branches: 9
 - Noncanonical branches: 31
@@ -90,7 +90,7 @@ This pair is historical evidence of the archive-first procedure, not authorizati
 
 Head: `e3f7ff4683140f39735c3e09c499c5b1c01fe379`.
 
-Observed: shared-infrastructure/health contract tests, protected-data bypass audit, authorization invariant gate, evidence pipeline, and local vault key lifecycle gates passed. Rust formatting failed; compilation and Clippy were skipped, and cryptographic/integrity plus PostgreSQL isolation jobs did not complete. Run the real formatter on the intended revision, inspect the full diff, and rerun all required exact-head gates. Do not merge before they pass.
+Observed on exact head `e3f7ff4683140f39735c3e09c499c5b1c01fe379`: shared-infrastructure/health contract tests, protected-data bypass audit, authorization invariant gate, evidence pipeline, and local vault key lifecycle gates passed. Rust formatting failed with concrete rustfmt diffs across responsibility modules, PHR repository implementation/security tests, and PostgreSQL test support; compilation and Clippy were skipped, and cryptographic/integrity plus PostgreSQL isolation jobs were skipped because they depend on the failed Rust gate. Local Windows compile attempts are separately blocked by missing MSVC `link.exe`. Review finding: `services/shared/protected_data_access.py` routes `permission is None` through `authorize()` then directly invokes the adapter, bypassing the governed executor/permission lifecycle. Resolve that path and add read/insert/update/delete denial-before-adapter and exactly-once tests. Do not merge before reviewed code changes and all required exact-head gates pass.
 
 ### PR #156 — Python actor/subject authorization
 
@@ -105,7 +105,7 @@ Head: `160667d8aef542c6a1acb1dc35ede765eea33265`, base `development`. Historical
 5. Re-query GitHub after each controlled batch and run `scripts/validate_branch_hygiene.py`.
 6. Stop immediately if the archive tag, remote head, open-PR state, or semantic disposition differs from the reviewed evidence.
 
-The connected GitHub mutation capability does not provide a safe remote branch-delete operation in this workflow. Do not claim exact-nine completion until the live remote branch listing contains exactly the nine canonical names.
+Live recheck on 2026-10-10: GitHub lists 40 remote branches (the nine canonical names plus the 31 noncanonical refs in this register). The connected GitHub mutation capability in this workflow does not provide a safe remote branch-delete operation; use VS Code/PowerShell for candidate local deletion as directed, archive and verify history first, then retire remote refs through the reviewed local Git workflow. Do not claim exact-nine completion until the live remote listing contains exactly the nine canonical names.
 
 ## Completion invariant
 
