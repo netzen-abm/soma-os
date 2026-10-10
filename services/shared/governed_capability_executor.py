@@ -76,11 +76,25 @@ class GovernedCapabilityExecutor:
             if not lifecycle.allowed:
                 return GovernedExecutionResult(operation_id, False, lifecycle.reason_code, dict(permission))
 
-        try:
+        execution_count = 0
+
+        def invoke_once() -> None:
+            nonlocal execution_count
+            if execution_count != 0:
+                raise RuntimeError("governed_operation_invoked_more_than_once")
+            execution_count += 1
             operation()
+
+        try:
+            invoke_once()
         except Exception:
             revoked = complete_permission(permission, completed_at=now) if permission is not None else {}
             reason = "execution_failed_permission_revoked" if permission is not None else "execution_failed"
+            return GovernedExecutionResult(operation_id, False, reason, revoked)
+
+        if execution_count != 1:
+            revoked = complete_permission(permission, completed_at=now) if permission is not None else {}
+            reason = "execution_count_invalid_permission_revoked" if permission is not None else "execution_count_invalid"
             return GovernedExecutionResult(operation_id, False, reason, revoked)
 
         revoked = complete_permission(permission, completed_at=now) if permission is not None else {}
