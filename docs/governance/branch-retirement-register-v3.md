@@ -5,10 +5,10 @@
 - Repository: `netzen-abm/soma-os`
 - Main: `78dd05e67b410264e85e929d4bb4a208b4fa7d6b`
 - Development: `9d32626bcfc8058d7706f75fde00c0c198e8b75d`
-- Remote branches: 40
+- Remote branches: 41 (live GitHub recheck, 2026-10-10)
 - Canonical active branches: 9
-- Noncanonical branches: 31
-- Open pull requests: #154 and #156
+- Noncanonical branches: 32
+- Open pull requests: #156; PR #159 merged, with source-branch retirement still pending
 - GitHub branch listing reports all 40 branches as unprotected.
 - No remote branch was deleted or force-moved during the 2026-10-10 cycle.
 
@@ -56,6 +56,7 @@ The following 31 refs remain. Unless an entry below records a verified dispositi
 | `design/legacy-scope-classification-quarantine-v1` | HOLD — legacy classification semantics require verification |
 | `design/protected-data-access-enforcement-v1` | HOLD — protected-data access requirements require verification |
 | `design/trusted-db-service-identity-context-v1` | HOLD — trusted persistence context requirements require verification |
+| `fix/governed-executor-no-bypass-v1` | RETIREMENT CANDIDATE — PR #159 merged into main; archive exact head `fffbf2d2b098612fe4dccd9b88c247773d339ab6`, verify no remaining dependencies, then delete source ref through reviewed local Git workflow |
 | `feat/canonical-principal-subject-scope-v3` | HOLD — broad authorization/health/vault implementation; compare behavior and tests |
 | `feat/canonical-principal-subject-scope-v4-clean` | HOLD — diverged later generation; compare authorization and outcome contracts |
 | `feat/python-authorization-subject-convergence-v1` | HOLD — PR #156 open; do not delete before actor/subject semantics are re-derived |
@@ -84,13 +85,19 @@ Archive tag: `archive/retired/feat-canonical-principal-subject-scope-v1-2026-10-
 
 This pair is historical evidence of the archive-first procedure, not authorization to delete other similarly named branches.
 
-## Open pull request gates
+## Historical merged PR gate
 
-### PR #154 — `feature/current` → `main`
+### PR #154 — `feature/current` → `main` (historical; merged after subsequent review)
+
+The details below describe the earlier exact-head findings and must not be interpreted as the current status of main.
+
+
 
 Head: `e3f7ff4683140f39735c3e09c499c5b1c01fe379`.
 
 Observed on exact head `e3f7ff4683140f39735c3e09c499c5b1c01fe379`: shared-infrastructure/health contract tests, protected-data bypass audit, authorization invariant gate, evidence pipeline, and local vault key lifecycle gates passed. Rust formatting failed with concrete rustfmt diffs across responsibility modules, PHR repository implementation/security tests, and PostgreSQL test support; compilation and Clippy were skipped, and cryptographic/integrity plus PostgreSQL isolation jobs were skipped because they depend on the failed Rust gate. Local Windows compile attempts are separately blocked by missing MSVC `link.exe`. Review finding: `services/shared/protected_data_access.py` routes `permission is None` through `authorize()` then directly invokes the adapter, bypassing the governed executor/permission lifecycle. Resolve that path and add read/insert/update/delete denial-before-adapter and exactly-once tests. Do not merge before reviewed code changes and all required exact-head gates pass.
+
+## Open pull request gate
 
 ### PR #156 — Python actor/subject authorization
 
@@ -105,7 +112,7 @@ Head: `160667d8aef542c6a1acb1dc35ede765eea33265`, base `development`. Historical
 5. Re-query GitHub after each controlled batch and run `scripts/validate_branch_hygiene.py`.
 6. Stop immediately if the archive tag, remote head, open-PR state, or semantic disposition differs from the reviewed evidence.
 
-Live recheck on 2026-10-10: GitHub lists 40 remote branches (the nine canonical names plus the 31 noncanonical refs in this register). The connected GitHub mutation capability in this workflow does not provide a safe remote branch-delete operation; use VS Code/PowerShell for candidate local deletion as directed, archive and verify history first, then retire remote refs through the reviewed local Git workflow. Do not claim exact-nine completion until the live remote listing contains exactly the nine canonical names.
+Live recheck on 2026-10-10: GitHub lists 41 remote branches (the nine canonical names plus 32 noncanonical refs, including `fix/governed-executor-no-bypass-v1`). The connected GitHub mutation capability in this workflow does not provide a safe remote branch-delete operation; use VS Code/PowerShell for candidate local deletion as directed, archive and verify history first, then retire remote refs through the reviewed local Git workflow. Do not claim exact-nine completion until the live remote listing contains exactly the nine canonical names.
 
 ## Completion invariant
 
