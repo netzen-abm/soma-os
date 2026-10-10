@@ -48,7 +48,7 @@ class AuthorizationPolicyDecisionBoundaryContractTests(unittest.TestCase):
     def base_decision(self, decision="ALLOW"):
         return {
             "request_id": "req-001",
-            "principal_id": "principal-001",
+            "principal_ref": "principal-001",
             "principal_type": "person",
             "subject_ref": "subject-001",
             "capability_id": "health.timeline.read",
@@ -91,7 +91,7 @@ class AuthorizationPolicyDecisionBoundaryContractTests(unittest.TestCase):
         self.assertTrue(validate(self.schema, decision))
 
     def test_empty_security_dimensions_are_rejected(self):
-        for field in ("principal_id", "capability_id", "resource_type", "resource_id", "action", "tenant_scope_binding", "data_domain_scope_binding", "policy_version", "reason_code", "enforcement_version"):
+        for field in ("principal_ref", "capability_id", "resource_type", "resource_id", "action", "tenant_scope_binding", "data_domain_scope_binding", "policy_version", "reason_code", "enforcement_version"):
             decision = self.base_decision()
             decision[field] = ""
             self.assertTrue(validate(self.schema, decision), field)

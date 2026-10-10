@@ -6,9 +6,8 @@ mod contract;
 mod implementation;
 
 pub use contract::{
-    AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository,
-    HealthStateRepositoryError, HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES,
-    HEALTH_STATE_CONTENT_TYPE,
+    AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository, HealthStateRepositoryError,
+    HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES, HEALTH_STATE_CONTENT_TYPE,
 };
 pub use implementation::LocalHealthStateRepository;
 

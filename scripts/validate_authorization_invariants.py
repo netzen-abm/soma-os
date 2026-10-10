@@ -58,15 +58,16 @@ def audit_python() -> None:
         fail("no PolicyRequest construction sites found")
     if protected_calls == 0:
         fail("no ProtectedDataRequest construction sites found")
-    if "subject_ref: str | None" not in (ROOT / "services/shared/policy_kernel.py").read_text(encoding="utf-8"):
-        fail("PolicyRequest must expose subject_ref")
+    policy_contract = ROOT / "services/shared/policy_kernel_contract.py"
+    if "subject_ref: str | None" not in policy_contract.read_text(encoding="utf-8"):
+        fail("PolicyRequest contract must expose optional subject_ref")
     if "subject_ref: str" not in (ROOT / "services/shared/protected_data_access.py").read_text(encoding="utf-8"):
         fail("ProtectedDataRequest must require subject_ref")
 
 def audit_rust() -> None:
-    canonical = (RUST_ROOT / "canonical_authorization.rs").read_text(encoding="utf-8")
-    if "pub principal_ref: String" not in canonical or "pub subject_ref: String" not in canonical:
-        fail("Rust AuthorizationRequest must contain principal_ref and subject_ref")
+    canonical_contract = (RUST_ROOT / "canonical_authorization_contract.rs").read_text(encoding="utf-8")
+    if "pub principal_ref: String" not in canonical_contract or "pub subject_ref: String" not in canonical_contract:
+        fail("Rust AuthorizationRequest contract must contain principal_ref and subject_ref")
     for path in RUST_ROOT.rglob("*.rs"):
         if "archive" in path.parts:
             continue

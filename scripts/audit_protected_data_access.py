@@ -25,6 +25,13 @@ ALLOWED_FILES = {
     pathlib.Path("services/backend-rust/src/legacy_promotion.rs"),
     pathlib.Path("services/backend-rust/src/legacy_promotion_preflight.rs"),
     pathlib.Path("services/backend-rust/src/db_postgres_integration_test.rs"),
+    pathlib.Path("services/backend-rust/src/db_postgres_scope_constraint_tests.rs"),
+    pathlib.Path("services/backend-rust/src/db_postgres_scope_hash_tests.rs"),
+    pathlib.Path("services/backend-rust/src/db_postgres_scope_rls_tests.rs"),
+    pathlib.Path("services/backend-rust/src/legacy_promotion_tests.rs"),
+    pathlib.Path("services/backend-rust/src/legacy_promotion_preflight_tests.rs"),
+    pathlib.Path("services/backend-rust/src/postgres_test_support.rs"),
+    pathlib.Path("services/backend-rust/src/db_postgres_role_security_tests.rs"),
     pathlib.Path("scripts/audit_protected_data_access.py"),
 }
 MIGRATION_CONTROL_PLANE = {
@@ -55,7 +62,7 @@ def files() -> list[pathlib.Path]:
 
 
 def is_test_or_archive(relative: pathlib.Path) -> bool:
-    return "archive" in relative.parts or relative.name.endswith("_test.rs")
+    return "archive" in relative.parts or relative.name.endswith("_test.rs") or relative.name.endswith("_tests.rs")
 
 
 def audit_control_plane_wiring(all_files: list[pathlib.Path]) -> list[str]:

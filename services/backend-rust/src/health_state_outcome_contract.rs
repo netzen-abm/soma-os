@@ -4,10 +4,10 @@
 //! does not itself establish efficacy, causality, clinical significance, or an
 //! adaptation decision.
 
-use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
+use crate::canonical_authorization::AuthorizationRequest;
 use thiserror::Error;
 
-const SCHEMA_VERSION: &str = "1.0.0";
+pub(super) const SCHEMA_VERSION: &str = "1.0.0";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutcomeStatus {
@@ -164,4 +164,3 @@ pub enum OutcomeError {
     #[error("outcome subject does not match authorized subject")]
     SubjectMismatch,
 }
-

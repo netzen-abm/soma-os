@@ -1,7 +1,4 @@
 use super::*;
-
-
-use super::*;
 use crate::health_state_evidence_link::{HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty};
 
 fn request() -> AuthorizationRequest {
@@ -75,12 +72,7 @@ fn assembly_is_read_only_and_preserves_evidence_references() {
 #[test]
 fn cross_subject_projection_is_rejected() {
     assert_eq!(
-        LongitudinalContextAssembly::assemble(
-            &context(),
-            vec![health_state_entry("hs-1", "person-2")],
-            vec![],
-            vec![],
-        ),
+        LongitudinalContextAssembly::assemble(&context(), vec![health_state_entry("hs-1", "person-2")], vec![], vec![],),
         Err(LongitudinalContextError::SubjectMismatch)
     );
 }
@@ -97,12 +89,8 @@ fn malformed_evidence_reference_is_rejected() {
 
 #[test]
 fn unknown_observation_time_remains_unknown() {
-    let result = LongitudinalContextAssembly::assemble(
-        &context(),
-        vec![],
-        vec![observation_entry("obs-1", "person-1")],
-        vec![],
-    )
-    .unwrap();
+    let result =
+        LongitudinalContextAssembly::assemble(&context(), vec![], vec![observation_entry("obs-1", "person-1")], vec![])
+            .unwrap();
     assert_eq!(result.observation_timeline[0].observed_at, None);
 }

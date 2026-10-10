@@ -2,24 +2,27 @@
 
 use std::cmp::Ordering;
 
-use crate::local_health_vault::LocalHealthVaultRecord;
-use crate::local_health_vault_storage::{
-    AuthorizationContext, LocalFileVaultStore, VaultAuthorizer, VaultKeyProvider,
-};
 use super::{
-    AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository,
-    HealthStateRepositoryError, HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES,
-    HEALTH_STATE_CONTENT_TYPE,
+    AuthorizedHealthStateAccessContext, HealthStateQuery, HealthStateRepository, HealthStateRepositoryError,
+    HealthStateTimelineEntry, ALLOWED_ENTITY_TYPES, HEALTH_STATE_CONTENT_TYPE,
 };
+use crate::local_health_vault::LocalHealthVaultRecord;
+use crate::local_health_vault_storage::{AuthorizationContext, LocalFileVaultStore, VaultAuthorizer, VaultKeyProvider};
 
 pub struct LocalHealthStateRepository<K, A> {
     vault: LocalFileVaultStore<K, A>,
 }
 
 impl<K, A> LocalHealthStateRepository<K, A>
-where K: VaultKeyProvider, A: VaultAuthorizer
+where
+    K: VaultKeyProvider,
+    A: VaultAuthorizer,
 {
-    pub fn new(vault: LocalFileVaultStore<K, A>) -> Self { Self { vault } }
+    pub fn new(vault: LocalFileVaultStore<K, A>) -> Self {
+        Self {
+            vault,
+        }
+    }
 
     fn vault_context(context: &AuthorizedHealthStateAccessContext) -> AuthorizationContext {
         AuthorizationContext {
@@ -42,10 +45,15 @@ where K: VaultKeyProvider, A: VaultAuthorizer
 }
 
 impl<K, A> HealthStateRepository for LocalHealthStateRepository<K, A>
-where K: VaultKeyProvider, A: VaultAuthorizer
+where
+    K: VaultKeyProvider,
+    A: VaultAuthorizer,
 {
-    fn put(&self, record: LocalHealthVaultRecord, context: &AuthorizedHealthStateAccessContext)
-        -> Result<(), HealthStateRepositoryError> {
+    fn put(
+        &self,
+        record: LocalHealthVaultRecord,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<(), HealthStateRepositoryError> {
         Self::validate_entity(&record)?;
         if record.subject_ref != context.subject_ref() {
             return Err(HealthStateRepositoryError::AuthorizationDenied);
@@ -53,24 +61,30 @@ where K: VaultKeyProvider, A: VaultAuthorizer
         self.vault.put(record, &Self::vault_context(context)).map_err(Into::into)
     }
 
-    fn get(&self, record_id: &str, context: &AuthorizedHealthStateAccessContext)
-        -> Result<LocalHealthVaultRecord, HealthStateRepositoryError> {
-        let record = self.vault.get(record_id, &Self::vault_context(context))
-            .map_err(HealthStateRepositoryError::from)?;
+    fn get(
+        &self,
+        record_id: &str,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<LocalHealthVaultRecord, HealthStateRepositoryError> {
+        let record =
+            self.vault.get(record_id, &Self::vault_context(context)).map_err(HealthStateRepositoryError::from)?;
         Self::validate_entity(&record)?;
         Ok(record)
     }
 
-    fn query(&self, context: &AuthorizedHealthStateAccessContext, query: &HealthStateQuery)
-        -> Result<Vec<LocalHealthVaultRecord>, HealthStateRepositoryError> {
-        let entries = self.vault.list(&Self::vault_context(context))
-            .map_err(HealthStateRepositoryError::from)?;
+    fn query(
+        &self,
+        context: &AuthorizedHealthStateAccessContext,
+        query: &HealthStateQuery,
+    ) -> Result<Vec<LocalHealthVaultRecord>, HealthStateRepositoryError> {
+        let entries = self.vault.list(&Self::vault_context(context)).map_err(HealthStateRepositoryError::from)?;
         let mut records = Vec::new();
         for entry in entries {
             if !ALLOWED_ENTITY_TYPES.contains(&entry.entity_type.as_str())
                 || query.entity_type.as_ref().is_some_and(|v| entry.entity_type != *v)
                 || query.classification.as_ref().is_some_and(|v| entry.classification != *v)
-                || query.content_type.as_ref().is_some_and(|v| entry.content_type != *v) {
+                || query.content_type.as_ref().is_some_and(|v| entry.content_type != *v)
+            {
                 continue;
             }
             records.push(self.get(&entry.record_id, context)?);
@@ -78,11 +92,13 @@ where K: VaultKeyProvider, A: VaultAuthorizer
         Ok(records)
     }
 
-    fn timeline(&self, context: &AuthorizedHealthStateAccessContext)
-        -> Result<Vec<HealthStateTimelineEntry>, HealthStateRepositoryError> {
-        let entries = self.vault.list(&Self::vault_context(context))
-            .map_err(HealthStateRepositoryError::from)?;
-        let mut timeline = entries.into_iter()
+    fn timeline(
+        &self,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<Vec<HealthStateTimelineEntry>, HealthStateRepositoryError> {
+        let entries = self.vault.list(&Self::vault_context(context)).map_err(HealthStateRepositoryError::from)?;
+        let mut timeline = entries
+            .into_iter()
             .filter(|e| ALLOWED_ENTITY_TYPES.contains(&e.entity_type.as_str()))
             .map(|e| HealthStateTimelineEntry {
                 record_id: e.record_id,
@@ -97,18 +113,25 @@ where K: VaultKeyProvider, A: VaultAuthorizer
                 (Some(_), None) => Ordering::Less,
                 (None, Some(_)) => Ordering::Greater,
                 (None, None) => left.recorded_at.cmp(&right.recorded_at),
-            }.then_with(|| left.record_id.cmp(&right.record_id))
+            }
+            .then_with(|| left.record_id.cmp(&right.record_id))
         });
         Ok(timeline)
     }
 
-    fn tombstone(&self, record_id: &str, context: &AuthorizedHealthStateAccessContext)
-        -> Result<(), HealthStateRepositoryError> {
+    fn tombstone(
+        &self,
+        record_id: &str,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<(), HealthStateRepositoryError> {
         self.vault.tombstone(record_id, &Self::vault_context(context)).map_err(Into::into)
     }
 
-    fn verify(&self, record_id: &str, context: &AuthorizedHealthStateAccessContext)
-        -> Result<(), HealthStateRepositoryError> {
+    fn verify(
+        &self,
+        record_id: &str,
+        context: &AuthorizedHealthStateAccessContext,
+    ) -> Result<(), HealthStateRepositoryError> {
         self.vault.verify(record_id, &Self::vault_context(context)).map_err(Into::into)
     }
 }

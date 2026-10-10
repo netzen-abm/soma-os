@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Protocol
+from typing import Callable, Mapping, Protocol
 
 from authorization_policy_decision_boundary import AuthorizationDecision, AuthorizationPolicyDecisionBoundary
-from governed_capability_executor import GovernedCapabilityExecutor\nfrom policy_kernel import PolicyKernel, PolicyRequest
+from governed_capability_executor import GovernedCapabilityExecutor
+from policy_kernel import PolicyKernel, PolicyRequest
 
 PROTECTED_DATA_ACCESS_VERSION = "1.0.0"
 
@@ -19,6 +20,10 @@ class ProtectedDataRequest:
     target_tenant_id: str
     target_data_domain: str
     subject_ref: str
+    operation_id: str | None = None
+    purpose: str | None = None
+    requested_scope: tuple[str, ...] = ()
+    permission: Mapping[str, object] | None = None
 
 class ProtectedDataAdapter(Protocol):
     def read(self, request: ProtectedDataRequest) -> object: ...
@@ -56,28 +61,67 @@ class ProtectedDataAccess:
         )
 
     def read(self, request: ProtectedDataRequest) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.read(request)
+        return self._execute(request, "read", lambda: self._adapter.read(request))
 
     def insert(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.insert(request, payload)
+        return self._execute(request, "insert", lambda: self._adapter.insert(request, payload))
 
     def update(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.update(request, payload)
+        return self._execute(request, "update", lambda: self._adapter.update(request, payload))
 
     def delete(self, request: ProtectedDataRequest) -> object:
-        decision = self.authorize(request)
-        if not decision_allowed(decision):
-            raise PermissionError(decision.reason_code)
-        return self._adapter.delete(request)
+        return self._execute(request, "delete", lambda: self._adapter.delete(request))
+
+    def _execute(self, request: ProtectedDataRequest, expected_action: str, operation: Callable[[], object]) -> object:
+        if request.action != expected_action:
+            raise PermissionError("protected_data_action_mismatch")
+        if not _valid_request(request):
+            raise PermissionError("invalid_protected_data_request")
+
+        principal_ref = request.authorization_context.get("principal_id")
+        principal_type = request.authorization_context.get("principal_type")
+        if not isinstance(principal_ref, str) or not principal_ref.strip():
+            raise PermissionError("invalid_protected_data_request")
+        if not isinstance(principal_type, str) or not principal_type.strip():
+            raise PermissionError("invalid_protected_data_request")
+
+        operation_id = request.operation_id or (
+            f"protected-data:{request.resource_type}:{request.resource_id}:{request.action}"
+        )
+        policy_request = PolicyRequest(
+            principal_id=principal_ref,
+            principal_type=principal_type,
+            capability_id=request.capability_id,
+            capability_version=request.capability_version,
+            resource_type=request.resource_type,
+            resource_id=request.resource_id,
+            action=request.action,
+            context={},
+            subject_ref=request.subject_ref,
+        )
+
+        result_holder: list[object] = []
+        result = self._executor.execute(
+            operation_id=operation_id,
+            authorization_boundary=self._decision_boundary,
+            authorization_context=request.authorization_context,
+            target_tenant=request.target_tenant_id,
+            target_data_domain=request.target_data_domain,
+            policy_request=policy_request,
+            permission=request.permission,
+            principal_ref=principal_ref,
+            subject_ref=request.subject_ref,
+            capability_id=request.capability_id,
+            capability_version=request.capability_version,
+            purpose=request.purpose or "protected_data_access",
+            requested_scope=list(request.requested_scope),
+            operation=lambda: result_holder.append(operation()),
+        )
+        if not result.succeeded:
+            raise PermissionError(result.reason_code)
+        if len(result_holder) != 1:
+            raise RuntimeError("governed_operation_execution_count_invalid")
+        return result_holder[0]
 
 def decision_allowed(decision: AuthorizationDecision) -> bool:
     return decision.decision.value == "ALLOW"

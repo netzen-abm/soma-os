@@ -1,7 +1,8 @@
 use super::*;
-use crate::local_health_vault::LocalHealthVaultCrypto;
-use crate::local_health_vault_storage::VaultAction;
-use sha2::{Digest, Sha256};
+use crate::local_health_vault::{LocalHealthVaultCrypto, LocalHealthVaultRecord};
+use crate::local_health_vault_storage::{
+    AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
+};
 use std::{
     cell::Cell,
     collections::HashMap,

@@ -40,12 +40,41 @@ impl From<StorageError> for RepositoryError {
 }
 
 pub trait PersonalHealthRecordRepository {
-    fn put_reference(&self, record_id: &str, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<(), RepositoryError>;
-    fn get(&self, record_id: &str, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<crate::local_health_vault::LocalHealthVaultRecord, RepositoryError>;
-    fn list(&self, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
-    fn query(&self, context: &crate::local_health_vault_storage::AuthorizationContext, query: &RepositoryQuery) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
-    fn timeline(&self, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
-    fn tombstone(&self, record_id: &str, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<(), RepositoryError>;
-    fn verify(&self, record_id: &str, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<(), RepositoryError>;
-    fn rebuild_index(&self, context: &crate::local_health_vault_storage::AuthorizationContext) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
+    fn put_reference(
+        &self,
+        record_id: &str,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<(), RepositoryError>;
+    fn get(
+        &self,
+        record_id: &str,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<crate::local_health_vault::LocalHealthVaultRecord, RepositoryError>;
+    fn list(
+        &self,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
+    fn query(
+        &self,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+        query: &RepositoryQuery,
+    ) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
+    fn timeline(
+        &self,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
+    fn tombstone(
+        &self,
+        record_id: &str,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<(), RepositoryError>;
+    fn verify(
+        &self,
+        record_id: &str,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<(), RepositoryError>;
+    fn rebuild_index(
+        &self,
+        context: &crate::local_health_vault_storage::AuthorizationContext,
+    ) -> Result<Vec<crate::local_health_vault_storage::AuthorizedIndexEntry>, RepositoryError>;
 }

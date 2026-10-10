@@ -1,7 +1,4 @@
 use super::*;
-
-
-use super::*;
 use sqlx::postgres::PgPoolOptions;
 
 #[test]
@@ -84,8 +81,7 @@ async fn postgres_preflight_detects_null_scope_transactionally() {
         Ok(value) if !value.trim().is_empty() => value,
         _ => return,
     };
-    let pool =
-        PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
+    let pool = PgPoolOptions::new().max_connections(4).connect(&url).await.expect("test database must be reachable");
     let mut tx = pool.begin().await.expect("test transaction must begin");
 
     sqlx::query("ALTER TABLE public.anonymized_user_vitals DROP CONSTRAINT IF EXISTS anonymized_user_vitals_protected_scope_required")

@@ -1,8 +1,5 @@
 use super::*;
 
-
-use super::*;
-
 fn request() -> AuthorizationRequest {
     AuthorizationRequest {
         principal_ref: "principal-1".into(),

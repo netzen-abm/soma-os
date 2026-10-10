@@ -115,9 +115,12 @@ jobs:
       - name: Run governed capability execution tests
         working-directory: services/shared
         run: python -m unittest -v governed_capability_executor_test.py
+      - name: Install pytest for protected-data integration tests
+        run: python -m pip install --disable-pip-version-check pytest
+
       - name: Run protected-data permission lifecycle integration tests
         working-directory: services/shared
-        run: python -m unittest -v protected_data_access_test.py
+        run: python -m pytest -q protected_data_access_test.py
 
       - name: Run Health State and Evidence contract tests
         working-directory: services/shared

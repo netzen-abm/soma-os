@@ -34,13 +34,16 @@ def identity(tenant: str = "tenant-a", domain: str = "personal-health") -> dict[
     }
 
 
-def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1") -> ProtectedDataRequest:
-    return ProtectedDataRequest(authorization_context=ctx, capability_id="health.read", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action="read", target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
+def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str = "person-1", action: str = "read") -> ProtectedDataRequest:
+    return ProtectedDataRequest(authorization_context=ctx, capability_id=f"health.{action}", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action=action, target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
 
 
 def kernel() -> PolicyKernel:
-    grants: dict[GrantKey, bool] = {("person-1", "person", "health.read", "health_record", "r-1", "read", "person-1"): True}
-    return PolicyKernel({"capabilities": [{"id": "health.read", "version": "1.0.0", "principal_types": ["person"]}]}, grants)
+    grants: dict[GrantKey, bool] = {
+        ("person-1", "person", f"health.{action}", "health_record", "r-1", action, "person-1"): True
+        for action in ("read", "insert", "update", "delete")
+    }
+    return PolicyKernel({"capabilities": [{"id": f"health.{action}", "version": "1.0.0", "principal_types": ["person"]} for action in ("read", "insert", "update", "delete")]}, grants)
 
 
 def test_authorized_read_reaches_adapter() -> None:
@@ -123,7 +126,7 @@ def active_permission() -> dict[str, object]:
     return {
         "permission_id": "perm-1", "operation_id": "op-1", "principal_ref": "person-1", "subject_ref": "person-1",
         "capability_id": "health.read", "capability_version": "1.0.0", "purpose": "read_health_record",
-        "scope": ["health_record:r-1"], "status": "ACTIVE", "expires_at": "2026-09-21T20:00:00Z",
+        "scope": ["health_record:r-1"], "status": "ACTIVE", "expires_at": "2099-01-01T00:00:00Z",
         "auto_revoke": True, "regrant_requires_fresh_consent": True,
     }
 
@@ -137,7 +140,7 @@ def test_permission_bound_read_uses_canonical_execution_and_revokes() -> None:
 
 def test_permission_bound_expiry_never_reaches_adapter() -> None:
     adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter)
-    permission = active_permission(); permission["expires_at"] = "2026-09-21T18:00:00Z"
+    permission = active_permission(); permission["expires_at"] = "2000-01-01T00:00:00Z"
     try: access.read(permission_bound_request(identity(), permission))
     except PermissionError as exc: assert str(exc) == "permission_expired"
     else: raise AssertionError("expected denial")
@@ -150,4 +153,26 @@ def test_permission_bound_subject_mismatch_never_reaches_adapter() -> None:
     try: access.read(permission_bound_request(identity(), permission))
     except PermissionError as exc: assert str(exc) == "permission_binding_mismatch"
     else: raise AssertionError("expected denial")
+    assert adapter.calls == 0
+
+
+def test_write_operations_are_governed_and_denied_before_adapter() -> None:
+    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter); payload = {"value": "test"}
+    operations = (
+        ("insert", lambda req: access.insert(req, payload)),
+        ("update", lambda req: access.update(req, payload)),
+        ("delete", access.delete),
+    )
+    for action, operation in operations:
+        assert operation(request(identity(), action=action)) == (True if action == "delete" else payload)
+    assert adapter.calls == 3
+    adapter.calls = 0
+    for action, operation in operations:
+        try: operation(request(identity(tenant="tenant-b"), action=action))
+        except PermissionError as exc: assert str(exc) == "target_scope_mismatch"
+        else: raise AssertionError(f"expected denial for {action}")
+    assert adapter.calls == 0
+    try: access.insert(request(identity(), action="read"), payload)
+    except PermissionError as exc: assert str(exc) == "protected_data_action_mismatch"
+    else: raise AssertionError("expected action mismatch denial")
     assert adapter.calls == 0

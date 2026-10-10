@@ -1,2 +1,2 @@
-use super::postgres_test_support::{assume_persistence_role, prepare, test_pool};
-use sqlx::Row;
+// Scope-specific PostgreSQL assertions are not yet implemented in this module.
+// Keep the module empty rather than retaining unused imports that break -D warnings.

@@ -1,7 +1,4 @@
 use super::*;
-
-
-use super::*;
 use crate::canonical_authorization::AuthorizationRequest;
 use crate::local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata};
 use crate::local_health_vault_storage::VaultAction;
@@ -76,9 +73,7 @@ fn observation() -> LocalHealthVaultRecord {
 fn repository(root: &PathBuf) -> LocalLongitudinalObservationRepository<Keys, SubjectAuthorizer> {
     let mut keys = HashMap::new();
     keys.insert("key-1".into(), KEY);
-    LocalLongitudinalObservationRepository::new(
-        LocalFileVaultStore::new(root, Keys(keys), SubjectAuthorizer).unwrap(),
-    )
+    LocalLongitudinalObservationRepository::new(LocalFileVaultStore::new(root, Keys(keys), SubjectAuthorizer).unwrap())
 }
 
 #[test]
