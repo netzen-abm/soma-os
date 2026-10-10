@@ -61,18 +61,21 @@ class ProtectedDataAccess:
         )
 
     def read(self, request: ProtectedDataRequest) -> object:
-        return self._execute(request, lambda: self._adapter.read(request))
+        return self._execute(request, "read", lambda: self._adapter.read(request))
 
     def insert(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
-        return self._execute(request, lambda: self._adapter.insert(request, payload))
+        return self._execute(request, "insert", lambda: self._adapter.insert(request, payload))
 
     def update(self, request: ProtectedDataRequest, payload: Mapping[str, object]) -> object:
-        return self._execute(request, lambda: self._adapter.update(request, payload))
+        return self._execute(request, "update", lambda: self._adapter.update(request, payload))
 
     def delete(self, request: ProtectedDataRequest) -> object:
-        return self._execute(request, lambda: self._adapter.delete(request))
+        return self._execute(request, "delete", lambda: self._adapter.delete(request))
 
-    def _execute(self, request: ProtectedDataRequest, operation: Callable[[], object]) -> object:
+    def _execute(self, request: ProtectedDataRequest, expected_action: str, operation: Callable[[], object]) -> object:
+        if request.action != expected_action:
+            raise PermissionError("protected_data_action_mismatch")
+
         principal_ref = request.authorization_context.get("principal_id")
         principal_type = request.authorization_context.get("principal_type")
         if not isinstance(principal_ref, str) or not principal_ref.strip():
