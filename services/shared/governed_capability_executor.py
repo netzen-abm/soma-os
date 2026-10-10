@@ -46,6 +46,7 @@ class GovernedCapabilityExecutor:
         operation: Callable[[], object],
         now: datetime | None = None,
     ) -> GovernedExecutionResult:
+        authorization_failure_reason = "authorization_required"
         if authorization_boundary is not None:
             if authorization_context is None or target_tenant is None or target_data_domain is None or policy_request is None:
                 return GovernedExecutionResult(operation_id, False, "authorization_context_required", dict(permission or {}))
@@ -58,8 +59,9 @@ class GovernedCapabilityExecutor:
                 now=now,
             )
             authorization_allowed = decision.allowed
+            authorization_failure_reason = decision.reason_code
         if authorization_allowed is not True:
-            return GovernedExecutionResult(operation_id, False, "authorization_required", dict(permission or {}))
+            return GovernedExecutionResult(operation_id, False, authorization_failure_reason, dict(permission or {}))
 
         if permission is not None:
             lifecycle = self._permissions.validate(
