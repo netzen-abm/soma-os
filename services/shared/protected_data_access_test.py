@@ -156,47 +156,23 @@ def test_permission_bound_subject_mismatch_never_reaches_adapter() -> None:
     assert adapter.calls == 0
 
 
-
-def test_insert_update_delete_use_governed_execution_exactly_once() -> None:
-    adapter = Adapter()
-    access = ProtectedDataAccess(kernel(), adapter)
-    payload = {"value": "test"}
-
-    assert access.insert(request(identity(), action="insert"), payload) == payload
-    assert access.update(request(identity(), action="update"), payload) == payload
-    assert access.delete(request(identity(), action="delete")) is True
-    assert adapter.calls == 3
-
-
-def test_insert_update_delete_denial_happens_before_adapter() -> None:
-    adapter = Adapter()
-    access = ProtectedDataAccess(kernel(), adapter)
-    ctx = identity(tenant="tenant-b")
-
-    for action, operation in (
-        ("insert", lambda req: access.insert(req, {"value": "test"})),
-        ("update", lambda req: access.update(req, {"value": "test"})),
+def test_write_operations_are_governed_and_denied_before_adapter() -> None:
+    adapter = Adapter(); access = ProtectedDataAccess(kernel(), adapter); payload = {"value": "test"}
+    operations = (
+        ("insert", lambda req: access.insert(req, payload)),
+        ("update", lambda req: access.update(req, payload)),
         ("delete", access.delete),
-    ):
-        try:
-            operation(request(ctx, action=action))
-        except PermissionError as exc:
-            assert str(exc) == "target_scope_mismatch"
-        else:
-            raise AssertionError(f"expected denial for {action}")
-
+    )
+    for action, operation in operations:
+        assert operation(request(identity(), action=action)) == (True if action == "delete" else payload)
+    assert adapter.calls == 3
+    adapter.calls = 0
+    for action, operation in operations:
+        try: operation(request(identity(tenant="tenant-b"), action=action))
+        except PermissionError as exc: assert str(exc) == "target_scope_mismatch"
+        else: raise AssertionError(f"expected denial for {action}")
     assert adapter.calls == 0
-
-
-def test_adapter_method_rejects_mismatched_action_before_authorization_or_io() -> None:
-    adapter = Adapter()
-    access = ProtectedDataAccess(kernel(), adapter)
-
-    try:
-        access.insert(request(identity(), action="read"), {"value": "test"})
-    except PermissionError as exc:
-        assert str(exc) == "protected_data_action_mismatch"
-    else:
-        raise AssertionError("expected action mismatch denial")
-
+    try: access.insert(request(identity(), action="read"), payload)
+    except PermissionError as exc: assert str(exc) == "protected_data_action_mismatch"
+    else: raise AssertionError("expected action mismatch denial")
     assert adapter.calls == 0
