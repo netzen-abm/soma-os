@@ -12,7 +12,11 @@ Follow-up evidence for PR #154 (`feature/current` head `e3f7ff4683140f39735c3e09
 - With end-of-line whitespace ignored, 33 files remained changed, with 867 insertions and 662 deletions. The diff therefore cannot be explained solely by CRLF/LF conversion.
 - Git emitted repeated warnings that LF in the working copy would be replaced by CRLF.
 - Local `cargo check --all-targets`, Clippy, and test compilation attempts stopped because the MSVC linker `link.exe` was not found. These checks are **blocked/unverified**, not passed.
+- A subsequent pasted run executed `cargo fmt --check`, `cargo check`, Clippy, and tests in sequence. The captured output shows no rustfmt diagnostic before compilation began, but does not include explicit per-command exit codes; treat formatting as **likely clean, not independently exit-code verified**.
+- In that subsequent run, compile/check, Clippy, and test attempts again failed because `link.exe` was unavailable. The terminal suggests the MSVC C++ build tools/Windows SDK environment is not initialized or installed. VS Code alone does not provide the linker.
 - `branch-audit/` remains untracked and must be preserved; do not stage it as part of the Rust formatting change.
+- Live GitHub recheck on 2026-10-10: PR #154 remains open, unmerged, at the same head SHA. The exact-head CI run still has Rust format/compile/lint job failure at the format step, with compile and Clippy skipped; cryptographic/integrity and PostgreSQL protected-data isolation jobs are skipped. Shared-infrastructure/health contract tests and the protected-data bypass audit passed. Passing those separate gates does not substitute for the skipped gates.
+- Live branch inventory remains 40 remote branches: the nine canonical branches plus 31 noncanonical branches. No branch was deleted in this verification step.
 
 ## Required disposition
 
