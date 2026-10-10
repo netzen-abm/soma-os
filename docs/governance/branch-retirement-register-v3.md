@@ -1,15 +1,14 @@
 # SOMA-OS Branch Retirement Register v3
 
-## Verified baseline — 2026-10-10
+## Branch disposition snapshot — 2026-10-10
 
 - Repository: `netzen-abm/soma-os`
-- Main: `78dd05e67b410264e85e929d4bb4a208b4fa7d6b`
-- Development: `9d32626bcfc8058d7706f75fde00c0c198e8b75d`
+- Main/development SHAs above are historical register values, not a fresh ref snapshot; verify live SHAs before any branch mutation.
 - Remote branches: 41 (live GitHub recheck, 2026-10-10)
 - Canonical active branches: 9
 - Noncanonical branches: 32
 - Open pull requests: #156; PR #159 merged, with source-branch retirement still pending
-- GitHub branch listing reports all 40 branches as unprotected.
+- Branch protection status was not revalidated during this pass; inspect live settings before changing protections.
 - No remote branch was deleted or force-moved during the 2026-10-10 cycle.
 
 ## Canonical active set — exactly nine
