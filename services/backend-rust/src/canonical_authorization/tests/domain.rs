@@ -1,6 +1,4 @@
-use super::{
-    request, AllowBoundary, AuthorizationDecision, CanonicalAuthorizationBoundary, DenyBoundary,
-};
+use super::{request, AllowBoundary, AuthorizationDecision, CanonicalAuthorizationBoundary, DenyBoundary};
 
 #[test]
 fn health_state_evidence_link_context_requires_authoritative_allow() {
