@@ -3,7 +3,6 @@ use crate::local_health_vault::{LocalHealthVaultCrypto, LocalHealthVaultRecord};
 use crate::local_health_vault_storage::{
     AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
 };
-use sha2::{Digest, Sha256};
 use std::{
     cell::Cell,
     collections::HashMap,
