@@ -6,6 +6,7 @@ from typing import Callable, Mapping
 
 from authorization_policy_decision_boundary import AuthorizationPolicyDecisionBoundary
 from permission_lifecycle_enforcement import PermissionLifecycleEnforcer, complete_permission
+from policy_kernel import PolicyRequest
 
 
 @dataclass(frozen=True)
@@ -19,8 +20,9 @@ class GovernedExecutionResult:
 class GovernedCapabilityExecutor:
     """Shared execution boundary joining canonical authorization and permission lifecycle.
 
-    Authorization is supplied by the existing canonical decision boundary.
-    This class never evaluates policy itself.
+    Authorization is always obtained from the canonical decision boundary.
+    This class never evaluates policy itself and accepts no caller-supplied
+    authorization Boolean.
     """
 
     def __init__(self, permission_enforcer: PermissionLifecycleEnforcer | None = None) -> None:
@@ -30,12 +32,11 @@ class GovernedCapabilityExecutor:
         self,
         *,
         operation_id: str,
-        authorization_allowed: bool | None = None,
-        authorization_boundary: AuthorizationPolicyDecisionBoundary | None = None,
-        authorization_context: Mapping[str, object] | None = None,
-        target_tenant: str | None = None,
-        target_data_domain: str | None = None,
-        policy_request: object | None = None,
+        authorization_boundary: AuthorizationPolicyDecisionBoundary,
+        authorization_context: Mapping[str, object],
+        target_tenant: str,
+        target_data_domain: str,
+        policy_request: PolicyRequest,
         permission: Mapping[str, object] | None,
         principal_ref: str,
         subject_ref: str,
@@ -46,22 +47,18 @@ class GovernedCapabilityExecutor:
         operation: Callable[[], object],
         now: datetime | None = None,
     ) -> GovernedExecutionResult:
-        authorization_failure_reason = "authorization_required"
-        if authorization_boundary is not None:
-            if authorization_context is None or target_tenant is None or target_data_domain is None or policy_request is None:
-                return GovernedExecutionResult(operation_id, False, "authorization_context_required", dict(permission or {}))
-            decision = authorization_boundary.authorize(
-                request_id=operation_id,
-                identity_context=authorization_context,
-                target_tenant=target_tenant,
-                target_data_domain=target_data_domain,
-                request=policy_request,
-                now=now,
+        decision = authorization_boundary.authorize(
+            request_id=operation_id,
+            identity_context=authorization_context,
+            target_tenant=target_tenant,
+            target_data_domain=target_data_domain,
+            request=policy_request,
+            now=now,
+        )
+        if not decision.allowed:
+            return GovernedExecutionResult(
+                operation_id, False, decision.reason_code, dict(permission or {})
             )
-            authorization_allowed = decision.allowed
-            authorization_failure_reason = decision.reason_code
-        if authorization_allowed is not True:
-            return GovernedExecutionResult(operation_id, False, authorization_failure_reason, dict(permission or {}))
 
         if permission is not None:
             lifecycle = self._permissions.validate(
