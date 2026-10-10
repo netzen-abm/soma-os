@@ -1,10 +1,10 @@
-use crate::canonical_authorization::AuthorizationRequest;
 //! Bounded, governed outcome contract for the canonical Health State domain.
 //!
 //! An outcome records a defined result over an explicit observation window. It
 //! does not itself establish efficacy, causality, clinical significance, or an
 //! adaptation decision.
 
+use crate::canonical_authorization::AuthorizationRequest;
 use thiserror::Error;
 
 pub(super) const SCHEMA_VERSION: &str = "1.0.0";
