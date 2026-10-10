@@ -1,3 +1,4 @@
+use crate::canonical_authorization::AuthorizationRequest;
 //! Bounded, governed outcome contract for the canonical Health State domain.
 //!
 //! An outcome records a defined result over an explicit observation window. It
