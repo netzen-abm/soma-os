@@ -164,4 +164,3 @@ pub enum OutcomeError {
     #[error("outcome subject does not match authorized subject")]
     SubjectMismatch,
 }
-

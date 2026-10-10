@@ -5,8 +5,7 @@ mod crypto;
 #[path = "local_health_vault_storage_store.rs"]
 mod store;
 pub use contract::{
-    AuthorizedIndexEntry, AuthorizationContext, StorageError, VaultAction,
-    VaultAuthorizer, VaultKeyProvider, KEY_LEN,
+    AuthorizationContext, AuthorizedIndexEntry, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider, KEY_LEN,
 };
 pub use store::LocalFileVaultStore;
 

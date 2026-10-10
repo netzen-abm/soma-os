@@ -20,20 +20,36 @@ pub struct AuthorizationContext {
     pub scope: String,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum VaultAction { Write, Read, List, Tombstone, Verify }
+pub enum VaultAction {
+    Write,
+    Read,
+    List,
+    Tombstone,
+    Verify,
+}
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum StorageError {
-    #[error("authorization denied")] AuthorizationDenied,
-    #[error("record not found")] NotFound,
-    #[error("record is tombstoned")] Tombstoned,
-    #[error("invalid storage record")] InvalidRecord,
-    #[error("index integrity failure")] IndexIntegrityFailure,
-    #[error("record integrity failure")] RecordIntegrityFailure,
-    #[error("key resolution failed")] KeyResolutionFailed,
-    #[error("storage I/O failure")] Io,
-    #[error("serialization failure")] Serialization,
-    #[error("random nonce generation failed")] NonceGenerationFailed,
+    #[error("authorization denied")]
+    AuthorizationDenied,
+    #[error("record not found")]
+    NotFound,
+    #[error("record is tombstoned")]
+    Tombstoned,
+    #[error("invalid storage record")]
+    InvalidRecord,
+    #[error("index integrity failure")]
+    IndexIntegrityFailure,
+    #[error("record integrity failure")]
+    RecordIntegrityFailure,
+    #[error("key resolution failed")]
+    KeyResolutionFailed,
+    #[error("storage I/O failure")]
+    Io,
+    #[error("serialization failure")]
+    Serialization,
+    #[error("random nonce generation failed")]
+    NonceGenerationFailed,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct EncryptedIndex {
@@ -79,11 +95,16 @@ pub struct AuthorizedIndexEntry {
 impl From<IndexPlaintext> for AuthorizedIndexEntry {
     fn from(value: IndexPlaintext) -> Self {
         Self {
-            record_id: value.record_id, subject_ref: value.subject_ref,
-            entity_type: value.entity_type, schema_version: value.schema_version,
-            classification: value.classification, content_type: value.content_type,
-            key_ref: value.key_ref, provenance_ref: value.provenance_ref,
-            created_at: value.created_at, updated_at: value.updated_at,
+            record_id: value.record_id,
+            subject_ref: value.subject_ref,
+            entity_type: value.entity_type,
+            schema_version: value.schema_version,
+            classification: value.classification,
+            content_type: value.content_type,
+            key_ref: value.key_ref,
+            provenance_ref: value.provenance_ref,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
             record_state: value.record_state,
         }
     }

@@ -146,4 +146,3 @@ pub enum HealthStateEvidenceLinkError {
     #[error("link subject does not match authorized subject")]
     SubjectMismatch,
 }
-
