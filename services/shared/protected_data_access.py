@@ -73,22 +73,19 @@ class ProtectedDataAccess:
         return self._execute(request, lambda: self._adapter.delete(request))
 
     def _execute(self, request: ProtectedDataRequest, operation: Callable[[], object]) -> object:
-        if request.permission is None:
-            decision = self.authorize(request)
-            if not decision_allowed(decision):
-                raise PermissionError(decision.reason_code)
-            return operation()
-
-        if request.operation_id is None or request.purpose is None or not request.requested_scope:
-            raise PermissionError("invalid_protected_data_request")
-
         principal_ref = request.authorization_context.get("principal_id")
+        principal_type = request.authorization_context.get("principal_type")
         if not isinstance(principal_ref, str) or not principal_ref.strip():
             raise PermissionError("invalid_protected_data_request")
+        if not isinstance(principal_type, str) or not principal_type.strip():
+            raise PermissionError("invalid_protected_data_request")
 
+        operation_id = request.operation_id or (
+            f"protected-data:{request.resource_type}:{request.resource_id}:{request.action}"
+        )
         policy_request = PolicyRequest(
             principal_id=principal_ref,
-            principal_type=request.authorization_context["principal_type"],
+            principal_type=principal_type,
             capability_id=request.capability_id,
             capability_version=request.capability_version,
             resource_type=request.resource_type,
@@ -97,9 +94,10 @@ class ProtectedDataAccess:
             context={},
             subject_ref=request.subject_ref,
         )
+
         result_holder: list[object] = []
         result = self._executor.execute(
-            operation_id=request.operation_id,
+            operation_id=operation_id,
             authorization_boundary=self._decision_boundary,
             authorization_context=request.authorization_context,
             target_tenant=request.target_tenant_id,
@@ -110,12 +108,14 @@ class ProtectedDataAccess:
             subject_ref=request.subject_ref,
             capability_id=request.capability_id,
             capability_version=request.capability_version,
-            purpose=request.purpose,
+            purpose=request.purpose or "protected_data_access",
             requested_scope=list(request.requested_scope),
             operation=lambda: result_holder.append(operation()),
         )
         if not result.succeeded:
             raise PermissionError(result.reason_code)
+        if len(result_holder) != 1:
+            raise RuntimeError("governed_operation_execution_count_invalid")
         return result_holder[0]
 
 def decision_allowed(decision: AuthorizationDecision) -> bool:
