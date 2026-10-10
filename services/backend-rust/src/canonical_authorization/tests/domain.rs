@@ -1,5 +1,5 @@
 use super::{
-    request, AllowBoundary, AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary, DenyBoundary,
+    request, AllowBoundary, AuthorizationDecision, CanonicalAuthorizationBoundary, DenyBoundary,
 };
 
 #[test]
