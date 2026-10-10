@@ -7,7 +7,6 @@ use ring::{
     aead,
     rand::{SecureRandom, SystemRandom},
 };
-use serde_json;
 
 pub(crate) fn encrypt_index(key: &[u8; KEY_LEN], index: &IndexPlaintext) -> Result<EncryptedIndex, StorageError> {
     let aad = format!("soma-index-v1:{}:{}", index.record_id, index.key_ref);
