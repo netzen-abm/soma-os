@@ -163,7 +163,13 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     let observation_repository = crate::local_longitudinal_observation_repository::LocalLongitudinalObservationRepository::new(
         LocalFileVaultStore::new(&root, Keys { values: key_values, calls: Rc::new(Cell::new(0)) }, SubjectAuthorizer).unwrap(),
     );
-    let observation_context = AuthorizedObservationAccessContext::from_authorized_request(&request).unwrap();
+    let mut observation_request = request.clone();
+    observation_request.capability_id = "health.observation.read".into();
+    observation_request.resource_type = "health_observation".into();
+    observation_request.resource_id = "person-1-record-1".into();
+    observation_request.action = "read".into();
+    assert_eq!(AllowBoundary.authorize(&observation_request), AuthorizationDecision::Allow);
+    let observation_context = AuthorizedObservationAccessContext::from_authorized_request(&observation_request).unwrap();
     let observed = observation_repository.get("person-1-record-1", &observation_context).unwrap();
     assert_eq!(observed.subject_ref, "person-1");
     assert_eq!(observed.entity_type, "observation");
@@ -174,7 +180,13 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     assert_eq!(observation_repository.put_reference("person-1-record-1", &observation_context), Ok(()));
 
     // Validate explicit evidence linkage without converting association into causality.
-    let link_context = AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&request).unwrap();
+    let mut link_request = request.clone();
+    link_request.capability_id = "health.evidence_link.write".into();
+    link_request.resource_type = "health_state_evidence_link".into();
+    link_request.resource_id = "person-1-link-1".into();
+    link_request.action = "write".into();
+    assert_eq!(AllowBoundary.authorize(&link_request), AuthorizationDecision::Allow);
+    let link_context = AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&link_request).unwrap();
     let link = HealthStateEvidenceLink {
         id: "person-1-link-1".into(),
         schema_version: "1.0.0".into(),
@@ -191,7 +203,13 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     };
     HealthStateEvidenceLinkBoundary::validate(&link, &link_context).unwrap();
 
-    let intervention_context = AuthorizedInterventionContext::from_authorized_request(&request).unwrap();
+    let mut intervention_request = request.clone();
+    intervention_request.capability_id = "health.intervention.write".into();
+    intervention_request.resource_type = "health_state_intervention".into();
+    intervention_request.resource_id = "person-1-intervention-1".into();
+    intervention_request.action = "write".into();
+    assert_eq!(AllowBoundary.authorize(&intervention_request), AuthorizationDecision::Allow);
+    let intervention_context = AuthorizedInterventionContext::from_authorized_request(&intervention_request).unwrap();
     let intervention = InterventionIntent {
         id: "person-1-intervention-1".into(),
         schema_version: "1.0.0".into(),
@@ -211,7 +229,13 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     };
     InterventionIntentBoundary::validate(&intervention, &intervention_context).unwrap();
 
-    let measurement_context = AuthorizedMeasurementContext::from_authorized_request(&request).unwrap();
+    let mut measurement_request = request.clone();
+    measurement_request.capability_id = "health.measurement.write".into();
+    measurement_request.resource_type = "health_state_measurement".into();
+    measurement_request.resource_id = "person-1-measurement-1".into();
+    measurement_request.action = "write".into();
+    assert_eq!(AllowBoundary.authorize(&measurement_request), AuthorizationDecision::Allow);
+    let measurement_context = AuthorizedMeasurementContext::from_authorized_request(&measurement_request).unwrap();
     let measurement = MeasurementPlan {
         id: "person-1-measurement-1".into(),
         schema_version: "1.0.0".into(),
@@ -250,7 +274,12 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
         recorded_at: "2026-10-13T00:00:00Z".into(),
         actor_ref: Some("principal-1".into()),
     };
-    let outcome_context = OutcomeAuthorizationBoundary::authorize(&AllowBoundary, &request()).unwrap();
+    let mut outcome_request = request.clone();
+    outcome_request.capability_id = "health.outcome.write".into();
+    outcome_request.resource_type = "health_state_outcome".into();
+    outcome_request.resource_id = "person-1-outcome-1".into();
+    outcome_request.action = "write".into();
+    let outcome_context = OutcomeAuthorizationBoundary::authorize(&AllowBoundary, &outcome_request).unwrap();
     OutcomeBoundary::validate(&outcome, &outcome_context).unwrap();
 
     // Persist the validated outcome using the existing Health State repository.
@@ -289,10 +318,12 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
         },
         &outcome_bytes,
     ).unwrap();
-    repository.put(outcome_record, &health_context).unwrap();
+    assert_eq!(AllowBoundary.authorize(&outcome_request), AuthorizationDecision::Allow);
+    let outcome_persistence_context = AuthorizedHealthStateAccessContext::from_authorized_request(&outcome_request).unwrap();
+    repository.put(outcome_record, &outcome_persistence_context).unwrap();
 
-    let persisted = repository.get("person-1-outcome-1", &health_context).unwrap();
-    repository.verify("person-1-outcome-1", &health_context).unwrap();
+    let persisted = repository.get("person-1-outcome-1", &outcome_persistence_context).unwrap();
+    repository.verify("person-1-outcome-1", &outcome_persistence_context).unwrap();
     let persisted_bytes = LocalHealthVaultCrypto::decrypt_record(&[7u8; KEY_LEN], &persisted).unwrap();
     let persisted_json: serde_json::Value = serde_json::from_slice(&persisted_bytes).unwrap();
     assert_eq!(persisted_json["subject_ref"], "person-1");
@@ -301,7 +332,14 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     assert_eq!(persisted_json["baseline_ref"], "person-1-record-1");
     assert_eq!(persisted_json["source_ref"], "person-1-link-1");
 
-    let timeline = repository.timeline(&health_context).unwrap();
+    let mut timeline_request = request.clone();
+    timeline_request.capability_id = "health.timeline.read".into();
+    timeline_request.resource_type = "health_state_timeline".into();
+    timeline_request.resource_id = "person-1".into();
+    timeline_request.action = "read".into();
+    assert_eq!(AllowBoundary.authorize(&timeline_request), AuthorizationDecision::Allow);
+    let timeline_context = AuthorizedHealthStateAccessContext::from_authorized_request(&timeline_request).unwrap();
+    let timeline = repository.timeline(&timeline_context).unwrap();
     assert!(timeline.iter().any(|entry| entry.record_id == "person-1-record-1"));
     assert!(timeline.iter().any(|entry| entry.record_id == "person-1-outcome-1"));
     assert!(timeline.iter().all(|entry| entry.subject_ref == "person-1"));
