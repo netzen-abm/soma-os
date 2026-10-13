@@ -110,7 +110,8 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
             updated_at: "2026-10-13T00:00:00Z",
         },
         &outcome_bytes,
-    ).unwrap();
+    )
+    .unwrap();
     let persistence_context = AuthorizedHealthStateAccessContext::from_authorized_request(&outcome_request).unwrap();
     repository.put(outcome_record, &persistence_context).unwrap();
     let persisted = repository.get("person-1-outcome-1", &persistence_context).unwrap();
