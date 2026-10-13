@@ -128,3 +128,6 @@ fn timeline_does_not_fabricate_effective_time() {
     assert_eq!(timeline[0].recorded_at, "2026-09-14T00:00:00Z");
     fs::remove_dir_all(root).unwrap();
 }
+
+#[path = "longitudinal_workflow_integration_tests.rs"]
+mod longitudinal_workflow_integration_tests;

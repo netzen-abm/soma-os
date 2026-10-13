@@ -5,9 +5,11 @@ on:
     branches:
       - main
       - development
+      - health/current
   pull_request:
     branches:
       - main
+      - development
 
 env:
   CARGO_TERM_COLOR: always
