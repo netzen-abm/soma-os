@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::health_state_evidence_link::{HealthStateEvidenceRelationship, LinkProvenance, LinkUncertainty};
 
