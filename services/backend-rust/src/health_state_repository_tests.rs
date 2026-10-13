@@ -141,7 +141,7 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     };
     use crate::health_state_measurement::{AuthorizedMeasurementContext, MeasurementBoundary, MeasurementPlan};
     use crate::health_state_outcome::{
-        AuthorizedOutcomeContext, Outcome, OutcomeAuthorizationBoundary, OutcomeBoundary, OutcomeStatus,
+        Outcome, OutcomeAuthorizationBoundary, OutcomeBoundary, OutcomeStatus,
     };
     use crate::longitudinal_observation_repository::{
         AuthorizedObservationAccessContext, LongitudinalObservationRepository,
