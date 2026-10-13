@@ -1,10 +1,6 @@
 use super::*;
-use crate::health_state_evidence_link::{
-    AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLinkBoundary,
-};
-use crate::health_state_intervention::{
-    AuthorizedInterventionContext, InterventionIntentBoundary,
-};
+use crate::health_state_evidence_link::{AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLinkBoundary};
+use crate::health_state_intervention::{AuthorizedInterventionContext, InterventionIntentBoundary};
 use crate::health_state_measurement::{AuthorizedMeasurementContext, MeasurementBoundary};
 use crate::health_state_outcome::{OutcomeAuthorizationBoundary, OutcomeBoundary};
 use crate::longitudinal_observation_repository::{
@@ -30,9 +26,13 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
         crate::local_longitudinal_observation_repository::LocalLongitudinalObservationRepository::new(
             LocalFileVaultStore::new(
                 &root,
-                Keys { values: key_values, calls: Rc::new(Cell::new(0)) },
+                Keys {
+                    values: key_values,
+                    calls: Rc::new(Cell::new(0)),
+                },
                 SubjectAuthorizer,
-            ).unwrap(),
+            )
+            .unwrap(),
         );
     let mut observation_request = write_request.clone();
     observation_request.capability_id = "health.vault.read".into();
@@ -100,9 +100,13 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     let outcome_record = LocalHealthVaultCrypto::encrypt_record(
         &[7u8; KEY_LEN],
         VaultRecordMetadata {
-            record_id: "person-1-outcome-1", subject_ref: "person-1", entity_type: "outcome",
-            content_type: HEALTH_STATE_CONTENT_TYPE, key_ref: "vault-key-v1",
-            provenance_ref: "person-1-link-1", created_at: "2026-10-13T00:00:00Z",
+            record_id: "person-1-outcome-1",
+            subject_ref: "person-1",
+            entity_type: "outcome",
+            content_type: HEALTH_STATE_CONTENT_TYPE,
+            key_ref: "vault-key-v1",
+            provenance_ref: "person-1-link-1",
+            created_at: "2026-10-13T00:00:00Z",
             updated_at: "2026-10-13T00:00:00Z",
         },
         &outcome_bytes,
