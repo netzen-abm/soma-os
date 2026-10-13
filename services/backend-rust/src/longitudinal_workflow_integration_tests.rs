@@ -12,7 +12,7 @@ mod domain_fixtures;
 use domain_fixtures::{intervention, link, measurement, outcome};
 
 #[test]
-fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
+fn longitudinal_contracts_and_observation_outcome_persistence_are_verified() {
     let root = root();
     let (repository, _) = repository(&root);
     let write_request = request();
@@ -58,6 +58,8 @@ fn longitudinal_observation_to_outcome_persists_through_existing_vault() {
     assert_eq!(AllowBoundary.authorize(&link_request), AuthorizationDecision::Allow);
     let link_context = AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&link_request).unwrap();
     let evidence_link = link();
+    // This repository persists observations and outcomes today; evidence-link, intervention,
+    // and measurement are contract-validated here because no dedicated persistence boundary exists.
     HealthStateEvidenceLinkBoundary::validate(&evidence_link, &link_context).unwrap();
 
     let mut intervention_request = write_request.clone();
