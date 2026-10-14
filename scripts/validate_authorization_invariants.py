@@ -85,10 +85,23 @@ def audit_governed_operation_schema() -> None:
     if not {"principal_ref", "subject_ref"} <= required:
         fail("governed capability operation must require principal_ref and subject_ref")
 
+def audit_authorization_enforcement_context_schema() -> None:
+    path = ROOT / "schemas/authorization-enforcement-context-v1.json"
+    schema = json.loads(path.read_text(encoding="utf-8"))
+    required = set(schema.get("required", []))
+    if "subject_ref" not in required:
+        fail("authorization enforcement context must require subject_ref")
+    if schema.get("properties", {}).get("subject_ref", {}).get("type") != "string":
+        fail("authorization enforcement context subject_ref must be a string")
+    if schema.get("properties", {}).get("schema_version", {}).get("const") != "1.1.0":
+        fail("authorization enforcement context subject binding requires schema version 1.1.0")
+
+
 def main() -> int:
     audit_python()
     audit_rust()
     audit_governed_operation_schema()
+    audit_authorization_enforcement_context_schema()
     print("PASS: canonical authorization invariants")
     return 0
 
