@@ -117,4 +117,26 @@ class ProtectedDataAccessTests(unittest.TestCase):
         except PermissionError as exc: assert str(exc) == "invalid_protected_data_request"
         else: raise AssertionError("expected denial")
         assert adapter.calls == 0
-    
+
+
+    def test_mismatched_subject_never_reaches_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        try:
+            access.read(request(identity(), subject_ref="subject-2"))
+        except PermissionError as exc:
+            assert str(exc) == "policy_authorization_required"
+        else:
+            raise AssertionError("expected subject-bound authorization denial")
+        assert adapter.calls == 0
+
+    def test_missing_subject_fails_closed_before_adapter(self) -> None:
+        adapter = Adapter()
+        access = ProtectedDataAccess(kernel(), adapter)
+        try:
+            access.read(request(identity(), subject_ref=""))
+        except PermissionError as exc:
+            assert str(exc) == "invalid_protected_data_request"
+        else:
+            raise AssertionError("expected invalid request denial")
+        assert adapter.calls == 0
