@@ -81,8 +81,9 @@ fn malformed_authorization_context_is_rejected() {
 fn delegated_actor_does_not_become_subject() {
     let request = request();
     let context = AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&request).unwrap();
-    assert_eq!(request.principal_ref, "principal-1");
+    assert_eq!(context.principal_ref(), "principal-1");
     assert_eq!(context.subject_ref(), "person-1");
+    assert_ne!(context.principal_ref(), context.subject_ref());
 }
 
 #[test]
