@@ -67,9 +67,11 @@ pub enum LinkUncertainty {
 /// Fields are private so a caller cannot manufacture a governed linkage context
 /// from arbitrary subject/scope strings. The canonical authorization boundary
 /// supplies the request only after an authoritative ALLOW; this module validates
-/// the request structure but does not evaluate policy.
+/// the request structure but does not evaluate policy. The principal (actor) and
+/// subject (person whose health data is addressed) remain separate identities.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedHealthStateEvidenceLinkContext {
+    principal_ref: String,
     subject_ref: String,
     tenant_id: String,
     data_domain: String,
@@ -100,6 +102,7 @@ impl AuthorizedHealthStateEvidenceLinkContext {
         }
 
         Ok(Self {
+            principal_ref: request.principal_ref.clone(),
             subject_ref: request.subject_ref.clone(),
             tenant_id: request.tenant_id.clone(),
             data_domain: request.data_domain.clone(),
@@ -111,6 +114,9 @@ impl AuthorizedHealthStateEvidenceLinkContext {
         })
     }
 
+    pub fn principal_ref(&self) -> &str {
+        &self.principal_ref
+    }
     pub fn subject_ref(&self) -> &str {
         &self.subject_ref
     }
