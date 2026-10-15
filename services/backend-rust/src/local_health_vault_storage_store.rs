@@ -50,14 +50,16 @@ where
         F: FnOnce(&[u8; super::contract::KEY_LEN]) -> Result<LocalHealthVaultRecord, E>,
         E: From<StorageError>,
     {
-        if !self.authorizer.authorize(context, record_id, VaultAction::Write)
-            || context.subject_ref != subject_ref
-        {
+        if !self.authorizer.authorize(context, record_id, VaultAction::Write) || context.subject_ref != subject_ref {
             return Err(E::from(StorageError::AuthorizationDenied));
         }
         let key = self.key_provider.key_for(key_ref).map_err(|_| E::from(StorageError::KeyResolutionFailed))?;
         let record = build_record(&key)?;
-        if record.record_id != record_id || record.subject_ref != subject_ref || record.key_ref != key_ref || record.tombstone {
+        if record.record_id != record_id
+            || record.subject_ref != subject_ref
+            || record.key_ref != key_ref
+            || record.tombstone
+        {
             return Err(E::from(StorageError::InvalidRecord));
         }
         validate_record_crypto(&key, &record).map_err(E::from)?;
