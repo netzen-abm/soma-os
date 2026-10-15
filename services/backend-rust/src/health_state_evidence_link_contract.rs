@@ -141,6 +141,16 @@ impl AuthorizedHealthStateEvidenceLinkContext {
     pub fn action(&self) -> &str {
         &self.action
     }
+
+    pub(crate) fn matches_operation(&self, resource_type: &str, resource_id: &str, action: &str) -> bool {
+        !self.principal_ref.trim().is_empty()
+            && !self.subject_ref.trim().is_empty()
+            && !self.tenant_id.trim().is_empty()
+            && !self.data_domain.trim().is_empty()
+            && self.resource_type == resource_type
+            && self.resource_id == resource_id
+            && self.action == action
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
