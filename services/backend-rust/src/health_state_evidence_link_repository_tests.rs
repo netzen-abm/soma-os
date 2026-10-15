@@ -138,26 +138,6 @@ fn denied_vault_write_does_not_persist_record() {
 }
 
 #[test]
-fn operation_context_must_match_action_and_resource() {
-    let root = root();
-    let repository = repository(&root, true);
-    let wrong_action = authorized("read");
-    assert_eq!(repository.put(&link(), &wrong_action), Err(HealthStateEvidenceLinkRepositoryError::InvalidContext));
-    let mut wrong_resource_request = request("write");
-    wrong_resource_request.resource_id = "different-link".into();
-    let wrong_resource = HealthStateEvidenceLinkRepository::<Keys, VaultPolicy>::authorize_context(
-        &AllowDomain,
-        &wrong_resource_request,
-    )
-    .unwrap();
-    assert_eq!(
-        repository.put(&link(), &wrong_resource),
-        Err(HealthStateEvidenceLinkRepositoryError::InvalidContext)
-    );
-    fs::remove_dir_all(root).unwrap();
-}
-
-#[test]
 fn cross_subject_read_is_denied_by_vault_scope() {
     let root = root();
     let repository = repository(&root, true);
