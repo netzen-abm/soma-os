@@ -38,7 +38,7 @@ where
 
     /// Authorizes the storage operation before invoking record construction.
     /// Callers can defer key resolution and encryption until storage policy allows it.
-    pub fn put_with<F>(
+    pub fn put_with<F, E>(
         &self,
         record_id: &str,
         subject_ref: &str,
