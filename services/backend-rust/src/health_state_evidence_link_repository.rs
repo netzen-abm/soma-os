@@ -13,13 +13,12 @@ use thiserror::Error;
 use crate::{
     canonical_authorization::CanonicalAuthorizationBoundary,
     health_state_evidence_link::{
-        AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink,
-        HealthStateEvidenceLinkBoundary, HealthStateEvidenceLinkError,
+        AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLink, HealthStateEvidenceLinkBoundary,
+        HealthStateEvidenceLinkError,
     },
     local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata},
     local_health_vault_storage::{
-        AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer,
-        VaultKeyProvider,
+        AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
     },
 };
 
@@ -91,12 +90,14 @@ where
         }
         let vault = LocalFileVaultStore::new(root, Arc::clone(&key_provider), authorizer)
             .map_err(HealthStateEvidenceLinkRepositoryError::from)?;
-        Ok(Self { vault, key_provider, key_ref })
+        Ok(Self {
+            vault,
+            key_provider,
+            key_ref,
+        })
     }
 
-    fn vault_context(
-        context: &AuthorizedHealthStateEvidenceLinkContext,
-    ) -> AuthorizationContext {
+    fn vault_context(context: &AuthorizedHealthStateEvidenceLinkContext) -> AuthorizationContext {
         AuthorizationContext {
             principal_ref: context.principal_ref().to_owned(),
             subject_ref: context.subject_ref().to_owned(),
