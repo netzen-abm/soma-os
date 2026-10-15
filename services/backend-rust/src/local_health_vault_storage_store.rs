@@ -1,3 +1,4 @@
+use super::atomic_write::atomic_write;
 use super::contract::{
     AuthorizationContext, AuthorizedIndexEntry, IndexPlaintext, StorageError, StoredBundle, VaultAction,
     VaultAuthorizer, VaultKeyProvider,
