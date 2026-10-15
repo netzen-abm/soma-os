@@ -1,10 +1,4 @@
-//! Governed persistence for cross-domain Health State ↔ Evidence Graph links.
-//!
-//! Domain authorization is performed by CanonicalAuthorizationBoundary before
-//! this repository receives its context. The vault then independently authorizes
-//! the concrete storage operation (health.vault.*). The two decisions are
-//! intentionally distinct: the first governs the domain operation; the second
-//! governs access to encrypted storage. Neither decision substitutes for the other.
+//! Governed Health State ↔ Evidence Graph link persistence through the shared encrypted vault.
 
 use std::{path::Path, sync::Arc};
 
@@ -32,10 +26,7 @@ impl<K: VaultKeyProvider> VaultKeyProvider for Arc<K> {
     }
 }
 
-/// Persists only evidence-link records, using the shared encrypted Health Vault.
-///
-/// The domain context must have been minted by the canonical authorization
-/// boundary. The vault performs its own storage authorization before I/O.
+/// Persists evidence links after domain authorization; the vault independently authorizes storage.
 pub struct HealthStateEvidenceLinkRepository<K, A> {
     vault: LocalFileVaultStore<Arc<K>, A>,
     key_provider: Arc<K>,
@@ -89,8 +80,6 @@ where
             _ => HealthStateEvidenceLinkRepositoryError::InvalidLink,
         })?;
 
-        // A persisted link must have an explicit creation timestamp. Missing
-        // provenance is not silently fabricated at the persistence boundary.
         let created_at = link
             .provenance
             .created_at
@@ -119,7 +108,6 @@ where
         )
         .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)?;
 
-        // The vault's own authorizer must independently allow health.vault.write.
         self.vault.put(record, &Self::vault_context(context)).map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
 
