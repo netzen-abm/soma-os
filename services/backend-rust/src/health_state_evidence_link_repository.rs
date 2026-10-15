@@ -26,7 +26,6 @@ impl<K: VaultKeyProvider> VaultKeyProvider for Arc<K> {
     }
 }
 
-/// Persists evidence links after domain authorization; the vault independently authorizes storage.
 pub struct HealthStateEvidenceLinkRepository<K, A> {
     vault: LocalFileVaultStore<Arc<K>, A>,
     key_provider: Arc<K>,
