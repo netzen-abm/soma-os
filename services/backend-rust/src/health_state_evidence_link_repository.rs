@@ -13,7 +13,7 @@ use crate::{
     },
     local_health_vault::{LocalHealthVaultCrypto, VaultRecordMetadata},
     local_health_vault_storage::{
-        AuthorizationContext, LocalFileVaultStore, StorageError, VaultAction, VaultAuthorizer, VaultKeyProvider,
+        AuthorizationContext, LocalFileVaultStore, StorageError, VaultAuthorizer, VaultKeyProvider,
     },
 };
 
