@@ -106,7 +106,6 @@ where
                 )
                 .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)
             })
-            .map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
 
     pub fn get(
