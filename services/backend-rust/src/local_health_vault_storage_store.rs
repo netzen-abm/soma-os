@@ -43,21 +43,22 @@ where
         subject_ref: &str,
         context: &AuthorizationContext,
         build_record: F,
-    ) -> Result<(), StorageError>
+    ) -> Result<(), E>
     where
-        F: FnOnce() -> Result<LocalHealthVaultRecord, StorageError>,
+        F: FnOnce() -> Result<LocalHealthVaultRecord, E>,
+        E: From<StorageError>,
     {
         if !self.authorizer.authorize(context, record_id, VaultAction::Write)
             || context.subject_ref != subject_ref
         {
-            return Err(StorageError::AuthorizationDenied);
+            return Err(E::from(StorageError::AuthorizationDenied));
         }
         let record = build_record()?;
         if record.record_id != record_id || record.subject_ref != subject_ref || record.tombstone {
-            return Err(StorageError::InvalidRecord);
+            return Err(E::from(StorageError::InvalidRecord));
         }
-        let key = self.key_provider.key_for(&record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
-        validate_record_crypto(&key, &record)?;
+        let key = self.key_provider.key_for(&record.key_ref).map_err(|_| E::from(StorageError::KeyResolutionFailed))?;
+        validate_record_crypto(&key, &record).map_err(E::from)?;
         let index = IndexPlaintext {
             record_id: record.record_id.clone(),
             subject_ref: record.subject_ref.clone(),
@@ -73,10 +74,10 @@ where
         };
         let bundle = StoredBundle {
             record,
-            index: encrypt_index(&key, &index)?,
+            index: encrypt_index(&key, &index).map_err(E::from)?,
         };
-        let bytes = serde_json::to_vec(&bundle).map_err(|_| StorageError::Serialization)?;
-        atomic_write(&self.path_for(&bundle.record.subject_ref, &bundle.record.record_id), &bytes)
+        let bytes = serde_json::to_vec(&bundle).map_err(|_| E::from(StorageError::Serialization))?;
+        atomic_write(&self.path_for(&bundle.record.subject_ref, &bundle.record.record_id), &bytes).map_err(E::from)
     }
     pub fn get(&self, record_id: &str, context: &AuthorizationContext) -> Result<LocalHealthVaultRecord, StorageError> {
         if !self.authorizer.authorize(context, record_id, VaultAction::Read) {
