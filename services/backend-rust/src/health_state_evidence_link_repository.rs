@@ -128,20 +128,25 @@ where
         context: &AuthorizedHealthStateEvidenceLinkContext,
     ) -> Result<(), HealthStateEvidenceLinkRepositoryError> {
         Self::validate_operation(context, &link.id, "write")?;
-        HealthStateEvidenceLinkBoundary::validate(link, context)
-            .map_err(|error| match error {
-                HealthStateEvidenceLinkError::InvalidAuthorizationContext => HealthStateEvidenceLinkRepositoryError::InvalidContext,
-                _ => HealthStateEvidenceLinkRepositoryError::InvalidLink,
-            })?;
+        HealthStateEvidenceLinkBoundary::validate(link, context).map_err(|error| match error {
+            HealthStateEvidenceLinkError::InvalidAuthorizationContext => {
+                HealthStateEvidenceLinkRepositoryError::InvalidContext
+            }
+            _ => HealthStateEvidenceLinkRepositoryError::InvalidLink,
+        })?;
 
         // A persisted link must have an explicit creation timestamp. Missing
         // provenance is not silently fabricated at the persistence boundary.
-        let created_at = link.provenance.created_at.as_deref()
+        let created_at = link
+            .provenance
+            .created_at
+            .as_deref()
             .filter(|value| !value.trim().is_empty())
             .ok_or(HealthStateEvidenceLinkRepositoryError::InvalidLink)?;
-        let plaintext = serde_json::to_vec(link)
-            .map_err(|_| HealthStateEvidenceLinkRepositoryError::Serialization)?;
-        let key = self.key_provider.key_for(&self.key_ref)
+        let plaintext = serde_json::to_vec(link).map_err(|_| HealthStateEvidenceLinkRepositoryError::Serialization)?;
+        let key = self
+            .key_provider
+            .key_for(&self.key_ref)
             .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)?;
         let provenance_ref = format!("evidence-link:{}", link.provenance.method);
         let record = LocalHealthVaultCrypto::encrypt_record(
@@ -157,11 +162,11 @@ where
                 updated_at: created_at,
             },
             &plaintext,
-        ).map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)?;
+        )
+        .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)?;
 
         // The vault's own authorizer must independently allow health.vault.write.
-        self.vault.put(record, &Self::vault_context(context))
-            .map_err(HealthStateEvidenceLinkRepositoryError::from)
+        self.vault.put(record, &Self::vault_context(context)).map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
 
     pub fn get(
@@ -170,7 +175,9 @@ where
         context: &AuthorizedHealthStateEvidenceLinkContext,
     ) -> Result<HealthStateEvidenceLink, HealthStateEvidenceLinkRepositoryError> {
         Self::validate_operation(context, record_id, "read")?;
-        let record = self.vault.get(record_id, &Self::vault_context(context))
+        let record = self
+            .vault
+            .get(record_id, &Self::vault_context(context))
             .map_err(HealthStateEvidenceLinkRepositoryError::from)?;
         if record.entity_type != ENTITY_TYPE || record.content_type != CONTENT_TYPE {
             return Err(HealthStateEvidenceLinkRepositoryError::InvalidLink);
