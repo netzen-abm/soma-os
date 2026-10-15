@@ -30,11 +30,31 @@ where
         })
     }
     pub fn put(&self, record: LocalHealthVaultRecord, context: &AuthorizationContext) -> Result<(), StorageError> {
-        if !self.authorizer.authorize(context, &record.record_id, VaultAction::Write)
-            || context.subject_ref != record.subject_ref
-            || record.tombstone
+        let record_id = record.record_id.clone();
+        let subject_ref = record.subject_ref.clone();
+        self.put_with(&record_id, &subject_ref, context, || Ok(record))
+    }
+
+    /// Authorizes the storage operation before invoking record construction.
+    /// Callers can defer key resolution and encryption until storage policy allows it.
+    pub fn put_with<F>(
+        &self,
+        record_id: &str,
+        subject_ref: &str,
+        context: &AuthorizationContext,
+        build_record: F,
+    ) -> Result<(), StorageError>
+    where
+        F: FnOnce() -> Result<LocalHealthVaultRecord, StorageError>,
+    {
+        if !self.authorizer.authorize(context, record_id, VaultAction::Write)
+            || context.subject_ref != subject_ref
         {
             return Err(StorageError::AuthorizationDenied);
+        }
+        let record = build_record()?;
+        if record.record_id != record_id || record.subject_ref != subject_ref || record.tombstone {
+            return Err(StorageError::InvalidRecord);
         }
         let key = self.key_provider.key_for(&record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
         validate_record_crypto(&key, &record)?;
