@@ -86,7 +86,8 @@ where
             .filter(|value| !value.trim().is_empty())
             .ok_or(HealthStateEvidenceLinkRepositoryError::InvalidLink)?;
         let provenance_ref = format!("evidence-link:{}", link.provenance.method);
-        self.vault.put_with(&link.id, context.subject_ref(), &self.key_ref, &Self::vault_context(context), |key| {
+        self.vault
+            .put_with(&link.id, context.subject_ref(), &self.key_ref, &Self::vault_context(context), |key| {
             let plaintext =
                 serde_json::to_vec(link).map_err(|_| HealthStateEvidenceLinkRepositoryError::Serialization)?;
             LocalHealthVaultCrypto::encrypt_record(
@@ -104,8 +105,8 @@ where
                 &plaintext,
             )
             .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)
-        })
-        .map_err(HealthStateEvidenceLinkRepositoryError::from)
+            })
+            .map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
 
     pub fn get(
