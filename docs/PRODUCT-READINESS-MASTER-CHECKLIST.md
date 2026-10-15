@@ -5,6 +5,21 @@
 
 > This checklist is the canonical execution/status tracker. A task is not `DONE` because code exists; it is `DONE` only when the applicable implementation, verification, security/privacy, failure behavior, documentation, and deployment gates have been checked.
 
+## Current engineering checkpoint — 2026-10-15
+
+**Verified development head:** `47d603e7ec3f7085d5bcf015574661c5f1601aca`
+
+- [x] Shared protected-data access now routes through the canonical authorization decision boundary and governed capability executor; caller-supplied authorization Boolean is not accepted.
+- [x] Protected-data integration tests exercise allow/deny, tenant/domain/resource mismatch, identity verification, capability version, action binding, permission expiry, subject binding, and permission revocation.
+- [x] CI on the exact head passed: Rust format/compile/Clippy; protected-data bypass audit; shared infrastructure contracts; PostgreSQL protected-data isolation; cryptographic/integrity tests.
+- [x] Evidence Pipeline and Local Health Vault Key Lifecycle Verification passed on the same head.
+- [ ] Production request-path integration remains open. The Rust HTTP runtime does not yet compose a real identity/session verifier, authoritative grant/policy provider, production vault key provider, and health repository into a governed health-data endpoint. Do not claim production readiness or introduce an allow-all/test-only provider.
+- [ ] Repository hygiene remains noncompliant: 42 branches total, 9 canonical and 33 noncanonical. No branch deletion was performed because the available GitHub operation set does not expose a supported delete-ref operation.
+- [ ] `main` and `development` remain divergent: development is 154 commits ahead; main has 26 commits not in development. Review those commits selectively; do not merge/reset wholesale.
+
+**Immediate engineering priority:** wire the existing governed operation and persistence boundaries through the real runtime only after trusted identity, policy/grant, tenant binding, and key-provider dependencies are explicit. Prove authorized read/write, deny-before-storage, cross-subject/tenant isolation, permission expiry/revocation, and failure behavior through the actual request path. Avoid new abstractions unless a genuine trust/provider/persistence boundary requires one.
+
+
 ## Status vocabulary
 
 - `DONE` — implemented and verified.
