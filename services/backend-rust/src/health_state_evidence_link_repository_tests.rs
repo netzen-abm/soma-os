@@ -2,7 +2,6 @@ use super::*;
 use crate::canonical_authorization::{AuthorizationDecision, AuthorizationRequest, CanonicalAuthorizationBoundary};
 use crate::local_health_vault_storage::{AuthorizationContext, VaultAction};
 use std::{
-    collections::HashMap,
     fs,
     path::PathBuf,
     sync::{Arc, atomic::{AtomicBool, Ordering}},
@@ -42,6 +41,7 @@ impl VaultAuthorizer for VaultPolicy {
             && !context.principal_ref.is_empty()
             && !context.subject_ref.is_empty()
             && !context.scope.is_empty()
+            && context.subject_ref == "person-1"
     }
 }
 
