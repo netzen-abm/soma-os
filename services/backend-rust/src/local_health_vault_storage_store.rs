@@ -7,7 +7,6 @@ use crate::local_health_vault::LocalHealthVaultRecord;
 use sha2::{Digest, Sha256};
 use std::{
     fs,
-    io::Write,
     path::{Path, PathBuf},
 };
 
@@ -171,24 +170,4 @@ where
     pub(crate) fn path_for(&self, subject_ref: &str, record_id: &str) -> PathBuf {
         self.subject_path(subject_ref).join(format!("{}.bundle", hex::encode(Sha256::digest(record_id.as_bytes()))))
     }
-}
-fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|_| StorageError::Io)?;
-    }
-    let tmp = path.with_extension(format!(
-        "bundle.tmp-{}-{}",
-        std::process::id(),
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| StorageError::Io)?.as_nanos()
-    ));
-    let mut file = fs::File::create(&tmp).map_err(|_| StorageError::Io)?;
-    if file.write_all(bytes).is_err() || file.sync_all().is_err() {
-        let _ = fs::remove_file(&tmp);
-        return Err(StorageError::Io);
-    }
-    if fs::rename(&tmp, path).is_err() {
-        let _ = fs::remove_file(&tmp);
-        return Err(StorageError::Io);
-    }
-    Ok(())
 }
