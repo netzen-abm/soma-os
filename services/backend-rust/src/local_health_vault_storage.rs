@@ -1,3 +1,5 @@
+#[path = "local_health_vault_storage_atomic_write.rs"]
+mod atomic_write;
 #[path = "local_health_vault_storage_contract.rs"]
 mod contract;
 #[path = "local_health_vault_storage_crypto.rs"]
