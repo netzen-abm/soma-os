@@ -33,7 +33,7 @@ where
         let record_id = record.record_id.clone();
         let subject_ref = record.subject_ref.clone();
         let key_ref = record.key_ref.clone();
-        self.put_with(&record_id, &subject_ref, &key_ref, context, |_| Ok(record))
+        self.put_with::<_, StorageError>(&record_id, &subject_ref, &key_ref, context, |_| Ok(record))
     }
 
     /// Authorizes the storage operation before invoking record construction.
