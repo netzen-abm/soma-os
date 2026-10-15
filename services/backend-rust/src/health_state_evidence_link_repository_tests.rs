@@ -4,7 +4,10 @@ use crate::local_health_vault_storage::{AuthorizationContext, VaultAction};
 use std::{
     fs,
     path::PathBuf,
-    sync::{Arc, atomic::{AtomicBool, Ordering}},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -13,7 +16,11 @@ const KEY: [u8; 32] = [7u8; 32];
 struct Keys;
 impl VaultKeyProvider for Keys {
     fn key_for(&self, key_ref: &str) -> Result<[u8; 32], StorageError> {
-        if key_ref == "vault-key-v1" { Ok(KEY) } else { Err(StorageError::KeyResolutionFailed) }
+        if key_ref == "vault-key-v1" {
+            Ok(KEY)
+        } else {
+            Err(StorageError::KeyResolutionFailed)
+        }
     }
 }
 
@@ -85,9 +92,12 @@ fn repository(root: &std::path::Path, allow_vault: bool) -> HealthStateEvidenceL
     HealthStateEvidenceLinkRepository::new(
         root,
         Arc::new(Keys),
-        VaultPolicy { allow: AtomicBool::new(allow_vault) },
+        VaultPolicy {
+            allow: AtomicBool::new(allow_vault),
+        },
         "vault-key-v1",
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 fn authorized(action: &str) -> AuthorizedHealthStateEvidenceLinkContext {
@@ -115,10 +125,7 @@ fn denied_vault_write_does_not_persist_record() {
     let root = root();
     let repository = repository(&root, false);
     let write = authorized("write");
-    assert_eq!(
-        repository.put(&link(), &write),
-        Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied)
-    );
+    assert_eq!(repository.put(&link(), &write), Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied));
 
     // A separate repository with vault access still cannot read a record that
     // the denied write failed to persist.
@@ -135,16 +142,14 @@ fn operation_context_must_match_action_and_resource() {
     let root = root();
     let repository = repository(&root, true);
     let wrong_action = authorized("read");
-    assert_eq!(
-        repository.put(&link(), &wrong_action),
-        Err(HealthStateEvidenceLinkRepositoryError::InvalidContext)
-    );
+    assert_eq!(repository.put(&link(), &wrong_action), Err(HealthStateEvidenceLinkRepositoryError::InvalidContext));
     let mut wrong_resource_request = request("write");
     wrong_resource_request.resource_id = "different-link".into();
     let wrong_resource = HealthStateEvidenceLinkRepository::<Keys, VaultPolicy>::authorize_context(
         &AllowDomain,
         &wrong_resource_request,
-    ).unwrap();
+    )
+    .unwrap();
     assert_eq!(
         repository.put(&link(), &wrong_resource),
         Err(HealthStateEvidenceLinkRepositoryError::InvalidContext)
@@ -159,10 +164,9 @@ fn cross_subject_read_is_denied_by_vault_scope() {
     repository.put(&link(), &authorized("write")).unwrap();
     let mut other_request = request("read");
     other_request.subject_ref = "person-2".into();
-    let other_context = HealthStateEvidenceLinkRepository::<Keys, VaultPolicy>::authorize_context(
-        &AllowDomain,
-        &other_request,
-    ).unwrap();
+    let other_context =
+        HealthStateEvidenceLinkRepository::<Keys, VaultPolicy>::authorize_context(&AllowDomain, &other_request)
+            .unwrap();
     assert_eq!(
         repository.get("link-1", &other_context),
         Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied)
