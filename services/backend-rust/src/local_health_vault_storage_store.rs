@@ -32,7 +32,8 @@ where
     pub fn put(&self, record: LocalHealthVaultRecord, context: &AuthorizationContext) -> Result<(), StorageError> {
         let record_id = record.record_id.clone();
         let subject_ref = record.subject_ref.clone();
-        self.put_with(&record_id, &subject_ref, context, || Ok(record))
+        let key_ref = record.key_ref.clone();
+        self.put_with(&record_id, &subject_ref, &key_ref, context, |_| Ok(record))
     }
 
     /// Authorizes the storage operation before invoking record construction.
@@ -41,11 +42,12 @@ where
         &self,
         record_id: &str,
         subject_ref: &str,
+        key_ref: &str,
         context: &AuthorizationContext,
         build_record: F,
     ) -> Result<(), E>
     where
-        F: FnOnce() -> Result<LocalHealthVaultRecord, E>,
+        F: FnOnce(&[u8; super::contract::KEY_LEN]) -> Result<LocalHealthVaultRecord, E>,
         E: From<StorageError>,
     {
         if !self.authorizer.authorize(context, record_id, VaultAction::Write)
@@ -53,11 +55,11 @@ where
         {
             return Err(E::from(StorageError::AuthorizationDenied));
         }
-        let record = build_record()?;
-        if record.record_id != record_id || record.subject_ref != subject_ref || record.tombstone {
+        let key = self.key_provider.key_for(key_ref).map_err(|_| E::from(StorageError::KeyResolutionFailed))?;
+        let record = build_record(&key)?;
+        if record.record_id != record_id || record.subject_ref != subject_ref || record.key_ref != key_ref || record.tombstone {
             return Err(E::from(StorageError::InvalidRecord));
         }
-        let key = self.key_provider.key_for(&record.key_ref).map_err(|_| E::from(StorageError::KeyResolutionFailed))?;
         validate_record_crypto(&key, &record).map_err(E::from)?;
         let index = IndexPlaintext {
             record_id: record.record_id.clone(),
