@@ -116,3 +116,66 @@ Live recheck on 2026-10-10: GitHub lists 41 remote branches (the nine canonical 
 ## Completion invariant
 
 The repository is complete only when exactly the nine canonical branch names remain on GitHub, retired work remains recoverable, no required implementation or PR is orphaned, and required exact-head security/CI gates pass.
+
+
+## Live recheck addendum — 2026-10-15
+
+This addendum supersedes earlier snapshot counts and PR-state statements above for current-state decisions. Earlier sections are retained as historical audit evidence.
+
+- Remote branch inventory: **42 refs**.
+- Canonical active branches: **9**.
+- Noncanonical refs requiring disposition: **33**.
+- `main` head observed by compare: `cb9c906d24cc3b51e4f0b6b24478840ee0ad22c2`.
+- `development` head observed by compare: `32bcc8e7a4207d279743d62ea4c8ad171e3a04a7`.
+- Merge base: `13b0b4ac2954f2d0ad2171abeb24e9f12adf9444`.
+- Divergence: development is 155 commits ahead of main; main is 26 commits ahead of development.
+- Latest open-PR search returned no open PRs. PR #156 is **closed, not merged**; its historical branch must not be treated as an active open-PR dependency, but its actor/subject semantics still require recovery into the current contract if not already present. PR #159 is merged; its source branch remains a retirement candidate only after exact-tip archival and dependency verification.
+- The live inventory is the authority for branch names; this register is not itself a deletion authorization.
+
+### Live noncanonical branch inventory
+
+Every branch below remains `UNKNOWN / HOLD` until exact tip, unique diff, dependencies, archival evidence, and disposition are verified:
+
+- `arch/behavioral-evidence-epistemic-layer-v1`
+- `arch/canonical-governed-operation-contract-v1`
+- `arch/capability-registry-canonicalization-v1`
+- `architecture/health-media-intelligence-v1`
+- `architecture/local-health-vault-contract-v1`
+- `architecture/local-health-vault-storage-index-v1`
+- `audit/evidence-canonicalization-v1`
+- `design/canonical-domain-runtime-polyglot-v1-main`
+- `design/canonical-domain-runtime-polyglot-v1`
+- `design/db-constraints-trusted-context-rls-v1`
+- `design/hybrid-web-platform-v1`
+- `design/identity-authorization-enforcement-v1`
+- `design/legacy-scope-classification-quarantine-v1`
+- `design/protected-data-access-enforcement-v1`
+- `design/trusted-db-service-identity-context-v1`
+- `feat/canonical-principal-subject-scope-v3`
+- `feat/canonical-principal-subject-scope-v4-clean`
+- `feat/python-authorization-subject-convergence-v1`
+- `feat/unpaywall-access-location-adapter-v1`
+- `feature/health-state-evidence-schema-v1`
+- `feature/policy-kernel-grant-identity-hardening`
+- `feature/shared-policy-kernel-hardening`
+- `feature/shared-policy-kernel-hardening-v2`
+- `fix/authorization-subject-context-contract-v1-1`
+- `fix/governed-executor-no-bypass-v1`
+- `fix/protected-db-context-rustfmt-v1`
+- `governance/automation-architecture-v1`
+- `impl/evidence-assessment-chain-hardening-v1`
+- `security/legacy-data-classification-quarantine-v1`
+- `security/legacy-data-classification-quarantine-v1-clean`
+- `security/protected-context-conformance-v1`
+- `security/protected-data-bypass-audit-v1`
+- `security/protected-data-bypass-audit-v1-main`
+
+### Next execution gates
+
+1. Reconcile main-only changes by file semantics and behavior; do not merge based on commit counts.
+2. Add evidence-link repository write/readback to the existing longitudinal integration test, reusing the existing encrypted vault and canonical authorization boundary.
+3. Replace the temporary Rust formatting workflow's direct security-branch push with a non-mutating check through a reviewed change.
+4. Archive and verify exact tips before retiring any noncanonical branch.
+5. Run `scripts/validate_branch_hygiene.py` against freshly fetched remote refs; only declare completion when the live remote count is exactly nine and all required checks pass.
+
+No branches were deleted or merged during this recheck. No code tests were run by the GitHub connector.
