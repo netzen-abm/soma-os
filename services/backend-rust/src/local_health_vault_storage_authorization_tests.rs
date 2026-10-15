@@ -14,7 +14,7 @@ fn denied_write_precedes_key_resolution_and_record_construction() {
         &denied,
         |_| {
             built.set(true);
-            Ok(record("person-1-record-2", "person-1"))
+            Ok::<_, StorageError>(record("person-1-record-2", "person-1"))
         },
     );
 
