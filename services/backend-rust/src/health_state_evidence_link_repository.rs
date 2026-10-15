@@ -167,8 +167,6 @@ where
             .verify(record_id, &Self::vault_context(context))
             .map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
-
-
 }
 
 #[cfg(test)]
