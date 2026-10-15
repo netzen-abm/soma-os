@@ -19,6 +19,7 @@ mod data_parser;
 mod db_layer;
 mod device_sync;
 mod health_state_evidence_link;
+mod health_state_evidence_link_repository;
 mod health_state_intervention;
 mod health_state_measurement;
 mod health_state_outcome;
