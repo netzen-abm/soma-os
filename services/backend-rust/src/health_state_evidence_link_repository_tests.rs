@@ -101,7 +101,7 @@ fn repository(root: &std::path::Path, allow_vault: bool) -> HealthStateEvidenceL
 }
 
 fn authorized(action: &str) -> AuthorizedHealthStateEvidenceLinkContext {
-    HealthStateEvidenceLinkRepository::<Keys, VaultPolicy>::authorize_context(&AllowDomain, &request(action)).unwrap()
+    AllowDomain.authorize_health_state_evidence_link_context(&request(action)).unwrap()
 }
 
 #[test]
