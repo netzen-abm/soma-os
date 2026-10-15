@@ -125,7 +125,10 @@ fn denied_vault_write_does_not_persist_record() {
     let root = root();
     let denied_repository = repository(&root, false);
     let write = authorized("write");
-    assert_eq!(denied_repository.put(&link(), &write), Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied));
+    assert_eq!(
+        denied_repository.put(&link(), &write),
+        Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied)
+    );
 
     // A separate repository with vault access still cannot read a record that
     // the denied write failed to persist.
@@ -145,10 +148,7 @@ fn cross_subject_read_is_denied_by_vault_scope() {
     let mut other_request = request("read");
     other_request.subject_ref = "person-2".into();
     let other_context = AllowDomain.authorize_health_state_evidence_link_context(&other_request).unwrap();
-    assert_eq!(
-        repo.get("link-1", &other_context),
-        Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied)
-    );
+    assert_eq!(repo.get("link-1", &other_context), Err(HealthStateEvidenceLinkRepositoryError::AuthorizationDenied));
     fs::remove_dir_all(root).unwrap();
 }
 
@@ -158,13 +158,7 @@ fn invalid_link_is_rejected_before_vault_write() {
     let repo = repository(&root, true);
     let mut invalid = link();
     invalid.evidence_ref.clear();
-    assert_eq!(
-        repo.put(&invalid, &authorized("write")),
-        Err(HealthStateEvidenceLinkRepositoryError::InvalidLink)
-    );
-    assert_eq!(
-        repo.get("link-1", &authorized("read")),
-        Err(HealthStateEvidenceLinkRepositoryError::StorageFailure)
-    );
+    assert_eq!(repo.put(&invalid, &authorized("write")), Err(HealthStateEvidenceLinkRepositoryError::InvalidLink));
+    assert_eq!(repo.get("link-1", &authorized("read")), Err(HealthStateEvidenceLinkRepositoryError::StorageFailure));
     fs::remove_dir_all(root).unwrap();
 }
