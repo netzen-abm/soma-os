@@ -175,12 +175,14 @@ where
         if record.entity_type != ENTITY_TYPE || record.content_type != CONTENT_TYPE {
             return Err(HealthStateEvidenceLinkRepositoryError::InvalidLink);
         }
-        let key = self.key_provider.key_for(&record.key_ref)
+        let key = self
+            .key_provider
+            .key_for(&record.key_ref)
             .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)?;
         let plaintext = LocalHealthVaultCrypto::decrypt_record(&key, &record)
             .map_err(|_| HealthStateEvidenceLinkRepositoryError::Cryptography)?;
-        let link: HealthStateEvidenceLink = serde_json::from_slice(&plaintext)
-            .map_err(|_| HealthStateEvidenceLinkRepositoryError::Serialization)?;
+        let link: HealthStateEvidenceLink =
+            serde_json::from_slice(&plaintext).map_err(|_| HealthStateEvidenceLinkRepositoryError::Serialization)?;
         if link.id != record_id {
             return Err(HealthStateEvidenceLinkRepositoryError::InvalidLink);
         }
@@ -195,7 +197,8 @@ where
         context: &AuthorizedHealthStateEvidenceLinkContext,
     ) -> Result<(), HealthStateEvidenceLinkRepositoryError> {
         Self::validate_operation(context, record_id, "tombstone")?;
-        self.vault.tombstone(record_id, &Self::vault_context(context))
+        self.vault
+            .tombstone(record_id, &Self::vault_context(context))
             .map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
 
@@ -205,7 +208,8 @@ where
         context: &AuthorizedHealthStateEvidenceLinkContext,
     ) -> Result<(), HealthStateEvidenceLinkRepositoryError> {
         Self::validate_operation(context, record_id, "verify")?;
-        self.vault.verify(record_id, &Self::vault_context(context))
+        self.vault
+            .verify(record_id, &Self::vault_context(context))
             .map_err(HealthStateEvidenceLinkRepositoryError::from)
     }
 
