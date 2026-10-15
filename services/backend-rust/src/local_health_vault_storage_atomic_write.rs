@@ -1,4 +1,9 @@
-use std::{fs, io::Write, path::Path, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    fs,
+    io::Write,
+    path::Path,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use super::contract::StorageError;
 
