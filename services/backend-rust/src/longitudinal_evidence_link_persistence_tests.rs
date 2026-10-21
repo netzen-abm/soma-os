@@ -4,6 +4,18 @@ use crate::health_state_evidence_link::{
     AuthorizedHealthStateEvidenceLinkContext, HealthStateEvidenceLinkBoundary, LinkUncertainty,
 };
 use crate::health_state_evidence_link_repository::HealthStateEvidenceLinkRepository;
+use crate::local_health_vault_storage::VaultKeyProvider;
+
+struct EvidencePersistenceKeys;
+impl VaultKeyProvider for EvidencePersistenceKeys {
+    fn key_for(&self, key_ref: &str) -> Result<[u8; KEY_LEN], StorageError> {
+        if key_ref == "vault-key-v1" {
+            Ok([7u8; KEY_LEN])
+        } else {
+            Err(StorageError::KeyResolutionFailed)
+        }
+    }
+}
 
 #[test]
 fn evidence_link_persistence_preserves_provenance_and_uncertainty() {
@@ -19,14 +31,7 @@ fn evidence_link_persistence_preserves_provenance_and_uncertainty() {
     HealthStateEvidenceLinkBoundary::validate(&evidence_link, &write_context).unwrap();
     let repository = HealthStateEvidenceLinkRepository::new(
         &root,
-        std::sync::Arc::new(Keys {
-            values: {
-                let mut values = HashMap::new();
-                values.insert("vault-key-v1".to_owned(), [7u8; KEY_LEN]);
-                values
-            },
-            calls: Rc::new(Cell::new(0)),
-        }),
+        std::sync::Arc::new(EvidencePersistenceKeys),
         SubjectAuthorizer,
         "vault-key-v1",
     )
