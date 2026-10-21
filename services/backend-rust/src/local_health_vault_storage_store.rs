@@ -90,6 +90,12 @@ where
             }
             let bundle: StoredBundle = serde_json::from_slice(&fs::read(&path).map_err(|_| StorageError::Io)?)
                 .map_err(|_| StorageError::InvalidRecord)?;
+            // The record identifier is untrusted until integrity validation, but it is
+            // sufficient for an early policy denial. Never resolve a key or decrypt an
+            // index for a record that this context is already forbidden to read.
+            if !self.authorizer.authorize(context, &bundle.record.record_id, VaultAction::Read) {
+                continue;
+            }
             let key =
                 self.key_provider.key_for(&bundle.record.key_ref).map_err(|_| StorageError::KeyResolutionFailed)?;
             let index = decrypt_index(&key, &bundle.index)?;
