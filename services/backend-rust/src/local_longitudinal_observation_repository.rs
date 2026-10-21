@@ -121,7 +121,7 @@ where
         context: &AuthorizedObservationAccessContext,
         query: &ObservationQuery,
     ) -> Result<Vec<Self::Observation>, ObservationRepositoryError> {
-        Self::require_action(context, "list")?;
+        Self::require_action(context, "read")?;
         let vault_context = Self::vault_context(context);
         let entries = self.vault.list(&vault_context).map_err(Self::map_error)?;
         let mut observations = Vec::new();
@@ -146,7 +146,7 @@ where
         &self,
         context: &AuthorizedObservationAccessContext,
     ) -> Result<Vec<ObservationTimelineEntry>, ObservationRepositoryError> {
-        Self::require_action(context, "list")?;
+        Self::require_action(context, "read")?;
         let vault_context = Self::vault_context(context);
         let entries = self.vault.list(&vault_context).map_err(Self::map_error)?;
         let mut timeline = entries
