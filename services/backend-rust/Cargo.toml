@@ -43,7 +43,7 @@ thiserror = "1.0.61"
 # WebSocket and HTTP clients.
 tokio-tungstenite = { version = "0.23.1", features = ["native-tls"] }
 futures-util = "0.3.30"
-reqwest = { version = "0.12.5", features = ["json"] }
+reqwest = { version = "0.13.5", features = ["json"] }
 
 # Serialization.
 serde = { version = "1.0.203", features = ["derive"] }
