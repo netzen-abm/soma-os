@@ -181,9 +181,13 @@ fn list_does_not_resolve_keys_for_records_denied_read_access() {
     values.insert("vault-key-v1".into(), [7u8; KEY_LEN]);
     let store = LocalFileVaultStore::new(
         &root,
-        Keys { calls: calls.clone(), values },
+        Keys {
+            calls: calls.clone(),
+            values,
+        },
         SelectiveReadAuthorizer,
-    ).unwrap();
+    )
+    .unwrap();
     let context = context("principal-1", "person-1");
     store.put(record("person-1-allowed", "person-1"), &context).unwrap();
     store.put(record("person-1-denied", "person-1"), &context).unwrap();
