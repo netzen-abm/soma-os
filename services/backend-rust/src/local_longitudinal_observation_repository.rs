@@ -65,6 +65,20 @@ where
     fn is_observation(record: &LocalHealthVaultRecord) -> bool {
         record.entity_type == "observation"
     }
+
+    /// Require the canonical request action to match the repository operation.
+    /// The vault authorizer remains an independent defense, not a substitute for
+    /// preserving the action bound by the canonical authorization boundary.
+    fn require_action(
+        context: &AuthorizedObservationAccessContext,
+        expected: &str,
+    ) -> Result<(), ObservationRepositoryError> {
+        if context.action() == expected {
+            Ok(())
+        } else {
+            Err(ObservationRepositoryError::AuthorizationDenied)
+        }
+    }
 }
 
 impl<K, A> LongitudinalObservationRepository for LocalLongitudinalObservationRepository<K, A>
@@ -79,6 +93,7 @@ where
         observation_id: &str,
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
+        Self::require_action(context, "read")?;
         let vault_context = Self::vault_context(context);
         let record = self.vault.get(observation_id, &vault_context).map_err(Self::map_error)?;
         if !Self::is_observation(&record) {
@@ -92,6 +107,7 @@ where
         observation_id: &str,
         context: &AuthorizedObservationAccessContext,
     ) -> Result<Self::Observation, ObservationRepositoryError> {
+        Self::require_action(context, "read")?;
         let vault_context = Self::vault_context(context);
         let record = self.vault.get(observation_id, &vault_context).map_err(Self::map_error)?;
         if !Self::is_observation(&record) {
@@ -105,6 +121,7 @@ where
         context: &AuthorizedObservationAccessContext,
         query: &ObservationQuery,
     ) -> Result<Vec<Self::Observation>, ObservationRepositoryError> {
+        Self::require_action(context, "list")?;
         let vault_context = Self::vault_context(context);
         let entries = self.vault.list(&vault_context).map_err(Self::map_error)?;
         let mut observations = Vec::new();
@@ -129,6 +146,7 @@ where
         &self,
         context: &AuthorizedObservationAccessContext,
     ) -> Result<Vec<ObservationTimelineEntry>, ObservationRepositoryError> {
+        Self::require_action(context, "list")?;
         let vault_context = Self::vault_context(context);
         let entries = self.vault.list(&vault_context).map_err(Self::map_error)?;
         let mut timeline = entries
@@ -153,6 +171,7 @@ where
         observation_id: &str,
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
+        Self::require_action(context, "tombstone")?;
         let vault_context = Self::vault_context(context);
         self.vault.tombstone(observation_id, &vault_context).map_err(Self::map_error)
     }
@@ -162,6 +181,7 @@ where
         observation_id: &str,
         context: &AuthorizedObservationAccessContext,
     ) -> Result<(), ObservationRepositoryError> {
+        Self::require_action(context, "verify")?;
         let vault_context = Self::vault_context(context);
         self.vault.verify(observation_id, &vault_context).map_err(Self::map_error)
     }
