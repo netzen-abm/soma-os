@@ -130,3 +130,18 @@ fn non_observation_entity_is_rejected() {
     );
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn read_authorization_cannot_be_reused_for_tombstone() {
+    let root = root();
+    let repository = repository(&root);
+    let read_context = context();
+
+    // No record is needed: action binding must reject before touching storage.
+    assert_eq!(
+        repository.tombstone("person-1-observation-1", &read_context),
+        Err(ObservationRepositoryError::AuthorizationDenied)
+    );
+
+    std::fs::remove_dir_all(root).unwrap();
+}
