@@ -159,6 +159,5 @@ fn interrupted_temp_bundle_is_not_listed() {
     fs::remove_dir_all(root).unwrap();
 }
 
-
 #[path = "local_health_vault_storage_list_authorization_tests.rs"]
 mod list_authorization;
