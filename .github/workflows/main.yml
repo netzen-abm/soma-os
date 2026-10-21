@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact workflow commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOMA_CI_CHECKOUT_REF }}
           fetch-depth: 1
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact workflow commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOMA_CI_CHECKOUT_REF }}
           fetch-depth: 0
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact workflow commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOMA_CI_CHECKOUT_REF }}
           fetch-depth: 1
@@ -203,7 +203,7 @@ jobs:
       SOMA_TEST_DATABASE_URL: postgresql://somaos_test:somaos_test_password@localhost:5432/somaos_test
     steps:
       - name: Checkout exact workflow commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOMA_CI_CHECKOUT_REF }}
           fetch-depth: 1
@@ -232,7 +232,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact workflow commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOMA_CI_CHECKOUT_REF }}
           fetch-depth: 1

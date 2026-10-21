@@ -25,7 +25,7 @@ jobs:
         run: echo "ref=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout exact ref
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.ref.outputs.ref }}
           fetch-depth: 1
