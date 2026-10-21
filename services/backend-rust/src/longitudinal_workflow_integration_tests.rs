@@ -11,6 +11,9 @@ use crate::longitudinal_observation_repository::{
 mod domain_fixtures;
 use domain_fixtures::{intervention, link, measurement, outcome};
 
+#[path = "longitudinal_evidence_link_persistence_tests.rs"]
+mod evidence_link_persistence_tests;
+
 #[test]
 fn longitudinal_contracts_and_observation_outcome_persistence_are_verified() {
     let root = root();
@@ -59,45 +62,6 @@ fn longitudinal_contracts_and_observation_outcome_persistence_are_verified() {
     let link_context = AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&link_request).unwrap();
     let evidence_link = link();
     HealthStateEvidenceLinkBoundary::validate(&evidence_link, &link_context).unwrap();
-
-    // Prove the existing evidence-link repository uses the shared encrypted vault and
-    // preserves provenance/uncertainty across an authorized write/readback cycle.
-    let evidence_link_repository =
-        crate::health_state_evidence_link_repository::HealthStateEvidenceLinkRepository::new(
-            &root,
-            std::sync::Arc::new(Keys {
-                values: {
-                    let mut values = HashMap::new();
-                    values.insert("vault-key-v1".to_owned(), [7u8; KEY_LEN]);
-                    values
-                },
-                calls: Rc::new(Cell::new(0)),
-            }),
-            SubjectAuthorizer,
-            "vault-key-v1",
-        )
-        .unwrap();
-    evidence_link_repository.put(&evidence_link, &link_context).unwrap();
-    let mut link_read_request = link_request.clone();
-    link_read_request.action = "read".into();
-    let link_read_context =
-        AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&link_read_request).unwrap();
-    let persisted_link = evidence_link_repository
-        .get("person-1-link-1", &link_read_context)
-        .unwrap();
-    assert_eq!(persisted_link, evidence_link);
-    assert_eq!(persisted_link.provenance.actor_ref.as_deref(), Some("principal-1"));
-    assert_eq!(
-        persisted_link.uncertainty,
-        Some(crate::health_state_evidence_link::LinkUncertainty::Reported)
-    );
-    evidence_link_repository
-        .verify("person-1-link-1", &{
-            let mut verify_request = link_request.clone();
-            verify_request.action = "verify".into();
-            AuthorizedHealthStateEvidenceLinkContext::from_authorized_request(&verify_request).unwrap()
-        })
-        .unwrap();
 
     let mut intervention_request = write_request.clone();
     intervention_request.capability_id = "health.intervention.write".into();
