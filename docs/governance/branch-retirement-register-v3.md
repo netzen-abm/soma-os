@@ -92,3 +92,41 @@ PR #164 adds `docs/architecture/local-health-vault-v1.md`. A review comment has 
 The connected GitHub tools available in this session expose branch listing/search and ref updates but no safe branch-delete mutation. Ref movement must not be used as a substitute for deletion. Therefore physical branch cleanup is blocked until an authorized GitHub branch-delete capability or an authorized maintainer operation is available.
 
 **Completion invariant:** the live GitHub branch listing must contain exactly the nine canonical names above. At this baseline it contains 44 branches, so the invariant is not satisfied.
+
+
+## Fresh high-risk branch comparison — current `main`
+
+A live compare pass against current `main` confirms that several security-sensitive branches are highly divergent and must not be merged wholesale:
+
+| Branch | Ahead | Behind | Unique scope visible in compare | Disposition |
+|---|---:|---:|---|---|
+| `feat/canonical-principal-subject-scope-v3` | 22 | 390 | Authorization, vault, protected DB context, health state/outcome and longitudinal repositories; 17+ changed files | Highest-risk review; isolate invariants and tests, no whole-branch merge |
+| `feat/canonical-principal-subject-scope-v4-clean` | 3 | 367 | Canonical authorization and health-state outcome | Compare specific behavior/tests with current `main`; likely overlapping lineage, not presumed duplicate |
+| `feat/python-authorization-subject-convergence-v1` | 6 | 313 | Shared policy kernel, protected-data access, authorization schema/tests | Review test coverage and semantics; port only missing proven behavior through PR |
+| `feature/policy-kernel-grant-identity-hardening` | 2 | 988 | Policy kernel and tests | Very stale; inspect exact patch and retain only non-redundant invariant |
+| `feature/shared-policy-kernel-hardening` | 3 | 988 | Capability registry and policy kernel/tests | Very stale; do not merge wholesale |
+| `feature/shared-policy-kernel-hardening-v2` | 4 | 987 | Workflow, capability registry and policy kernel/tests | Very stale; compare with sibling branch and current implementation before disposition |
+| `fix/authorization-subject-context-contract-v1-1` | 109 | 36 | Authorization schemas/scripts, many architecture and governance documents | Broad, divergent branch; do not merge wholesale; extract documents/patches only after current-state comparison |
+| `fix/governed-executor-no-bypass-v1` | 2 | 11 | Governed executor and tests | Candidate for targeted behavioral review; verify invariant is not already covered |
+| `fix/protected-db-context-rustfmt-v1` | 6 | 898 | Protected DB context and PostgreSQL integration tests | Extremely stale; extract only unique tests/required correctness changes |
+| `security/protected-context-conformance-v1` | 8 | 556 | Protected context conformance tests | Review test gaps against current context API before porting |
+| `security/protected-data-bypass-audit-v1` | 6 | 915 | Workflow, protected-data audit script and architecture note | Compare with `-main` sibling and current CI before retaining |
+| `security/protected-data-bypass-audit-v1-main` | 3 | 877 | Same audit script/workflow/doc family | Compare exact content to sibling; no automatic deletion until unique work is ruled out |
+| `security/legacy-data-classification-quarantine-v1` | 8 | 898 | Migration, Python classifier/tests, protected DB context | Stale multi-layer branch; review migration compatibility and tests separately |
+| `security/legacy-data-classification-quarantine-v1-clean` | 4 | 915 | Migration, Python classifier/tests | Compare to sibling; retain one canonical implementation only after behavior-level review |
+| `security/vault-list-auth-order-v1` | 6 | 5 | Vault list authorization-ordering test and store changes | Main already contains the tested authorization-before-key-resolution behavior; verify branch-only changes are represented before retiring |
+| `arch/capability-registry-canonicalization-v1` | 17 | 628 | Shared capability registry/schema, Rust infrastructure, Python tests and workflow | Architecture-level diff; review contract consistency and test evidence before selective port |
+| `architecture/local-health-vault-storage-index-v1` | 4 | 700 | Index schema, Python contract test, workflow and architecture doc | Check for requirements not already implemented; avoid parallel index abstraction |
+| `feat/unpaywall-access-location-adapter-v1` | 4 | 335 | Research source adapter and contract test | Separate provider boundary may justify an adapter; verify current contract and preserve only unique behavior |
+| `feature/health-state-evidence-schema-v1` | 5 | 971 | Health evidence schemas, validator and workflow | Stale; compare schemas with current canonical health model and validator before selective recovery |
+| `dependabot/cargo/services/backend-rust/rust-dependencies-0c8e3c0fe1` | 3 | 8 | Cargo manifest and crypto formatting changes | PR #173 merged; verify no unique commit/content remains before retirement |
+
+The ahead/behind figures are relative to the `main` ref at comparison time. They are not proof that every listed commit is unique or still useful. The correct operation is selective patch/content reconciliation followed by tested PRs—not merge-first branch cleanup.
+
+## Canonical branch tip observation
+
+The live branch listing shows `ai-agent/current`, `integration/current`, and `research/current` all point to commit `aed45e8ce19fb9b7c409ad73c4422e5b7da4139b`. This is not itself a violation of the nine-name invariant, but it means these three branch names currently do not represent distinct branch tips. Do not move them merely to make them look different; first verify the intended branch-role contract and whether separate active work is expected.
+
+## CI follow-up
+
+The branch-register update commit is `89e555c3232eecddd0100a8c46d6c86b0dff80a1`. At the last live check, its check runs were queued/in progress and no completed success was established by that response. Recheck the commit's checks before treating the register update as fully gated.
