@@ -24,7 +24,7 @@ impl SovereignCryptoEngine {
     pub fn generate_anonymized_user_hash(raw_user_id: &str) -> String {
         let mut hasher = Sha256::new();
         hasher.update(raw_user_id.as_bytes());
-        format!("{:x}", hasher.finalize())
+        hex::encode(hasher.finalize())
     }
 
     pub fn sign_health_milestone(
