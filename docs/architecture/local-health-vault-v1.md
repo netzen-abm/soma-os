@@ -20,7 +20,7 @@ The repository already contains health-vault/device-sync related code and export
 
 In particular, `LocalDeviceHealthVault` is currently an implementation model rather than a sufficient security contract. The presence of local storage or a vault-shaped type does not establish encryption, key isolation, integrity, deletion semantics, or application-level exfiltration resistance.
 
-The PHR schemas correctly establish a local-first product boundary and reference canonical health entities. The next missing foundation is an explicit machine-readable vault envelope and executable invariants before persistent PHR implementation proceeds.
+The PHR schemas establish a local-first product boundary and reference canonical health entities. The repository already contains a provider-neutral encrypted record primitive, an encrypted AES-256-GCM index, authenticated record/key-reference binding, and a file-backed storage adapter. The remaining work is to reconcile this contract with that implementation and prove each production guarantee through targeted adversarial tests. Do not add a parallel envelope abstraction unless a demonstrated requirement is not represented by the existing record/index contract.
 
 ## 3. Security objectives
 
@@ -222,6 +222,30 @@ Before production PHR persistence is considered ready, SOMA MUST have executable
 13. backups are encrypted and separately governed;
 14. emergency profile cannot escalate to full vault access;
 15. external processing cannot occur without explicit authorization.
+
+### 18.1 Initial implementation-to-evidence matrix
+
+This is a conservative source review, not a claim that the production system has passed all gates. “Proven” means a narrowly scoped behavior has a named implementation/test; it does not certify the entire security objective. Workflow names and test paths must be revalidated against the exact PR head before promotion.
+
+| Gate | Initial status | Existing evidence | Remaining proof / smallest useful next test |
+|---|---|---|---|
+| 1. Unauthorized record access denied | **Partial** | `local_health_vault_storage_store.rs` authorizes `put/get/list/tombstone/verify`; storage tests and `local_health_vault_storage_list_authorization_tests.rs` cover authorization ordering. | Add table-driven denial tests for every action and assert no key resolution, disk mutation, or plaintext return after denial. |
+| 2. Plaintext not persisted where ciphertext is required | **Partial** | `local_health_vault.rs` provides encrypted record primitives; `local_health_vault_storage_crypto.rs` encrypts the index. | Write a representative sensitive payload, inspect every persisted bundle byte/string, and assert sensitive plaintext is absent while permitted metadata is explicitly enumerated. |
+| 3. Tampered ciphertext fails authentication | **Proven narrowly** | `local_health_vault_storage_tests.rs::ciphertext_tampering_fails_integrity`; record and index crypto validators return integrity errors. | Extend tampering coverage to record ciphertext, index ciphertext, nonce, tag, and authenticated record/key references independently. |
+| 4. Wrong key fails closed | **Partial** | Record/index decryption errors are mapped to integrity failures; key resolution failures are explicit. | Add tests using a validly shaped bundle and wrong key for both record and index; assert no plaintext and no mutation. |
+| 5. Unsupported schema/envelope versions fail closed | **Partial** | `decrypt_index` rejects an index schema version other than `INDEX_SCHEMA_VERSION`. | Test unsupported record schema/envelope versions separately, including read, list, and migration paths. |
+| 6. Record-to-subject isolation | **Proven narrowly** | `get` loads beneath the authorized subject path; `put` binds context subject to record subject; `validate_binding` checks subject; list checks decrypted subject. | Add adversarial path/reference substitution tests across put/get/list/tombstone and assert no cross-subject disclosure. |
+| 7. AI/capability access is minimum-necessary | **Missing in this storage-path review** | The reviewed vault store enforces vault actions but does not itself demonstrate external-AI minimization. | Test a governed AI request with excess fields and prove authorization plus redaction/minimization happens before any provider call. |
+| 8. Export/share is explicit and auditable | **Missing in this storage-path review** | No export/share implementation or audit path was established by the inspected files. | Add an end-to-end denial-by-default test; require purpose, selected records, recipient, expiry, consent, and audit before producing export bytes. |
+| 9. Deletion prevents ordinary reads | **Proven narrowly** | `tombstone` updates record and encrypted index state; `get` rejects tombstoned records; repository tests cover tombstone visibility. | Test restart/reopen, list, repository lookup, and malformed/tampered tombstone states. Do not equate tombstoning with physical erasure. |
+| 10. Interrupted writes do not produce false success | **Partial** | `atomic_write` writes a temporary file, calls `sync_all`, and renames; it returns errors on failed write/sync/rename. | Add fault-injection tests around each write/sync/rename boundary and restart recovery; document filesystem/directory durability assumptions. |
+| 11. Provenance survives import/transformation | **Partial** | The record/index contract carries `provenance_ref`; `validate_binding` checks it against the record. | Test import and transformation pipelines retain source, transformation lineage, timestamps, and provenance references end-to-end. |
+| 12. Index does not become a plaintext health-data copy | **Partial** | Index payload is encrypted with AES-256-GCM and AAD binds record/key references. The serialized bundle still contains some record/index envelope metadata. | Enumerate all persisted fields and test that sensitive clinical values are absent from plaintext metadata, filenames, logs, and index records. |
+| 13. Backups are encrypted and separately governed | **Missing in this storage-path review** | No backup/restore guarantee is established by the inspected vault store and crypto files. | Add backup/restore integration tests with separate key-access policy, integrity checks, and denial when required keys are unavailable. |
+| 14. Emergency profile cannot escalate to full vault access | **Missing in this storage-path review** | No emergency-specific authorization proof was established by the inspected files. | Add adversarial tests showing emergency scope is record/purpose-limited and cannot read/list unrelated records or resolve unrelated keys. |
+| 15. External processing requires explicit authorization | **Missing in this storage-path review** | The reviewed storage adapter does not establish the complete external-provider boundary. | Use a fake provider and prove no network/provider invocation occurs without consent/policy approval; assert redaction precedes invocation. |
+
+**Promotion rule:** do not label a gate “proven” solely because a function exists or a general CI workflow passes. Require a specific test asserting the relevant invariant, run on the exact PR head. Where the test or production boundary is absent, keep the status **missing** and implement only the smallest testable slice.
 
 ## 19. Architectural conclusion
 
