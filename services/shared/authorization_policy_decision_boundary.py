@@ -37,6 +37,10 @@ class AuthorizationPolicyDecisionBoundary:
     def __init__(self, policy_kernel: PolicyKernel):
         self._policy_kernel = policy_kernel
 
+    def permission_lifecycle_required(self, capability_id: str) -> bool:
+        """Expose the registry requirement without creating another policy authority."""
+        return self._policy_kernel.permission_lifecycle_required(capability_id)
+
     def authorize(self, *, request_id: str, identity_context: Mapping[str, object], target_tenant: str,
                   target_data_domain: str, request: PolicyRequest,
                   caller_metadata: Mapping[str, object] | None = None,
