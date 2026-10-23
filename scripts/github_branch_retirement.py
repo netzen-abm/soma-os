@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 from urllib.error import HTTPError
 from urllib.parse import quote
@@ -101,6 +102,30 @@ class GitHubApi:
         if obj.get("type") != "commit":
             raise RuntimeError(f"archive tag {tag} is not a lightweight commit tag")
         return obj.get("sha")
+
+    def wait_for_tag(self, tag: str, expected_sha: str, *, attempts: int = 6,
+                    initial_delay_seconds: float = 0.2) -> str:
+        """Verify a newly-created archive tag, retrying only eventual-visibility 404s.
+
+        A mismatched visible SHA is a hard failure; it is never retried or accepted.
+        """
+        if not SHA_RE.fullmatch(expected_sha):
+            raise ValueError("expected archive SHA is invalid")
+        if attempts < 1 or initial_delay_seconds < 0:
+            raise ValueError("invalid archive-tag retry configuration")
+        for attempt in range(attempts):
+            actual = self.tag_sha(tag)
+            if actual is not None:
+                if actual != expected_sha:
+                    raise RuntimeError(
+                        f"recovery tag mismatch: expected {expected_sha}, found {actual}"
+                    )
+                return actual
+            if attempt + 1 < attempts:
+                time.sleep(initial_delay_seconds * min(2 ** attempt, 4))
+        raise RuntimeError(
+            f"recovery tag did not become visible after {attempts} reads: {tag}"
+        )
 
     def create_tag(self, tag: str, sha: str) -> None:
         self.request("POST", f"repos/{self.repository}/git/refs",
