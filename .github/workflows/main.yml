@@ -78,6 +78,9 @@ jobs:
       - name: Test PR-driven branch retirement safety policy
         run: python scripts/test_retire_merged_branch.py
 
+      - name: Test GitHub archive-tag visibility retries
+        run: python scripts/test_github_branch_retirement.py
+
       - name: Test branch manifest validation
         run: python scripts/test_branch_retirement_manifest.py
 
