@@ -80,20 +80,7 @@ class FakeClient:
 
 class RetirementPolicyTests(unittest.TestCase):
     def test_exactly_nine_canonical_branches_are_protected(self) -> None:
-        self.assertEqual(
-            CANONICAL_BRANCHES,
-            {
-                "main",
-                "development",
-                "security/current",
-                "architecture/current",
-                "feature/current",
-                "health/current",
-                "research/current",
-                "ai-agent/current",
-                "integration/current",
-            },
-        )
+        self.assertEqual(CANONICAL_BRANCHES, set("main development security/current architecture/current feature/current health/current research/current ai-agent/current integration/current".split()))
 
     def test_tag_is_stable_for_a_specific_pr_head(self) -> None:
         self.assertEqual(
@@ -109,9 +96,7 @@ class RetirementPolicyTests(unittest.TestCase):
         )
 
     def test_canonical_branch_is_never_candidate(self) -> None:
-        for branch in CANONICAL_BRANCHES:
-            with self.subTest(branch=branch):
-                self.assertIsNone(candidate_for_event(event(branch=branch), REPO))
+        self.assertTrue(all(candidate_for_event(event(branch=name), REPO) is None for name in CANONICAL_BRANCHES))
 
     def test_unmerged_pr_is_never_candidate(self) -> None:
         self.assertIsNone(candidate_for_event(event(merged=False), REPO))
