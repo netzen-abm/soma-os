@@ -29,7 +29,7 @@ Deletion requires comparison with main, review of unique commits/files, preserva
 
 All nine canonical branches exist.
 
-The current repository inventory contains 33 non-canonical branches requiring controlled retirement:
+Historical snapshot (2026-09-21): the inventory contained 33 non-canonical branches. This count is stale; the verified live inventory on 2026-10-23 is 44 branches total (9 canonical + 35 non-canonical). Use the current branch-retirement register for the live list. The following list is historical, not a current deletion allow-list:
 arch/behavioral-evidence-epistemic-layer-v1
 arch/canonical-governed-operation-contract-v1
 arch/capability-registry-canonicalization-v1
@@ -158,3 +158,14 @@ Before physical deletion, unique historical commits and design decisions must re
 - The shared ephemeral-device permission contract from this family has now been preserved on `main` at `docs/architecture/ephemeral-device-permission-contract-v1.md`.
 - The Rust `capability_permission.rs` implementation was deliberately not copied into `main` because the current canonical permission lifecycle enforcement already exists in shared infrastructure; introducing a second Rust lifecycle authority without first proving an adapter seam would violate the single-authority invariant.
 - Therefore the two duplicate branch refs are strong `REDUNDANT_DELETE` candidates once an authorized remote branch-delete operation is available. No force-reset is permitted as a substitute.
+
+
+## Reviewed branch-retirement batch — 2026-10-23
+
+The workflow `.github/workflows/retire-merged-branch.yml` runs only on pushes to `main`. It resolves the merged same-repository PR associated with that exact commit; direct pushes without merged-PR provenance are skipped.
+
+The reviewed manifest `docs/governance/branch-retirement-manifest-v1.json` records exact expected SHAs for 33 noncanonical refs, excluding the source branches of open PR #177 and PR #178. On PR #178 merge, the workflow processes its source branch plus the 33 manifest targets. On later PR #177 merge, absent manifest targets count as retired only if their exact recovery tags still exist.
+
+For each batch, it validates every entry; checks live ref SHA, explicit unprotected status, other open PR references, and tracked workflow/deployment configuration; then creates and verifies deterministic recovery tags for all targets. It rechecks every target before deleting any ref. A preflight or final-check failure leaves branch refs intact. After each deletion it confirms the ref is absent. Recovery tags preserve the exact commit graph without merging historical implementations into `main`.
+
+The manifest marks historical branches `PRESERVE_THEN_DELETE` unless specifically documented as redundant. This retires the active branch name while retaining its history for selective recovery; it does not claim every historical implementation is redundant or replace merging code required by current product behavior.
