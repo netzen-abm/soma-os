@@ -45,11 +45,16 @@ class FakeClient:
         self.branches = {branch: sha}
         self.tags: dict[str, str] = {}
         self.open_pr_branches: set[str] = set()
+        self.protected = False
         self.operations: list[str] = []
 
     def current_branch_sha(self, branch: str) -> str | None:
         self.operations.append("read-branch")
         return self.branches.get(branch)
+
+    def is_explicitly_unprotected(self, branch: str) -> bool:
+        self.operations.append("check-protection")
+        return not self.protected
 
     def has_other_open_pr(self, branch: str, pr_number: int) -> bool:
         self.operations.append("check-open-prs")
@@ -155,6 +160,17 @@ class RetirementPolicyTests(unittest.TestCase):
         client = FakeClient()
         client.open_pr_branches.add("feature/example")
         with self.assertRaisesRegex(RuntimeError, "another open PR"):
+            retire_merged_branch(client, candidate, REPO, "https://example/run")
+        self.assertIn("feature/example", client.branches)
+        self.assertEqual(client.tags, {})
+        self.assertNotIn("delete-branch", client.operations)
+
+    def test_protected_branch_is_never_archived_or_deleted(self) -> None:
+        candidate = candidate_for_event(event(), REPO)
+        assert candidate is not None
+        client = FakeClient()
+        client.protected = True
+        with self.assertRaisesRegex(RuntimeError, "protection state"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
         self.assertIn("feature/example", client.branches)
         self.assertEqual(client.tags, {})
