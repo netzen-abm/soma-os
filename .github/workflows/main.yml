@@ -78,6 +78,9 @@ jobs:
       - name: Test PR-driven branch retirement safety policy
         run: python scripts/test_retire_merged_branch.py
 
+      - name: Test branch manifest validation
+        run: python scripts/test_branch_retirement_manifest.py
+
       - name: Validate Health State and Evidence contracts
         run: python scripts/validate_health_contracts.py
 

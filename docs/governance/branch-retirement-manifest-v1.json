@@ -1,0 +1,248 @@
+{
+  "schema_version": "1.0.0",
+  "inventory_main_sha": "bb4bf255959620ff93c55acbca9c2229a9975b92",
+  "canonical_branches": [
+    "ai-agent/current",
+    "architecture/current",
+    "development",
+    "feature/current",
+    "health/current",
+    "integration/current",
+    "main",
+    "research/current",
+    "security/current"
+  ],
+  "entries": [
+    {
+      "branch": "arch/behavioral-evidence-epistemic-layer-v1",
+      "expected_sha": "a5286d63b93be05527bdbf7777c7ea705f96549b",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "arch/canonical-governed-operation-contract-v1",
+      "expected_sha": "f0afc1a05f78e46e17c20b9eb7366fa4e5983d78",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "arch/capability-registry-canonicalization-v1",
+      "expected_sha": "a937d3e0b55d8e03e32e549583f75128f1d70def",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "architecture/health-media-intelligence-v1",
+      "expected_sha": "50d924694722a3163d4ff354273646be2e99bbe4",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "architecture/local-health-vault-storage-index-v1",
+      "expected_sha": "6ad739dcc550ce0e0bf776f3c083eb58d1bafab7",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "audit/evidence-canonicalization-v1",
+      "expected_sha": "c5933b1a684de157ef0a37c1880a7c83b9d6b10b",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "dependabot/cargo/services/backend-rust/rust-dependencies-0c8e3c0fe1",
+      "expected_sha": "f12686a07ac5016185580e5ea2bb00bc98c41aa6",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Dependency-maintenance branch associated with merged PR #173. Preserve its exact tip and reachable history before retiring the inactive ref; do not merge additional divergent history without separate review.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/canonical-domain-runtime-polyglot-v1-main",
+      "expected_sha": "69f606c47710f7b99280db788820cb72ac7dd88c",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/canonical-domain-runtime-polyglot-v1",
+      "expected_sha": "968a2fb9d20025a70d724e829145efc81c3738d3",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/db-constraints-trusted-context-rls-v1",
+      "expected_sha": "3694e4c8468d8320bb92fe8c98e5a944dae50662",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/hybrid-web-platform-v1",
+      "expected_sha": "96772793f7aa798ec19208e011f2b529e504a0cc",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/identity-authorization-enforcement-v1",
+      "expected_sha": "eddcc45cf20765a9c1b62e359ac33ce6e203da5e",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/legacy-scope-classification-quarantine-v1",
+      "expected_sha": "2264447586ef59be7f2cd8c6a92912bc6fab1f16",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/protected-data-access-enforcement-v1",
+      "expected_sha": "0b86ae67fdd511c83d3f405c9e7b9ca43baf3c82",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "design/trusted-db-service-identity-context-v1",
+      "expected_sha": "af21ef8de43b434a1078ef61f498260ea5e06e7d",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feat/canonical-principal-subject-scope-v3",
+      "expected_sha": "98e77badfbed54ae06630d1a7c2ebb24cb9fd2e4",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feat/canonical-principal-subject-scope-v4-clean",
+      "expected_sha": "afe6456202ca5cdcf4cd4ed0048eb6d3e5c29ebe",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feat/python-authorization-subject-convergence-v1",
+      "expected_sha": "160667d8aef542c6a1acb1dc35ede765eea33265",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feat/unpaywall-access-location-adapter-v1",
+      "expected_sha": "00f197e82763bd8992e9f5e97db7711dcb88d50a",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feature/health-state-evidence-schema-v1",
+      "expected_sha": "0b0785e1fd49a0be829e74914b229478dabdac9f",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feature/policy-kernel-grant-identity-hardening",
+      "expected_sha": "d03b821f494d1cf6cfc1556e7bdcde57a3a80f6e",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feature/shared-policy-kernel-hardening",
+      "expected_sha": "0b1b18f8ee545f8721f661009cd5e2f57efe67bd",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "feature/shared-policy-kernel-hardening-v2",
+      "expected_sha": "8f2905ba68031a8e22f625746e9e80f2d6b3c2cb",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "fix/authorization-subject-context-contract-v1-1",
+      "expected_sha": "7987cecf4f6150b442cd6aa9371801eeb3cd2264",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "fix/protected-db-context-rustfmt-v1",
+      "expected_sha": "4162e509bd25b09ab806a7a20399e4b9e08e0de3",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "governance/automation-architecture-v1",
+      "expected_sha": "e50f4574a89a011d08b7d0ec96038c0f66f4b563",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "impl/evidence-assessment-chain-hardening-v1",
+      "expected_sha": "7ef63057af6273c4dcb2baaf7a32c389d8d23939",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "security/legacy-data-classification-quarantine-v1-clean",
+      "expected_sha": "5b7b02598fa475595d042b321ec3ecb0fccb403d",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "security/legacy-data-classification-quarantine-v1",
+      "expected_sha": "2cfd116e52059bf7ba8abdff48d82ed8190c5312",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "security/protected-context-conformance-v1",
+      "expected_sha": "b6a9c505556e7a8455fe6fac8236f8c857a21b4b",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "security/protected-data-bypass-audit-v1-main",
+      "expected_sha": "a1575d043e813b22d58a091ecb68c989a6d1514e",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "security/protected-data-bypass-audit-v1",
+      "expected_sha": "5193e2f9e2661ce70a9ab314df4c84522c8a423f",
+      "disposition": "PRESERVE_THEN_DELETE",
+      "reason": "Divergent historical branch recorded in the retirement register. Do not merge it wholesale; preserve this exact tip and its reachable history in a recovery tag so useful work can be selectively recovered if needed.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    },
+    {
+      "branch": "security/vault-list-auth-order-v1",
+      "expected_sha": "a80377f2fec950d06495198e20f7d2af6c5569eb",
+      "disposition": "REDUNDANT_DELETE",
+      "reason": "PR #174 merged the authorization-before-key-resolution change into main. Preserve this exact historical tip in a recovery tag before retiring the now-redundant active ref.",
+      "evidence": "docs/governance/branch-retirement-register-v3.md"
+    }
+  ]
+}

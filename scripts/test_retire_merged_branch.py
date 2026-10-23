@@ -1,173 +1,113 @@
 #!/usr/bin/env python3
-"""Offline safety tests for PR-driven branch retirement."""
-
+"""Offline fail-closed tests for branch retirement."""
 from __future__ import annotations
-
 import unittest
-
-from retire_merged_branch import (
-    CANONICAL_BRANCHES,
-    archive_tag_name,
-    candidate_for_event,
-    retire_merged_branch,
-)
-
+from retire_merged_branch import CANONICAL_BRANCHES, archive_tag_name, candidate_for_event, retire_merged_branch
 
 REPO = "netzen-abm/soma-os"
-HEAD_SHA = "a" * 40
+SHA = "a" * 40
 
 
-def event(
-    *,
-    branch: str = "feature/example",
-    merged: bool = True,
-    base_ref: str = "main",
-    head_repo: str = REPO,
-    head_sha: str = HEAD_SHA,
-) -> dict:
-    return {
-        "action": "closed",
-        "pull_request": {
-            "number": 123,
-            "merged": merged,
-            "base": {"ref": base_ref, "repo": {"full_name": REPO}},
-            "head": {
-                "ref": branch,
-                "sha": head_sha,
-                "repo": {"full_name": head_repo},
-            },
-        },
-    }
+def make_event(branch="feature/example", merged=True, base="main", head_repo=REPO, sha=SHA):
+    return {"action": "closed", "pull_request": {"number": 123, "merged": merged,
+        "base": {"ref": base, "repo": {"full_name": REPO}},
+        "head": {"ref": branch, "sha": sha, "repo": {"full_name": head_repo}}}}
 
 
 class FakeClient:
-    def __init__(self, branch: str = "feature/example", sha: str = HEAD_SHA) -> None:
-        self.branches = {branch: sha}
-        self.tags: dict[str, str] = {}
-        self.open_pr_branches: set[str] = set()
-        self.protected = False
-        self.operations: list[str] = []
+    def __init__(self, sha=SHA):
+        self.branches = {"feature/example": {"sha": sha, "protected": False}}
+        self.tags, self.open_prs, self.operations = {}, set(), []
 
-    def current_branch_sha(self, branch: str) -> str | None:
+    def branch_state(self, branch):
         self.operations.append("read-branch")
         return self.branches.get(branch)
 
-    def is_explicitly_unprotected(self, branch: str) -> bool:
-        self.operations.append("check-protection")
-        return not self.protected
+    def has_other_open_pr(self, branch, pr_number):
+        self.operations.append("check-prs")
+        return branch in self.open_prs
 
-    def has_other_open_pr(self, branch: str, pr_number: int) -> bool:
-        self.operations.append("check-open-prs")
-        return branch in self.open_pr_branches
-
-    def tag_sha(self, tag: str) -> str | None:
+    def tag_sha(self, tag):
         self.operations.append("read-tag")
         return self.tags.get(tag)
 
-    def create_tag(self, tag: str, head_sha: str) -> None:
+    def create_tag(self, tag, sha):
         self.operations.append("create-tag")
-        if tag in self.tags:
-            raise RuntimeError("tag already exists")
-        self.tags[tag] = head_sha
+        self.tags[tag] = sha
 
-    def delete_branch(self, branch: str) -> None:
+    def delete_branch(self, branch):
         self.operations.append("delete-branch")
         del self.branches[branch]
 
-    def add_audit_comment(self, body: str) -> None:
-        self.operations.append("audit-comment")
+    def audit(self, body):
+        self.operations.append("audit")
 
 
-class RetirementPolicyTests(unittest.TestCase):
-    def test_exactly_nine_canonical_branches_are_protected(self) -> None:
+class RetirementTests(unittest.TestCase):
+    def test_exact_nine_canonical_names(self):
         self.assertEqual(CANONICAL_BRANCHES, set("main development security/current architecture/current feature/current health/current research/current ai-agent/current integration/current".split()))
 
-    def test_tag_is_stable_for_a_specific_pr_head(self) -> None:
-        self.assertEqual(
-            archive_tag_name(123, HEAD_SHA),
-            f"soma-branch-archive-pr-123-{HEAD_SHA[:12]}",
-        )
+    def test_tag_is_stable_and_branch_specific(self):
+        self.assertEqual(archive_tag_name("feature/example", SHA), archive_tag_name("feature/example", SHA))
+        self.assertNotEqual(archive_tag_name("feature/example", SHA), archive_tag_name("feature/other", SHA))
 
-    def test_merged_same_repo_noncanonical_pr_to_main_is_candidate(self) -> None:
-        result = candidate_for_event(event(), REPO)
-        self.assertEqual(
-            result,
-            {"branch": "feature/example", "head_sha": HEAD_SHA, "pr_number": 123},
-        )
+    def test_merged_same_repo_pr_to_main_is_candidate(self):
+        self.assertEqual(candidate_for_event(make_event(), REPO)["branch"], "feature/example")
 
-    def test_canonical_branch_is_never_candidate(self) -> None:
-        self.assertTrue(all(candidate_for_event(event(branch=name), REPO) is None for name in CANONICAL_BRANCHES))
+    def test_canonical_branch_never_candidate(self):
+        self.assertTrue(all(candidate_for_event(make_event(branch=b), REPO) is None for b in CANONICAL_BRANCHES))
 
-    def test_unmerged_pr_is_never_candidate(self) -> None:
-        self.assertIsNone(candidate_for_event(event(merged=False), REPO))
+    def test_unmerged_fork_or_non_main_pr_is_skipped(self):
+        self.assertIsNone(candidate_for_event(make_event(merged=False), REPO))
+        self.assertIsNone(candidate_for_event(make_event(head_repo="external/fork"), REPO))
+        self.assertIsNone(candidate_for_event(make_event(base="development"), REPO))
 
-    def test_pr_targeting_non_main_is_never_candidate(self) -> None:
-        self.assertIsNone(candidate_for_event(event(base_ref="development"), REPO))
-
-    def test_fork_pr_is_never_candidate(self) -> None:
-        self.assertIsNone(
-            candidate_for_event(event(head_repo="external/fork"), REPO)
-        )
-
-    def test_invalid_sha_fails_closed(self) -> None:
+    def test_invalid_sha_or_ref_fails_closed(self):
         with self.assertRaises(ValueError):
-            candidate_for_event(event(head_sha="not-a-sha"), REPO)
-
-    def test_invalid_branch_name_fails_closed(self) -> None:
+            candidate_for_event(make_event(sha="bad"), REPO)
         with self.assertRaises(ValueError):
-            candidate_for_event(event(branch="../main"), REPO)
+            candidate_for_event(make_event(branch="../main"), REPO)
 
-    def test_archive_tag_precedes_branch_deletion(self) -> None:
-        candidate = candidate_for_event(event(), REPO)
-        assert candidate is not None
+    def test_archive_tag_precedes_branch_deletion(self):
+        candidate = candidate_for_event(make_event(), REPO)
         client = FakeClient()
         tag = retire_merged_branch(client, candidate, REPO, "https://example/run")
-        self.assertEqual(client.tags[tag], HEAD_SHA)
+        self.assertEqual(client.tags[tag], SHA)
         self.assertNotIn("feature/example", client.branches)
-        self.assertLess(
-            client.operations.index("create-tag"),
-            client.operations.index("delete-branch"),
-        )
+        self.assertLess(client.operations.index("create-tag"), client.operations.index("delete-branch"))
 
-    def test_head_mismatch_preserves_branch_without_archive_or_delete(self) -> None:
-        candidate = candidate_for_event(event(), REPO)
-        assert candidate is not None
-        client = FakeClient(sha="b" * 40)
-        with self.assertRaisesRegex(RuntimeError, "advanced after PR merge"):
+    def test_head_mismatch_preserves_branch(self):
+        candidate = candidate_for_event(make_event(), REPO)
+        client = FakeClient("b" * 40)
+        with self.assertRaisesRegex(RuntimeError, "tip mismatch"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
         self.assertIn("feature/example", client.branches)
         self.assertEqual(client.tags, {})
         self.assertNotIn("delete-branch", client.operations)
 
-    def test_open_pr_dependency_preserves_branch(self) -> None:
-        candidate = candidate_for_event(event(), REPO)
-        assert candidate is not None
+    def test_open_pr_dependency_preserves_branch(self):
+        candidate = candidate_for_event(make_event(), REPO)
         client = FakeClient()
-        client.open_pr_branches.add("feature/example")
+        client.open_prs.add("feature/example")
         with self.assertRaisesRegex(RuntimeError, "another open PR"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
         self.assertIn("feature/example", client.branches)
-        self.assertEqual(client.tags, {})
         self.assertNotIn("delete-branch", client.operations)
 
-    def test_protected_branch_is_never_archived_or_deleted(self) -> None:
-        candidate = candidate_for_event(event(), REPO)
-        assert candidate is not None
+    def test_protected_branch_preserves_branch(self):
+        candidate = candidate_for_event(make_event(), REPO)
         client = FakeClient()
-        client.protected = True
+        client.branches["feature/example"]["protected"] = True
         with self.assertRaisesRegex(RuntimeError, "protection state"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
-        self.assertIn("feature/example", client.branches)
         self.assertEqual(client.tags, {})
         self.assertNotIn("delete-branch", client.operations)
 
-    def test_conflicting_archive_tag_preserves_branch(self) -> None:
-        candidate = candidate_for_event(event(), REPO)
-        assert candidate is not None
+    def test_archive_tag_collision_preserves_branch(self):
+        candidate = candidate_for_event(make_event(), REPO)
         client = FakeClient()
-        tag = archive_tag_name(123, HEAD_SHA)
-        client.tags[tag] = "b" * 40
-        with self.assertRaisesRegex(RuntimeError, "archive tag mismatch"):
+        client.tags[archive_tag_name("feature/example", SHA)] = "b" * 40
+        with self.assertRaisesRegex(RuntimeError, "recovery tag mismatch"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
         self.assertIn("feature/example", client.branches)
         self.assertNotIn("delete-branch", client.operations)

@@ -7,7 +7,7 @@
 - Physical branches: **44**
 - Canonical active branches: **9**
 - Non-canonical branches: **35**
-- Open pull requests: **1** — PR #177, draft, `fix/governed-executor-no-bypass-v1` → `main`. PR #164 merged as `bb4bf255959620ff93c55acbca9c2229a9975b92`.
+- Open pull requests: **2** — PR #177 (permission-lifecycle enforcement) and PR #178 (branch-retirement workflow/manifest), both draft. PR #164 merged as `bb4bf255959620ff93c55acbca9c2229a9975b92`.
 - Retirement completion: **NOT COMPLETE**. No branch has been deleted in this pass.
 - GitHub branch-list response marks the listed branches `protected: false`; rulesets query previously returned none. The branch-protection endpoint was denied by the connected integration, so protection settings are not independently verified.
 
@@ -138,3 +138,12 @@ The live branch listing shows `ai-agent/current`, `integration/current`, and `re
 ## CI follow-up
 
 The branch-register update commit is `89e555c3232eecddd0100a8c46d6c86b0dff80a1`. At the last live check, its check runs were queued/in progress and no completed success was established by that response. Recheck the commit's checks before treating the register update as fully gated.
+
+
+## PR #178 — SHA-pinned branch-retirement batch
+
+PR #178 adds the main-push retirement workflow and a SHA-pinned manifest for 33 noncanonical refs captured from the live inventory. The manifest excludes the two currently open PR source branches. The source branch of the merged retirement PR is handled separately from manifest targets.
+
+Every manifest entry carries its expected tip SHA, disposition, reason, and evidence reference. The workflow checks exact live tip, explicit unprotected status, open PR references, and tracked automation/config references; creates and verifies a deterministic recovery tag for every target; rechecks all preconditions; then deletes eligible refs and verifies deletion. If any preflight target fails, no branch refs are deleted. The workflow is idempotent when an already deleted ref has its exact recovery tag.
+
+Historical branches are not merged wholesale into `main`. Their reachable commit graphs remain recoverable through archive tags, and required functionality must be selectively extracted through ordinary reviewed PRs. The completion check is a fresh branch listing containing exactly the nine canonical names after PR #178 and PR #177 post-merge cleanup runs succeed.

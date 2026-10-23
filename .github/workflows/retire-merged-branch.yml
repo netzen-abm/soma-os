@@ -1,32 +1,33 @@
 name: Archive and retire merged PR branches
 
 on:
-  pull_request:
+  push:
     branches:
       - main
-    types:
-      - closed
 
 permissions:
   contents: write
   issues: write
   pull-requests: read
 
+concurrency:
+  group: soma-branch-retirement-main
+  cancel-in-progress: false
+
 jobs:
   archive-and-retire:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the merged commit
+      - name: Check out the pushed main commit
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
-
-      - name: Test branch-retirement safety policy
+      - name: Test branch retirement safety
         run: python scripts/test_retire_merged_branch.py
-
-      - name: Archive exact merged head, then retire source branch
+      - name: Test branch manifest validation
+        run: python scripts/test_branch_retirement_manifest.py
+      - name: Archive verified heads before deleting refs
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
