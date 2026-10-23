@@ -1,13 +1,13 @@
 # SOMA-OS Branch Retirement Register v3
 
-## Verified baseline — 2026-10-22
+## Verified baseline — 2026-10-23
 
 - Repository: `netzen-abm/soma-os`
-- Main: `fd43b98be1583f2d13fc0f96eeabaeee71ad9c95` (post-PR #173 merge)
+- Main: `bb4bf255959620ff93c55acbca9c2229a9975b92` (post-PR #164 vault-contract merge)
 - Physical branches: **44**
 - Canonical active branches: **9**
 - Non-canonical branches: **35**
-- Open pull requests: **1** — PR #164, draft, `architecture/local-health-vault-contract-v1` → `main`
+- Open pull requests: **1** — PR #177, draft, `fix/governed-executor-no-bypass-v1` → `main`. PR #164 merged as `bb4bf255959620ff93c55acbca9c2229a9975b92`.
 - Retirement completion: **NOT COMPLETE**. No branch has been deleted in this pass.
 - GitHub branch-list response marks the listed branches `protected: false`; rulesets query previously returned none. The branch-protection endpoint was denied by the connected integration, so protection settings are not independently verified.
 
@@ -83,15 +83,23 @@ Do not merge a historical branch merely to reduce the branch count. Do not force
 
 On `main`, `services/backend-rust/src/local_health_vault_storage_store.rs` checks per-record `VaultAction::Read` before resolving that record's key and decrypting its index in `list()`, then validates the decrypted index binding and subject. The regression test is present through `services/backend-rust/src/local_health_vault_storage_tests.rs`, which imports `local_health_vault_storage_list_authorization_tests.rs`; that file tests that denied records do not trigger key resolution. This is evidence for the tested authorization-ordering invariant, not proof of all vault security objectives.
 
-## PR #164 — keep draft pending evidence mapping
+## PR #164 — merged preservation contract
 
-PR #164 adds `docs/architecture/local-health-vault-v1.md`. A review comment has been posted asking for a requirement-to-implementation/test/CI matrix and for each claim to be labeled implemented, partial, or unproven. Existing code already provides encrypted index storage, AES-256-GCM authenticated encryption for the index, record/index binding checks, and authorization-before-key-resolution paths. The contract still needs evidence mapping for key lifecycle/recovery, durable audit consistency, backup/restore, deletion semantics, sharing/export, and external-AI policy enforcement. Do not merge solely because the document describes a MUST.
+PR #164 merged into `main` on 2026-10-23 as `bb4bf255959620ff93c55acbca9c2229a9975b92`. The merge commit changes only `docs/architecture/local-health-vault-v1.md`. The document's 15-gate evidence matrix records initial implementation/test evidence and remaining proof; it does not certify all vault requirements as implemented. The source branch remains in the live inventory until a post-merge retirement workflow archives and deletes it, or an authorized maintainer does so.
 
-## Tooling limitation and completion invariant
+## PR #177 — permission-lifecycle enforcement
 
-The connected GitHub tools available in this session expose branch listing/search and ref updates but no safe branch-delete mutation. Ref movement must not be used as a substitute for deletion. Therefore physical branch cleanup is blocked until an authorized GitHub branch-delete capability or an authorized maintainer operation is available.
+PR #177's current exact head is `a42934e466039464b2203fce67b4265939c7c893`. Its five-file change binds the existing registry flag to the canonical governed executor and adds fail-closed tests for missing permission and mismatched permission metadata. Exact-head Evidence Pipeline, authorization gate, key-lifecycle gate, SOMA CI, and PR analysis were reported successful on the latest completed run. Durable revocation persistence and production device-adapter reachability remain unproven; no claim is made that this PR physically disables operating-system permissions.
 
-**Completion invariant:** the live GitHub branch listing must contain exactly the nine canonical names above. At this baseline it contains 44 branches, so the invariant is not satisfied.
+## PR-driven archival and branch deletion
+
+The repository is adopting a reviewed-PR-driven path rather than ref rewrites. `.github/workflows/retire-merged-branch.yml` archives a merged PR's noncanonical same-repository source head in a uniquely named recovery tag before deleting that branch. It rechecks the exact head SHA and other open PR references immediately before deletion; mismatches fail closed. The nine canonical branch names are excluded in code and covered by unit tests.
+
+For existing noncanonical branches without a relevant merged PR, the workflow does not sweep refs automatically. Each branch requires diff classification, preservation/porting decisions, and a small retirement PR when safe. The post-merge action's archive tag preserves the complete head ancestry for recovery and records the disposition in issue #161.
+
+The live GitHub integration used to prepare this change does not offer direct branch deletion. The workflow uses the narrowly scoped `GITHUB_TOKEN` with `contents: write` only after a PR targeting `main` has successfully merged. Failure to archive, verify the current SHA, or confirm no open PR dependency prevents deletion.
+
+**Completion invariant:** the live branch listing must contain exactly the nine canonical names above. At this baseline it contains 44 branches (9 canonical + 35 noncanonical), so the invariant is not satisfied.
 
 
 ## Fresh high-risk branch comparison — current `main`

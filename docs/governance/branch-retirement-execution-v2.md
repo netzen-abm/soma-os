@@ -29,7 +29,7 @@ Deletion requires comparison with main, review of unique commits/files, preserva
 
 All nine canonical branches exist.
 
-The current repository inventory contains 33 non-canonical branches requiring controlled retirement:
+Historical snapshot (2026-09-21): the inventory contained 33 non-canonical branches. This count is stale; the verified live inventory on 2026-10-23 is 44 branches total (9 canonical + 35 non-canonical). Use the current branch-retirement register for the live list. The following list is historical, not a current deletion allow-list:
 arch/behavioral-evidence-epistemic-layer-v1
 arch/canonical-governed-operation-contract-v1
 arch/capability-registry-canonicalization-v1
@@ -158,3 +158,19 @@ Before physical deletion, unique historical commits and design decisions must re
 - The shared ephemeral-device permission contract from this family has now been preserved on `main` at `docs/architecture/ephemeral-device-permission-contract-v1.md`.
 - The Rust `capability_permission.rs` implementation was deliberately not copied into `main` because the current canonical permission lifecycle enforcement already exists in shared infrastructure; introducing a second Rust lifecycle authority without first proving an adapter seam would violate the single-authority invariant.
 - Therefore the two duplicate branch refs are strong `REDUNDANT_DELETE` candidates once an authorized remote branch-delete operation is available. No force-reset is permitted as a substitute.
+
+
+## PR-driven branch retirement — 2026-10-23
+
+The workflow `.github/workflows/retire-merged-branch.yml` is the intended GitHub-native branch retirement path. When a same-repository PR targeting `main` is successfully merged, it evaluates the merged source branch and:
+
+1. refuses all nine canonical names, fork PRs, unmerged PRs, and PRs targeting a non-`main` base;
+2. verifies that the source branch still points to the exact SHA recorded by the merged PR;
+3. checks that no other open PR references the source branch;
+4. creates and verifies a recovery tag `soma-branch-archive-pr-<PR>-<sha12>` pointing to that exact head;
+5. rechecks the branch tip and open-PR dependency, then deletes the branch ref and verifies that it is absent;
+6. records the archive tag, branch SHA, PR, and result against issue #161.
+
+If any validation fails, deletion stops; an already-created recovery tag is retained. The tag preserves the branch tip and its reachable commit graph without merging historical code into `main`. This is appropriate for a reviewed `PRESERVE_THEN_DELETE` retirement, not for silently discarding work that still needs to be integrated.
+
+To retire an already-existing branch with no pending code PR, first classify its diff and preserve or selectively merge any required behavior, then open a small reviewed retirement PR from that branch with only the intended governance/retirement record against current `main`. After merge, this workflow archives and deletes that noncanonical source branch. Do not merge whole stale branches merely to make them deletable.
