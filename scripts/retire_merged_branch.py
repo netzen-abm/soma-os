@@ -39,7 +39,9 @@ def _prepare(client: Any, item: dict[str, Any], root: Path) -> dict[str, Any]:
     archived = client.tag_sha(tag)
     if archived is None:
         client.create_tag(tag, expected)
-        archived = client.tag_sha(tag)
+        # GitHub may briefly return 404 immediately after creating a ref.
+        # Retry visibility checks at the provider boundary; only an exact SHA passes.
+        archived = client.wait_for_tag(tag, expected)
     if archived != expected:
         raise RuntimeError(f"recovery tag mismatch: expected {expected}, found {archived}")
     return {**item, "tag": tag, "already_retired": False}

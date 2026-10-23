@@ -42,6 +42,13 @@ class FakeClient:
         self.operations.append("create-tag")
         self.tags[tag] = sha
 
+    def wait_for_tag(self, tag, expected_sha):
+        self.operations.append("wait-for-tag")
+        actual = self.tags.get(tag)
+        if actual != expected_sha:
+            raise RuntimeError(f"recovery tag mismatch: expected {expected_sha}, found {actual}")
+        return actual
+
     def delete_branch(self, branch):
         self.operations.append("delete-branch")
         del self.branches[branch]
