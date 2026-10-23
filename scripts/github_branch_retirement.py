@@ -84,9 +84,12 @@ class GitHubApi:
 
     def has_other_open_pr(self, branch: str, pr_number: int) -> bool:
         for pr in self.list_items(f"repos/{self.repository}/pulls?state=open"):
-            head = pr.get("head") or {}
-            if (pr.get("number") != pr_number and head.get("ref") == branch
-                and (head.get("repo") or {}).get("full_name") == self.repository):
+            if pr.get("number") == pr_number:
+                continue
+            head, base = pr.get("head") or {}, pr.get("base") or {}
+            head_dep = head.get("ref") == branch and (head.get("repo") or {}).get("full_name") == self.repository
+            base_dep = base.get("ref") == branch and (base.get("repo") or {}).get("full_name") == self.repository
+            if head_dep or base_dep:
                 return True
         return False
 

@@ -18,13 +18,13 @@ class FakeClient:
     def __init__(self, sha=SHA):
         self.branches = {name: {"sha": SHA, "protected": True} for name in CANONICAL_BRANCHES}
         self.branches["feature/example"] = {"sha": sha, "protected": False}
-        self.tags, self.open_prs, self.operations = {}, set(), []
+        self.tags, self.open_pr_heads, self.open_pr_bases, self.operations = {}, set(), set(), []
 
     def branch_names(self):
         return set(self.branches)
 
     def open_pr_head_branches(self):
-        return set(self.open_prs)
+        return set(self.open_pr_heads)
 
     def branch_state(self, branch):
         self.operations.append("read-branch")
@@ -32,7 +32,7 @@ class FakeClient:
 
     def has_other_open_pr(self, branch, pr_number):
         self.operations.append("check-prs")
-        return branch in self.open_prs
+        return branch in self.open_pr_heads or branch in self.open_pr_bases
 
     def tag_sha(self, tag):
         self.operations.append("read-tag")
@@ -95,7 +95,16 @@ class RetirementTests(unittest.TestCase):
     def test_open_pr_dependency_preserves_branch(self):
         candidate = candidate_for_event(make_event(), REPO)
         client = FakeClient()
-        client.open_prs.add("feature/example")
+        client.open_pr_heads.add("feature/example")
+        with self.assertRaisesRegex(RuntimeError, "another open PR"):
+            retire_merged_branch(client, candidate, REPO, "https://example/run")
+        self.assertIn("feature/example", client.branches)
+        self.assertNotIn("delete-branch", client.operations)
+
+    def test_open_pr_base_dependency_preserves_branch(self):
+        candidate = candidate_for_event(make_event(), REPO)
+        client = FakeClient()
+        client.open_pr_bases.add("feature/example")
         with self.assertRaisesRegex(RuntimeError, "another open PR"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
         self.assertIn("feature/example", client.branches)
