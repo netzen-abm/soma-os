@@ -10,7 +10,7 @@ from typing import Any
 
 from branch_retirement_policy import (
     CANONICAL_BRANCHES, MANIFEST_PATH, SHA_RE, archive_tag_name,
-    candidate_for_event, read_manifest, tracked_config_reference, valid_branch,
+    candidate_for_event, manifest_candidates, read_manifest, tracked_config_reference, valid_branch,
 )
 from github_branch_retirement import GitHubApi
 
