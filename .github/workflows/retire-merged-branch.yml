@@ -1,0 +1,39 @@
+name: Archive and retire merged PR branches
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: soma-branch-retirement-main
+  cancel-in-progress: false
+
+jobs:
+  archive-and-retire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the pushed main commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Test branch retirement safety
+        run: python scripts/test_retire_merged_branch.py
+      - name: Test GitHub archive-tag visibility retries
+        run: python scripts/test_github_branch_retirement.py
+      - name: Test branch manifest validation
+        run: python scripts/test_branch_retirement_manifest.py
+      - name: Archive verified heads before deleting refs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python scripts/retire_merged_branch.py
