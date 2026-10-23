@@ -158,6 +158,14 @@ class GitHubApi:
                 return sha if isinstance(sha, str) else None
         return None
 
+    def is_explicitly_unprotected(self, branch: str) -> bool:
+        # Require the branch API to positively report protected=false. Missing
+        # protection metadata fails closed rather than assuming deletion is safe.
+        for item in self.list_items(f"repos/{self.repository}/branches"):
+            if item.get("name") == branch:
+                return item.get("protected") is False
+        return False
+
     def has_other_open_pr(self, branch: str, pr_number: int) -> bool:
         prs = self.list_items(f"repos/{self.repository}/pulls?state=open")
         return any(
@@ -224,6 +232,8 @@ def retire_merged_branch(
         raise RuntimeError(
             f"source branch advanced after PR merge: expected {expected_sha}, found {current_sha}"
         )
+    if not client.is_explicitly_unprotected(branch):
+        raise RuntimeError("source branch protection state is not explicitly unprotected")
     if client.has_other_open_pr(branch, pr_number):
         raise RuntimeError("another open PR still references the source branch")
 
@@ -247,6 +257,8 @@ def retire_merged_branch(
     # a changed tip or new open PR leaves the branch intact and already archived.
     if client.current_branch_sha(branch) != expected_sha:
         raise RuntimeError("source branch changed after archival; leaving it intact")
+    if not client.is_explicitly_unprotected(branch):
+        raise RuntimeError("source branch became protected after archival; leaving it intact")
     if client.has_other_open_pr(branch, pr_number):
         raise RuntimeError("another PR began referencing the source branch; leaving it intact")
 
