@@ -16,8 +16,15 @@ def make_event(branch="feature/example", merged=True, base="main", head_repo=REP
 
 class FakeClient:
     def __init__(self, sha=SHA):
-        self.branches = {"feature/example": {"sha": sha, "protected": False}}
+        self.branches = {name: {"sha": SHA, "protected": True} for name in CANONICAL_BRANCHES}
+        self.branches["feature/example"] = {"sha": sha, "protected": False}
         self.tags, self.open_prs, self.operations = {}, set(), []
+
+    def branch_names(self):
+        return set(self.branches)
+
+    def open_pr_head_branches(self):
+        return set(self.open_prs)
 
     def branch_state(self, branch):
         self.operations.append("read-branch")
@@ -130,6 +137,15 @@ class RetirementTests(unittest.TestCase):
             retire_batch(client, candidates, "https://example/run")
         self.assertIn("feature/example", client.branches)
         self.assertIn("feature/second", client.branches)
+        self.assertNotIn("delete-branch", client.operations)
+
+    def test_unmanifested_branch_aborts_before_archival_or_deletion(self):
+        candidate = candidate_for_event(make_event(), REPO)
+        client = FakeClient()
+        client.branches["unreviewed/new-work"] = {"sha": "b" * 40, "protected": False}
+        with self.assertRaisesRegex(RuntimeError, "unmanifested active branches"):
+            retire_batch(client, [candidate], "https://example/run")
+        self.assertEqual(client.tags, {})
         self.assertNotIn("delete-branch", client.operations)
 
     def test_archive_tag_collision_preserves_branch(self):

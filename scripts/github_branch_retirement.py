@@ -65,6 +65,17 @@ class GitHubApi:
                     "number": pr.get("number"), "merged": True, "base": base, "head": head}}
         return None
 
+    def branch_names(self) -> set[str]:
+        return {item["name"] for item in self.list_items(f"repos/{self.repository}/branches")}
+
+    def open_pr_head_branches(self) -> set[str]:
+        result = set()
+        for pr in self.list_items(f"repos/{self.repository}/pulls?state=open"):
+            head = pr.get("head") or {}
+            if (head.get("repo") or {}).get("full_name") == self.repository and isinstance(head.get("ref"), str):
+                result.add(head["ref"])
+        return result
+
     def branch_state(self, branch: str) -> dict[str, Any] | None:
         for item in self.list_items(f"repos/{self.repository}/branches"):
             if item.get("name") == branch:

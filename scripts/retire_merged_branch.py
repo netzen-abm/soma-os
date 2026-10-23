@@ -63,11 +63,25 @@ def _recheck(client: Any, item: dict[str, Any], root: Path) -> None:
         raise RuntimeError(f"recovery tag verification failed for {branch}")
 
 
+def _validate_live_inventory(client: Any, candidates: list[dict[str, Any]]) -> None:
+    live = client.branch_names()
+    missing_canonical = CANONICAL_BRANCHES - live
+    if missing_canonical:
+        raise RuntimeError("canonical branch missing; refusing retirement: " + ", ".join(sorted(missing_canonical)))
+    covered = CANONICAL_BRANCHES | {item["branch"] for item in candidates} | client.open_pr_head_branches()
+    unlisted = live - covered
+    if unlisted:
+        raise RuntimeError(
+            "unmanifested active branches remain; no branch refs deleted: " + ", ".join(sorted(unlisted))
+        )
+
+
 def retire_batch(client: Any, candidates: list[dict[str, Any]], run_url: str,
                  root: Path = Path(".")) -> list[str]:
     names = [item.get("branch") for item in candidates]
     if len(names) != len(set(names)):
         raise RuntimeError("duplicate branch in retirement batch")
+    _validate_live_inventory(client, candidates)
     prepared, errors = [], []
     # Archive and preflight every item before deleting any active branch ref.
     for item in candidates:
