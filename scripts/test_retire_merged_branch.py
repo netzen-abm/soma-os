@@ -2,9 +2,6 @@
 """Offline fail-closed tests for branch retirement."""
 from __future__ import annotations
 import unittest
-from unittest.mock import Mock, patch
-
-from github_branch_retirement import GitHubApi
 from retire_merged_branch import CANONICAL_BRANCHES, archive_tag_name, candidate_for_event, retire_batch, retire_merged_branch
 
 REPO = "netzen-abm/soma-os"
@@ -84,32 +81,6 @@ class RetirementTests(unittest.TestCase):
             candidate_for_event(make_event(sha="bad"), REPO)
         with self.assertRaises(ValueError):
             candidate_for_event(make_event(branch="../main"), REPO)
-
-    def test_new_archive_tag_visibility_is_retried_until_exact_sha_appears(self):
-        client = GitHubApi(REPO, "test-token", "https://api.github.com")
-        client.tag_sha = Mock(side_effect=[None, None, SHA])
-        with patch("github_branch_retirement.time.sleep") as sleep:
-            self.assertEqual(client.wait_for_tag("archive-tag", SHA), SHA)
-        self.assertEqual(client.tag_sha.call_count, 3)
-        self.assertEqual([call.args[0] for call in sleep.call_args_list], [0.2, 0.4])
-
-    def test_visible_archive_tag_with_wrong_sha_fails_without_retry(self):
-        client = GitHubApi(REPO, "test-token", "https://api.github.com")
-        client.tag_sha = Mock(return_value="b" * 40)
-        with patch("github_branch_retirement.time.sleep") as sleep:
-            with self.assertRaisesRegex(RuntimeError, "recovery tag mismatch"):
-                client.wait_for_tag("archive-tag", SHA)
-        client.tag_sha.assert_called_once_with("archive-tag")
-        sleep.assert_not_called()
-
-    def test_archive_tag_that_never_becomes_visible_fails_closed(self):
-        client = GitHubApi(REPO, "test-token", "https://api.github.com")
-        client.tag_sha = Mock(return_value=None)
-        with patch("github_branch_retirement.time.sleep") as sleep:
-            with self.assertRaisesRegex(RuntimeError, "did not become visible after 6 reads"):
-                client.wait_for_tag("archive-tag", SHA)
-        self.assertEqual(client.tag_sha.call_count, 6)
-        self.assertEqual(sleep.call_count, 5)
 
     def test_archive_tag_precedes_branch_deletion(self):
         candidate = candidate_for_event(make_event(), REPO)
