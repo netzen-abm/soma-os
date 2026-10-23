@@ -38,12 +38,19 @@ def request(ctx: dict[str, object], resource_id: str = "r-1", subject_ref: str =
     return ProtectedDataRequest(authorization_context=ctx, capability_id=f"health.{action}", capability_version="1.0.0", resource_type="health_record", resource_id=resource_id, action=action, target_tenant_id="tenant-a", target_data_domain="personal-health", subject_ref=subject_ref)
 
 
-def kernel() -> PolicyKernel:
+def kernel(*, requires_permission_lifecycle: bool = False) -> PolicyKernel:
     grants: dict[GrantKey, bool] = {
         ("person-1", "person", f"health.{action}", "health_record", "r-1", action, "person-1"): True
         for action in ("read", "insert", "update", "delete")
     }
-    return PolicyKernel({"capabilities": [{"id": f"health.{action}", "version": "1.0.0", "principal_types": ["person"]} for action in ("read", "insert", "update", "delete")]}, grants)
+    capabilities = [
+        {"id": f"health.{action}", "version": "1.0.0", "principal_types": ["person"]}
+        for action in ("read", "insert", "update", "delete")
+    ]
+    if requires_permission_lifecycle:
+        for capability in capabilities:
+            capability["requires_permission_lifecycle"] = True
+    return PolicyKernel({"capabilities": capabilities}, grants)
 
 
 def test_authorized_read_reaches_adapter() -> None:
@@ -109,6 +116,18 @@ def test_invalid_request_never_reaches_adapter() -> None:
     try: access.read(bad)
     except PermissionError as exc: assert str(exc) == "invalid_protected_data_request"
     else: raise AssertionError("expected denial")
+    assert adapter.calls == 0
+
+
+def test_missing_required_permission_never_reaches_protected_data_adapter() -> None:
+    adapter = Adapter()
+    access = ProtectedDataAccess(kernel(requires_permission_lifecycle=True), adapter)
+    try:
+        access.read(request(identity()))
+    except PermissionError as exc:
+        assert str(exc) == "permission_required"
+    else:
+        raise AssertionError("expected lifecycle-required permission denial")
     assert adapter.calls == 0
 
 

@@ -7,6 +7,9 @@ from governed_capability_executor import GovernedCapabilityExecutor
 from policy_kernel import PolicyKernel, PolicyRequest
 
 
+_USE_DEFAULT_PERMISSION = object()
+
+
 class GovernedCapabilityExecutorTests(unittest.TestCase):
     def setUp(self):
         self.executor = GovernedCapabilityExecutor()
@@ -38,7 +41,7 @@ class GovernedCapabilityExecutorTests(unittest.TestCase):
             context={}, subject_ref="subject-1",
         )
 
-    def boundary(self, allowed=True):
+    def boundary(self, allowed=True, *, requires_permission_lifecycle=True):
         grants = {
             ("person-1", "person", "device.camera.capture", "device",
              "camera-1", "capture", "subject-1"): True
@@ -47,18 +50,24 @@ class GovernedCapabilityExecutorTests(unittest.TestCase):
             "capabilities": [{
                 "id": "device.camera.capture", "version": "1.0.0",
                 "principal_types": ["person"],
+                "requires_permission_lifecycle": requires_permission_lifecycle,
             }]
         }, grants)
         return AuthorizationPolicyDecisionBoundary(kernel)
 
-    def execute(self, *, boundary, permission=None, operation):
+    def execute(
+        self, *, boundary, permission=_USE_DEFAULT_PERMISSION, operation,
+        principal_ref="person-1", subject_ref="subject-1",
+        capability_id="device.camera.capture", capability_version="1.0.0",
+    ):
+        selected_permission = self.permission if permission is _USE_DEFAULT_PERMISSION else permission
         return self.executor.execute(
             operation_id="op-1", authorization_boundary=boundary,
             authorization_context=self.identity_context, target_tenant="tenant-1",
             target_data_domain="health", policy_request=self.policy_request,
-            permission=self.permission if permission is None else permission,
-            principal_ref="person-1", subject_ref="subject-1",
-            capability_id="device.camera.capture", capability_version="1.0.0",
+            permission=selected_permission,
+            principal_ref=principal_ref, subject_ref=subject_ref,
+            capability_id=capability_id, capability_version=capability_version,
             purpose="capture_health_image", requested_scope=["camera:front"],
             operation=operation, now=self.now,
         )
@@ -72,6 +81,47 @@ class GovernedCapabilityExecutorTests(unittest.TestCase):
         self.assertFalse(result.succeeded)
         self.assertEqual(result.reason_code, "policy_authorization_required")
         self.assertEqual(called, [])
+
+    def test_missing_required_permission_denies_before_operation(self):
+        called = []
+        result = self.execute(
+            boundary=self.boundary(),
+            permission=None,
+            operation=lambda: called.append(True),
+        )
+        self.assertFalse(result.succeeded)
+        self.assertEqual(result.reason_code, "permission_required")
+        self.assertEqual(called, [])
+
+    def test_non_lifecycle_capability_can_execute_without_permission(self):
+        called = []
+        result = self.execute(
+            boundary=self.boundary(requires_permission_lifecycle=False),
+            permission=None,
+            operation=lambda: called.append(True),
+        )
+        self.assertTrue(result.succeeded)
+        self.assertEqual(result.reason_code, "executed")
+        self.assertEqual(called, [True])
+
+    def test_permission_binding_must_match_authorized_request(self):
+        cases = (
+            {"principal_ref": "other-person"},
+            {"subject_ref": "other-subject"},
+            {"capability_id": "device.location.read"},
+            {"capability_version": "9.9.9"},
+        )
+        for override in cases:
+            called = []
+            with self.subTest(override=override):
+                result = self.execute(
+                    boundary=self.boundary(),
+                    operation=lambda: called.append(True),
+                    **override,
+                )
+                self.assertFalse(result.succeeded)
+                self.assertEqual(result.reason_code, "permission_binding_mismatch")
+                self.assertEqual(called, [])
 
     def test_active_permission_executes_once_and_is_revoked(self):
         called = []

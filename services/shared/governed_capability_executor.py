@@ -60,6 +60,24 @@ class GovernedCapabilityExecutor:
                 operation_id, False, decision.reason_code, dict(permission or {})
             )
 
+        permission_required = authorization_boundary.permission_lifecycle_required(
+            policy_request.capability_id
+        )
+        if permission_required and permission is None:
+            return GovernedExecutionResult(operation_id, False, "permission_required", {})
+
+        # Keep lifecycle metadata bound to the same identity/capability that was
+        # evaluated by the canonical authorization boundary.
+        if permission is not None and (
+            principal_ref != policy_request.principal_id
+            or subject_ref != policy_request.subject_ref
+            or capability_id != policy_request.capability_id
+            or capability_version != policy_request.capability_version
+        ):
+            return GovernedExecutionResult(
+                operation_id, False, "permission_binding_mismatch", dict(permission)
+            )
+
         if permission is not None:
             lifecycle = self._permissions.validate(
                 permission=permission,

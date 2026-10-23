@@ -28,6 +28,11 @@ class PolicyKernel:
         self._capabilities = self._index_capabilities(registry)
         self._grants = dict(grants)
 
+    def permission_lifecycle_required(self, capability_id: str) -> bool:
+        """Read the lifecycle requirement from the canonical capability registry."""
+        capability = self._capabilities.get(capability_id)
+        return capability is not None and capability.get("requires_permission_lifecycle") is True
+
     def evaluate(
         self,
         request: PolicyRequest,
