@@ -2,7 +2,7 @@
 """Offline fail-closed tests for branch retirement."""
 from __future__ import annotations
 import unittest
-from retire_merged_branch import CANONICAL_BRANCHES, archive_tag_name, candidate_for_event, retire_merged_branch
+from retire_merged_branch import CANONICAL_BRANCHES, archive_tag_name, candidate_for_event, retire_batch, retire_merged_branch
 
 REPO = "netzen-abm/soma-os"
 SHA = "a" * 40
@@ -101,6 +101,20 @@ class RetirementTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "protection state"):
             retire_merged_branch(client, candidate, REPO, "https://example/run")
         self.assertEqual(client.tags, {})
+        self.assertNotIn("delete-branch", client.operations)
+
+    def test_batch_preflight_failure_deletes_nothing(self):
+        client = FakeClient()
+        second_sha = "b" * 40
+        client.branches["feature/second"] = {"sha": "c" * 40, "protected": False}
+        candidates = [
+            candidate_for_event(make_event(), REPO),
+            {"branch": "feature/second", "head_sha": second_sha, "pr_number": 124},
+        ]
+        with self.assertRaisesRegex(RuntimeError, "no branch refs deleted"):
+            retire_batch(client, candidates, "https://example/run")
+        self.assertIn("feature/example", client.branches)
+        self.assertIn("feature/second", client.branches)
         self.assertNotIn("delete-branch", client.operations)
 
     def test_archive_tag_collision_preserves_branch(self):
