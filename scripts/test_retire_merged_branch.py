@@ -103,6 +103,21 @@ class RetirementTests(unittest.TestCase):
         self.assertEqual(client.tags, {})
         self.assertNotIn("delete-branch", client.operations)
 
+    def test_all_recovery_tags_precede_any_batch_deletion(self):
+        client = FakeClient()
+        second_sha = "b" * 40
+        client.branches["feature/second"] = {"sha": second_sha, "protected": False}
+        candidates = [
+            candidate_for_event(make_event(), REPO),
+            {"branch": "feature/second", "head_sha": second_sha, "pr_number": 124},
+        ]
+        retire_batch(client, candidates, "https://example/run")
+        last_tag = max(i for i, op in enumerate(client.operations) if op == "create-tag")
+        first_delete = client.operations.index("delete-branch")
+        self.assertLess(last_tag, first_delete)
+        self.assertNotIn("feature/example", client.branches)
+        self.assertNotIn("feature/second", client.branches)
+
     def test_batch_preflight_failure_deletes_nothing(self):
         client = FakeClient()
         second_sha = "b" * 40

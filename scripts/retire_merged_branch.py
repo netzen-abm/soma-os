@@ -221,7 +221,7 @@ class GitHubApi:
         self.request("POST", f"repos/{self.repository}/git/refs", {"ref": f"refs/tags/{tag}", "sha": sha})
 
     def delete_branch(self, branch: str) -> None:
-        self.request("DELETE", f"repos/{self.repository}/git/refs/{quote('heads/' + branch, safe='')}")
+        self.request("DELETE", f"repos/{self.repository}/git/refs/{quote('heads/' + branch, safe='/')}")
 
     def audit(self, body: str) -> None:
         self.request("POST", f"repos/{self.repository}/issues/{RETIREMENT_ISSUE}/comments", {"body": body})
