@@ -5,10 +5,37 @@
 //! does not own either domain's persistence, payloads, or policy engine.
 
 use crate::canonical_authorization::AuthorizationRequest;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 
 pub(super) const SCHEMA_VERSION: &str = "1.0.0";
+
+fn deserialize_optional_object<'de, D>(deserializer: D) -> Result<Option<serde_json::Value>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = serde_json::Value::deserialize(deserializer)?;
+    if !value.is_object() {
+        return Err(serde::de::Error::custom("context must be a non-null object"));
+    }
+    Ok(Some(value))
+}
+
+fn deserialize_optional_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(Some)
+}
+
+fn deserialize_optional_uncertainty<'de, D>(
+    deserializer: D,
+) -> Result<Option<LinkUncertainty>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    LinkUncertainty::deserialize(deserializer).map(Some)
+}
 
 /// Directional, provenance-preserving reference between canonical health-state
 /// and evidence entities. The referenced entities remain owned by their domains.
@@ -21,9 +48,17 @@ pub struct HealthStateEvidenceLink {
     pub evidence_ref: String,
     pub relationship: HealthStateEvidenceRelationship,
     pub provenance: LinkProvenance,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_object",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub context: Option<serde_json::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_uncertainty",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub uncertainty: Option<LinkUncertainty>,
 }
 
@@ -43,9 +78,17 @@ pub enum HealthStateEvidenceRelationship {
 #[serde(deny_unknown_fields)]
 pub struct LinkProvenance {
     pub method: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_string",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub created_at: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_string",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub actor_ref: Option<String>,
 }
 
