@@ -28,9 +28,7 @@ where
     String::deserialize(deserializer).map(Some)
 }
 
-fn deserialize_optional_uncertainty<'de, D>(
-    deserializer: D,
-) -> Result<Option<LinkUncertainty>, D::Error>
+fn deserialize_optional_uncertainty<'de, D>(deserializer: D) -> Result<Option<LinkUncertainty>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -48,17 +46,9 @@ pub struct HealthStateEvidenceLink {
     pub evidence_ref: String,
     pub relationship: HealthStateEvidenceRelationship,
     pub provenance: LinkProvenance,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_optional_object",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_optional_object", skip_serializing_if = "Option::is_none")]
     pub context: Option<serde_json::Value>,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_optional_uncertainty",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_optional_uncertainty", skip_serializing_if = "Option::is_none")]
     pub uncertainty: Option<LinkUncertainty>,
 }
 
@@ -78,17 +68,9 @@ pub enum HealthStateEvidenceRelationship {
 #[serde(deny_unknown_fields)]
 pub struct LinkProvenance {
     pub method: String,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_optional_string",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_optional_string", skip_serializing_if = "Option::is_none")]
     pub created_at: Option<String>,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_optional_string",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_optional_string", skip_serializing_if = "Option::is_none")]
     pub actor_ref: Option<String>,
 }
 
