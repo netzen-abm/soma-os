@@ -83,6 +83,26 @@ fn serde_rejects_unknown_root_and_provenance_fields() {
 }
 
 #[test]
+fn non_object_context_is_rejected() {
+    let mut candidate = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
+    candidate.context = Some(serde_json::json!("not-an-object"));
+    assert_eq!(
+        HealthStateEvidenceLinkBoundary::validate(&candidate, &context()),
+        Err(HealthStateEvidenceLinkError::InvalidLink)
+    );
+}
+
+#[test]
+fn malformed_provenance_timestamp_is_rejected() {
+    let mut candidate = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
+    candidate.provenance.created_at = Some("not-a-timestamp".into());
+    assert_eq!(
+        HealthStateEvidenceLinkBoundary::validate(&candidate, &context()),
+        Err(HealthStateEvidenceLinkError::InvalidLink)
+    );
+}
+
+#[test]
 fn malformed_link_is_rejected() {
     let mut candidate = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
     candidate.health_state_ref.clear();
