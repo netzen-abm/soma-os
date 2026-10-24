@@ -83,6 +83,22 @@ fn serde_rejects_unknown_root_and_provenance_fields() {
 }
 
 #[test]
+fn serde_rejects_explicit_null_for_optional_fields() {
+    let fixture = include_str!("../../../tests/fixtures/health-state-evidence-link-v1.json");
+    for field in ["context", "uncertainty"] {
+        let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        value[field] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<HealthStateEvidenceLink>(value).is_err(), "{field}");
+    }
+
+    for field in ["created_at", "actor_ref"] {
+        let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        value["provenance"][field] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<HealthStateEvidenceLink>(value).is_err(), "{field}");
+    }
+}
+
+#[test]
 fn non_object_context_is_rejected() {
     let mut candidate = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
     candidate.context = Some(serde_json::json!("not-an-object"));
