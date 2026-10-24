@@ -1,0 +1,11 @@
+{
+  "id": "link-1",
+  "schema_version": "1.0.0",
+  "health_state_ref": "hs-1",
+  "evidence_ref": "claim-1",
+  "relationship": "EVIDENCE_INFORMS_HYPOTHESIS",
+  "provenance": {
+    "method": "human-curated"
+  },
+  "uncertainty": "reported"
+}
