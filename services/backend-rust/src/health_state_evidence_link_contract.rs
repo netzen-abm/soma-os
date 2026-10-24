@@ -13,6 +13,7 @@ pub(super) const SCHEMA_VERSION: &str = "1.0.0";
 /// Directional, provenance-preserving reference between canonical health-state
 /// and evidence entities. The referenced entities remain owned by their domains.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct HealthStateEvidenceLink {
     pub id: String,
     pub schema_version: String,
@@ -20,8 +21,9 @@ pub struct HealthStateEvidenceLink {
     pub evidence_ref: String,
     pub relationship: HealthStateEvidenceRelationship,
     pub provenance: LinkProvenance,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub context: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub uncertainty: Option<LinkUncertainty>,
 }
 
@@ -38,9 +40,12 @@ pub enum HealthStateEvidenceRelationship {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct LinkProvenance {
     pub method: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub created_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_ref: Option<String>,
 }
 
