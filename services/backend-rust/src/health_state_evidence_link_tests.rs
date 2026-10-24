@@ -29,8 +29,8 @@ fn link(relationship: HealthStateEvidenceRelationship) -> HealthStateEvidenceLin
         relationship,
         provenance: LinkProvenance {
             method: "human-curated".into(),
-            created_at: Some("2026-09-14T05:00:00Z".into()),
-            actor_ref: Some("principal-1".into()),
+            created_at: None,
+            actor_ref: None,
         },
         context: None,
         uncertainty: Some(LinkUncertainty::Reported),
@@ -52,9 +52,70 @@ fn serde_values_match_machine_readable_schema() {
     let value = serde_json::to_value(&link).unwrap();
     assert_eq!(value["relationship"], "EVIDENCE_INFORMS_HYPOTHESIS");
     assert_eq!(value["uncertainty"], "reported");
+    assert!(value.get("context").is_none());
+    assert!(value["provenance"].get("created_at").is_none());
+    assert!(value["provenance"].get("actor_ref").is_none());
 
     let round_trip: HealthStateEvidenceLink = serde_json::from_value(value).unwrap();
     assert_eq!(round_trip, link);
+}
+
+#[test]
+fn shared_json_fixture_round_trips_through_serde() {
+    let fixture = include_str!("../../../tests/fixtures/health-state-evidence-link-v1.json");
+    let decoded: HealthStateEvidenceLink = serde_json::from_str(fixture).unwrap();
+    assert_eq!(decoded, link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis));
+    let encoded = serde_json::to_value(decoded).unwrap();
+    let fixture_value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+    assert_eq!(encoded, fixture_value);
+}
+
+#[test]
+fn serde_rejects_unknown_root_and_provenance_fields() {
+    let fixture = include_str!("../../../tests/fixtures/health-state-evidence-link-v1.json");
+    let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+    value["unexpected"] = serde_json::Value::Bool(true);
+    assert!(serde_json::from_value::<HealthStateEvidenceLink>(value).is_err());
+
+    let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+    value["provenance"]["unexpected"] = serde_json::Value::Bool(true);
+    assert!(serde_json::from_value::<HealthStateEvidenceLink>(value).is_err());
+}
+
+#[test]
+fn serde_rejects_explicit_null_for_optional_fields() {
+    let fixture = include_str!("../../../tests/fixtures/health-state-evidence-link-v1.json");
+    for field in ["context", "uncertainty"] {
+        let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        value[field] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<HealthStateEvidenceLink>(value).is_err(), "{field}");
+    }
+
+    for field in ["created_at", "actor_ref"] {
+        let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        value["provenance"][field] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<HealthStateEvidenceLink>(value).is_err(), "{field}");
+    }
+}
+
+#[test]
+fn non_object_context_is_rejected() {
+    let mut candidate = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
+    candidate.context = Some(serde_json::json!("not-an-object"));
+    assert_eq!(
+        HealthStateEvidenceLinkBoundary::validate(&candidate, &context()),
+        Err(HealthStateEvidenceLinkError::InvalidLink)
+    );
+}
+
+#[test]
+fn malformed_provenance_timestamp_is_rejected() {
+    let mut candidate = link(HealthStateEvidenceRelationship::EvidenceInformsHypothesis);
+    candidate.provenance.created_at = Some("not-a-timestamp".into());
+    assert_eq!(
+        HealthStateEvidenceLinkBoundary::validate(&candidate, &context()),
+        Err(HealthStateEvidenceLinkError::InvalidLink)
+    );
 }
 
 #[test]
