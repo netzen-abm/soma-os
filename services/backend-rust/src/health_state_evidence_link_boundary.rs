@@ -15,8 +15,11 @@ impl HealthStateEvidenceLinkBoundary {
             || link.health_state_ref.trim().is_empty()
             || link.evidence_ref.trim().is_empty()
             || link.provenance.method.trim().is_empty()
-            || link.provenance.created_at.as_deref().is_some_and(|value| value.trim().is_empty())
+            || link.provenance.created_at.as_deref().is_some_and(|value| {
+                value.trim().is_empty() || chrono::DateTime::parse_from_rfc3339(value).is_err()
+            })
             || link.provenance.actor_ref.as_deref().is_some_and(|value| value.trim().is_empty())
+            || link.context.as_ref().is_some_and(|value| !value.is_object())
         {
             return Err(HealthStateEvidenceLinkError::InvalidLink);
         }
