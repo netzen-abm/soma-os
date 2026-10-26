@@ -37,11 +37,11 @@ secp256k1 = { version = "0.33.1", features = [
 flate2 = "1.0.30"
 
 # Native mobile bindings and error types.
-uniffi = { version = "0.28.0", features = ["tokio"] }
-thiserror = "1.0.61"
+uniffi = { version = "0.32.2", features = ["tokio"] }
+thiserror = "2.0.21"
 
 # WebSocket and HTTP clients.
-tokio-tungstenite = { version = "0.23.1", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.30.0", features = ["native-tls"] }
 futures-util = "0.3.30"
 reqwest = { version = "0.13.5", features = ["json"] }
 
@@ -50,7 +50,7 @@ serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.118"
 
 [build-dependencies]
-uniffi = { version = "0.28.0", features = ["build"] }
+uniffi = { version = "0.32.2", features = ["build"] }
 
 [profile.release]
 opt-level = 3
